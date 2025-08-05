@@ -57,9 +57,10 @@ describe('AnswerDisplay', () => {
     })
 
     const buttons = wrapper.findAll('.action-button')
-    expect(buttons).toHaveLength(2)
+    expect(buttons).toHaveLength(3)
     expect(buttons[0].text()).toContain('Copy')
     expect(buttons[1].text()).toContain('Share')
+    expect(buttons[2].text()).toContain('Save')
   })
 
   it('copies answer to clipboard when copy button is clicked', async () => {

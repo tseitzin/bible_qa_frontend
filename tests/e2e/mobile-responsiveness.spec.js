@@ -12,7 +12,7 @@ test.describe('Mobile Responsiveness', () => {
     await expect(page.locator('.question-form')).toBeVisible();
     
     // Check that logo and title stack vertically on mobile
-    const logo = page.locator('.logo');
+    const logo = page.locator('.logo-wrapper');
     const logoStyles = await logo.evaluate(el => getComputedStyle(el).flexDirection);
     expect(logoStyles).toBe('column');
     

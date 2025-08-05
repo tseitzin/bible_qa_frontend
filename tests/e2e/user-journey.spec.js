@@ -19,7 +19,7 @@ test.describe('Complete User Journey', () => {
     
     // Step 2: User sees the welcome message and interface
     await expect(page.locator('h1')).toContainText('Bible Q&A');
-    await expect(page.locator('.app-subtitle')).toContainText('Ask questions about Scripture');
+    await expect(page.locator('.app-subtitle')).toContainText('Discover biblical wisdom through AI-powered Scripture exploration');
     
     // Step 3: User examines the question form
     const textarea = page.locator('textarea');
@@ -80,7 +80,7 @@ test.describe('Complete User Journey', () => {
     await expect(page.locator('.error-text')).toContainText('Service temporarily unavailable');
     
     // User dismisses error
-    await page.locator('.error-dismiss').click();
+    await page.locator('.dismiss-button').click();
     
     // Error should be hidden
     await expect(page.locator('.error-message')).not.toBeVisible();
@@ -106,7 +106,7 @@ test.describe('Complete User Journey', () => {
     await expect(page.locator('.error-text')).toContainText('Network Error');
     
     // User can dismiss and retry
-    await page.locator('.error-dismiss').click();
+    await page.locator('.dismiss-button').click();
     await expect(page.locator('.error-message')).not.toBeVisible();
   });
 });

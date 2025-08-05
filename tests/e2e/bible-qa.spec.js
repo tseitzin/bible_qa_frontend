@@ -36,7 +36,7 @@ test.describe('Bible Q&A Application', () => {
     await expect(page.locator('h1')).toContainText('Bible Q&A');
     
     // Check subtitle
-    await expect(page.locator('.app-subtitle')).toContainText('Ask questions about Scripture and receive thoughtful, biblical answers');
+    await expect(page.locator('.app-subtitle')).toContainText('Discover biblical wisdom through AI-powered Scripture exploration');
     
     // Check that Bible icon is displayed
     await expect(page.locator('.logo-icon')).toBeVisible();
@@ -51,7 +51,7 @@ test.describe('Bible Q&A Application', () => {
     await expect(page.locator('button[type="submit"]')).toBeVisible();
     
     // Check footer
-    await expect(page.locator('.footer-text')).toContainText('Powered by AI');
+    await expect(page.locator('.footer-description')).toContainText('Powered by advanced AI technology');
   });
 
   test('should have proper form validation', async ({ page }) => {
@@ -110,7 +110,7 @@ test.describe('Bible Q&A Application', () => {
     await submitButton.click();
     
     // Check loading message appears
-    await expect(page.locator('.loading-message')).toContainText('Searching Scripture...');
+    await expect(page.locator('.loading-primary')).toContainText('Searching Scripture...');
     
     // Wait for response and check answer appears
     await expect(page.locator('.answer-display')).toBeVisible({ timeout: 10000 });
@@ -144,7 +144,7 @@ test.describe('Bible Q&A Application', () => {
     await expect(page.locator('.error-message')).toBeVisible();
     
     // Click dismiss button
-    await page.locator('.error-dismiss').click();
+    await page.locator('.dismiss-button').click();
     
     // Error should be hidden
     await expect(page.locator('.error-message')).not.toBeVisible();
@@ -163,8 +163,9 @@ test.describe('Bible Q&A Application', () => {
     await expect(page.locator('.answer-display')).toBeVisible();
     
     // Check action buttons are present
-    await expect(page.locator('.action-button')).toHaveCount(2);
+    await expect(page.locator('.action-button')).toHaveCount(3);
     await expect(page.locator('.action-button').first()).toContainText('Copy');
-    await expect(page.locator('.action-button').last()).toContainText('Share');
+    await expect(page.locator('.action-button').nth(1)).toContainText('Share');
+    await expect(page.locator('.action-button').last()).toContainText('Save');
   });
 });
