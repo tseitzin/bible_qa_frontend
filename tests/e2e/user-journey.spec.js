@@ -43,16 +43,17 @@ test.describe('Complete User Journey', () => {
     await submitButton.click();
     
     // Step 8: User sees loading message
-    await expect(page.locator('.loading-message')).toContainText('Searching Scripture...');
+    await expect(page.locator('.loading-primary')).toContainText('Searching Scripture...');
     
     // Step 9: User receives answer
     await expect(page.locator('.answer-display')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('.answer-text')).toContainText('Love is patient');
     
     // Step 10: User sees action buttons
-    await expect(page.locator('.action-button')).toHaveCount(2);
+    await expect(page.locator('.action-button')).toHaveCount(3);
     await expect(page.locator('.action-button').first()).toContainText('Copy');
-    await expect(page.locator('.action-button').last()).toContainText('Share');
+    await expect(page.locator('.action-button').nth(1)).toContainText('Share');
+    await expect(page.locator('.action-button').last()).toContainText('Save');
     
     // Step 11: User can ask another question
     await textarea.fill('Who is Jesus?');
