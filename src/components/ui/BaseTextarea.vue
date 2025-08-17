@@ -6,7 +6,7 @@
         <span v-if="required" class="required-indicator">*</span>
       </label>
       <div v-if="showCharCount && maxLength" class="char-count-header">
-        <span :class="charCountClasses">{{ modelValue.length }}/{{ maxLength }}</span>
+        <span :class="charCountClasses">Characters: {{ modelValue.length }}/{{ maxLength }}</span>
       </div>
     </div>
     
@@ -40,7 +40,7 @@
       
       <!-- Character count (bottom right) -->
       <div v-if="showCharCount && maxLength && !label" class="char-count-bottom">
-        <span :class="charCountClasses">{{ modelValue.length }}/{{ maxLength }}</span>
+        <span :class="charCountClasses">Characters: {{ modelValue.length }}/{{ maxLength }}</span>
       </div>
     </div>
     
@@ -221,7 +221,7 @@ const autoResizeTextarea = (textarea) => {
   border: 2px solid var(--color-border);
   border-radius: var(--border-radius-lg);
   background: var(--color-background);
-  color: #6b7280;
+  color: #eef1f6;
   resize: vertical;
   transition: all var(--transition-normal);
   min-height: 2.5rem;
@@ -231,7 +231,7 @@ const autoResizeTextarea = (textarea) => {
 }
 
 .base-textarea::placeholder {
-  color: #9ca3af;
+  color: #eaecef;
   transition: all var(--transition-fast);
 }
 
@@ -240,7 +240,7 @@ const autoResizeTextarea = (textarea) => {
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   background: var(--color-background);
-  color: #4b5563;
+  color: #dee3eb;
 }
 
 .base-textarea:focus::placeholder {
@@ -327,7 +327,7 @@ const autoResizeTextarea = (textarea) => {
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-sm);
   border: 1px solid var(--color-border-light);
-  color: var(--color-text-muted);
+  color: white;
   font-weight: var(--font-weight-medium);
   box-shadow: var(--shadow-xs);
 }

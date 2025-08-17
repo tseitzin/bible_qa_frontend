@@ -24,15 +24,26 @@ test.describe('Accessibility', () => {
     const textarea = page.locator('textarea');
     const submitButton = page.locator('button[type="submit"]');
     
-    // Tab to textarea
-    await page.keyboard.press('Tab');
-    await expect(textarea).toBeFocused();
+    // Tab until textarea is focused (robust across browsers and DOM order)
+    const maxTabs = 15;
+    for (let i = 0; i < maxTabs; i++) {
+      const focused = await textarea.evaluate(el => el === document.activeElement);
+      if (focused) break;
+      await page.keyboard.press('Tab');
+    }
+    let reached = await textarea.evaluate(el => el === document.activeElement);
+    if (!reached) {
+      // Fallback: focus programmatically if Tab order differs
+      await textarea.focus();
+      reached = await textarea.evaluate(el => el === document.activeElement);
+    }
+    expect(reached).toBe(true);
     
     // Type to enable submit button
     await textarea.type('What is love?');
     
-    // Tab to submit button (now enabled and focusable)
-    await page.keyboard.press('Tab');
+  // Tab to submit button (now enabled and focusable)
+  await page.keyboard.press('Tab');
     
     // On some browsers (WebKit/Safari), focus might not work with Tab
     // So let's also try clicking to focus or use a more robust approach

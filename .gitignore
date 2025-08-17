@@ -6,6 +6,10 @@ dist/
 coverage/
 test-results/
 playwright-report/
+blob-report/
+traces/
+videos/
+screenshots/
 
 # Local env files
 .env
@@ -16,9 +20,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.eslintcache
+.stylelintcache
 
 # Backup and temp files
 *.bak
+.history/
+
+# Debug files
+debug.spec.js
+debug/
+**/*.debug.js
+**/*.debug.spec.js
 
 # Editor/IDE settings
 .vscode/

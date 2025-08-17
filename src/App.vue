@@ -66,7 +66,31 @@
       
       <!-- Main Content -->
       <main class="app-main">
-        <div class="content-wrapper animate-slide-in">
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+          <button 
+            @click="activeTab = 'ask'" 
+            :class="['nav-tab', { 'nav-tab--active': activeTab === 'ask' }]"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+            Ask Question
+          </button>
+          <button 
+            @click="activeTab = 'saved'" 
+            :class="['nav-tab', { 'nav-tab--active': activeTab === 'saved' }]"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+            </svg>
+            Saved Answers
+            <span v-if="savedCount > 0" class="saved-badge">{{ savedCount }}</span>
+          </button>
+        </div>
+
+        <!-- Ask Question Tab -->
+        <div v-if="activeTab === 'ask'" class="content-wrapper animate-slide-in">
           <QuestionForm
             v-model:question="question"
             :loading="loading"
@@ -76,13 +100,23 @@
           
           <AnswerDisplay 
             :answer="answer" 
+            :question="question"
             class="answer-section"
+            @answer-saved="handleAnswerSaved"
           />
           
           <ErrorMessage 
             :error="error" 
             @dismiss="clearError"
             class="error-section"
+          />
+        </div>
+
+        <!-- Saved Answers Tab -->
+        <div v-else-if="activeTab === 'saved'" class="saved-content animate-fade-in">
+          <SavedAnswers 
+            ref="savedAnswersRef" 
+            @update="handleSavedAnswersUpdated"
           />
         </div>
       </main>
@@ -121,10 +155,13 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
 import QuestionForm from './components/QuestionForm.vue'
 import AnswerDisplay from './components/AnswerDisplay.vue'
 import ErrorMessage from './components/ErrorMessage.vue'
+import SavedAnswers from './components/SavedAnswers.vue'
 import { useBibleQA } from './composables/useBibleQA.js'
+import { savedAnswersService } from './services/savedAnswersService.js'
 
 const {
   question,
@@ -135,9 +172,54 @@ const {
   clearError
 } = useBibleQA()
 
-const handleQuestionSubmit = (questionText) => {
-  askQuestion(questionText)
+// Tab management
+const activeTab = ref('ask')
+const savedAnswersRef = ref(null)
+
+// Store current question and answer for accessibility by tests
+const currentQuestion = ref('')
+const currentAnswer = ref('')
+
+// Saved answers count for badge
+const savedCount = ref(0)
+
+const updateSavedCount = () => {
+  try {
+    savedCount.value = savedAnswersService.getAll().length
+  } catch (error) {
+    console.error('Error updating saved count:', error)
+    savedCount.value = 0
+  }
 }
+
+const handleQuestionSubmit = (questionText, answerText) => {
+  // Store the current question and answer
+  currentQuestion.value = questionText
+  currentAnswer.value = answerText
+  
+  askQuestion(questionText)
+  // Auto-switch to ask tab if user submits from saved tab
+  if (activeTab.value !== 'ask') {
+    activeTab.value = 'ask'
+  }
+}
+
+const handleAnswerSaved = () => {
+  updateSavedCount()
+  // Refresh the saved answers component if it exists
+  if (savedAnswersRef.value) {
+    savedAnswersRef.value.refresh()
+  }
+}
+
+const handleSavedAnswersUpdated = () => {
+  updateSavedCount()
+}
+
+// Load saved count on mount
+onMounted(() => {
+  updateSavedCount()
+})
 </script>
 
 <style scoped>
@@ -401,10 +483,80 @@ const handleQuestionSubmit = (questionText) => {
   flex-direction: column;
 }
 
+.nav-tabs {
+  display: flex;
+  margin-bottom: var(--spacing-xl);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-xs);
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.nav-tab svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nav-tab:hover {
+  color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.nav-tab--active {
+  background: var(--gradient-primary);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-tab--active:hover {
+  color: var(--color-text-inverse);
+  background: var(--gradient-primary);
+}
+
+.saved-badge {
+  background: var(--color-text-inverse);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding: 2px 6px;
+  border-radius: var(--border-radius-full);
+  min-width: 18px;
+  text-align: center;
+  line-height: 1;
+}
+
+.nav-tab--active .saved-badge {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-primary);
+}
+
 .content-wrapper {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+  flex: 1;
+}
+
+.saved-content {
   flex: 1;
 }
 

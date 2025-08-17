@@ -68,11 +68,16 @@
               variant="ghost"
               size="sm"
               class="action-button"
+              :class="{ 'action-button--success': saveSuccess }"
+              :disabled="saving"
             >
-              <svg viewBox="0 0 20 20" fill="currentColor">
+              <svg v-if="!saveSuccess" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
               </svg>
-              Save
+              <svg v-else viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              {{ saveSuccess ? 'Saved!' : 'Save' }}
             </BaseButton>
           </div>
           
@@ -117,15 +122,25 @@
 <script setup>
 import { computed, ref } from 'vue'
 import BaseButton from './ui/BaseButton.vue'
+import { savedAnswersService } from '../services/savedAnswersService.js'
+
+const emit = defineEmits(['answerSaved'])
 
 const props = defineProps({
   answer: {
+    type: String,
+    default: ''
+  },
+  question: {
     type: String,
     default: ''
   }
 })
 
 const copySuccess = ref(false)
+const saveSuccess = ref(null)
+const saveMessage = ref('')
+const saving = ref(false)
 
 const formattedTime = computed(() => {
   return new Date().toLocaleTimeString('en-US', { 
@@ -173,9 +188,53 @@ const shareAnswer = async () => {
   }
 }
 
-const saveAnswer = () => {
-  // Placeholder for save functionality
-  console.log('Save answer functionality would be implemented here')
+const saveAnswer = async () => {
+  if (saving.value) return // Prevent multiple saves
+  
+  try {
+    saving.value = true
+    
+    // Small delay to allow tests to see the saving state
+    await new Promise(resolve => setTimeout(resolve, 0))
+    
+    // Get the current question from the parent or context
+    const question = props.question || ''
+    
+    const result = savedAnswersService.save(question, props.answer)
+    
+    if (result.success) {
+      // Show success feedback
+      saveSuccess.value = true
+      saveMessage.value = result.message
+      
+      // Emit event with the ID for parent components
+      emit('answerSaved', result.id)
+      
+      console.log('Answer saved successfully:', result.id)
+    } else {
+      // Show error feedback
+      saveSuccess.value = false
+      saveMessage.value = result.message
+      console.warn('Failed to save answer:', result.message)
+    }
+    
+    // Clear feedback after 3 seconds
+    setTimeout(() => {
+      saveSuccess.value = null
+      saveMessage.value = ''
+    }, 3000)
+  } catch (error) {
+    console.error('Failed to save answer:', error)
+    saveSuccess.value = false
+    saveMessage.value = 'An error occurred while saving'
+    
+    setTimeout(() => {
+      saveSuccess.value = null
+      saveMessage.value = ''
+    }, 3000)
+  } finally {
+    saving.value = false
+  }
 }
 
 const provideFeedback = (type) => {
