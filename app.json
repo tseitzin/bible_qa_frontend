@@ -1,0 +1,33 @@
+{
+  "name": "Bible Q&A Frontend",
+  "description": "A Vue.js frontend for the Bible Q&A application",
+  "repository": "https://github.com/your-username/bible-qa-frontend",
+  "logo": "https://cdn-icons-png.flaticon.com/512/167/167756.png",
+  "keywords": ["vue", "bible", "qa", "frontend"],
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "VITE_API_URL": {
+      "description": "Backend API URL",
+      "value": "https://your-bible-qa-api-81c2e54b07f7.herokuapp.com"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "addons": [],
+  "scripts": {
+    "postdeploy": "echo 'Deployment completed successfully!'"
+  }
+}

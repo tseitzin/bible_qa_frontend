@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://your-bible-qa-api-81c2e54b07f7.herokuapp.com'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
