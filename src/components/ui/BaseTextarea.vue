@@ -29,6 +29,24 @@
           @keydown="handleKeydown"
         />
         
+        <!-- Speech-to-text button -->
+        <button
+          v-if="speechSupported"
+          @click="toggleSpeech"
+          :disabled="disabled"
+          type="button"
+          class="speech-button"
+          :class="{ 'speech-button--listening': isListening }"
+          :title="isListening ? 'Stop listening' : 'Start voice input'"
+        >
+          <svg v-if="!isListening" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/>
+          </svg>
+        </button>
+        
         <!-- Floating placeholder effect -->
         <div v-if="floatingLabel && label" :class="floatingLabelClasses">
           {{ label }}
@@ -61,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -111,6 +129,14 @@ const props = defineProps({
   autoResize: {
     type: Boolean,
     default: false
+  },
+  speechSupported: {
+    type: Boolean,
+    default: false
+  },
+  isListening: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -118,6 +144,9 @@ const emit = defineEmits(['update:modelValue', 'focus', 'blur', 'keydown'])
 
 const isFocused = ref(false)
 const inputId = computed(() => `textarea-${Math.random().toString(36).substr(2, 9)}`)
+
+// Inject speech functions from parent
+const toggleSpeech = inject('toggleSpeech', () => {})
 
 const textareaClasses = computed(() => ({
   'base-textarea': true,
@@ -215,6 +244,7 @@ const autoResizeTextarea = (textarea) => {
 .base-textarea {
   width: 100%;
   padding: var(--spacing-lg);
+  padding-right: 60px; /* Make room for speech button */
   font-size: var(--font-size-base);
   font-family: inherit;
   line-height: var(--line-height-relaxed);
@@ -228,6 +258,54 @@ const autoResizeTextarea = (textarea) => {
   position: relative;
   z-index: 1;
   font-weight: var(--font-weight-medium);
+}
+
+.speech-button {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+  z-index: 2;
+}
+
+.speech-button:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.05);
+  transform: scale(1.05);
+}
+
+.speech-button--listening {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-text-inverse);
+  animation: pulse-recording 1s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.speech-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.speech-button svg {
+  width: 20px;
+  height: 20px;
 }
 
 .base-textarea::placeholder {

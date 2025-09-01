@@ -12,7 +12,7 @@
       </div>
     </div>
     
-    <form @submit.prevent="handleSubmit" class="form">
+    <form @submit.prevent="handleSubmit" class="form" :key="formKey">
       <BaseTextarea
         v-model="localQuestion"
         label="Your Bible Question"
@@ -23,9 +23,20 @@
         :show-char-count="true"
         :floating-label="false"
         :auto-resize="true"
+        :speech-supported="speechSupported"
+        :is-listening="isListening"
         help-text="💡 Ask clear, specific questions for the most accurate and helpful biblical answers"
         class="question-input"
       />
+      
+      <!-- Speech Error Display -->
+      <div v-if="speechError" class="speech-error">
+        <svg class="speech-error-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        {{ speechError }}
+        <button @click="speechError = ''" class="speech-error-dismiss">×</button>
+      </div>
       
       <div class="form-actions">
         <div class="action-buttons">
@@ -92,10 +103,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, provide } from 'vue'
 import BaseTextarea from './ui/BaseTextarea.vue'
 import BaseButton from './ui/BaseButton.vue'
 import LoadingSpinner from './ui/LoadingSpinner.vue'
+import { useSpeechToText } from '../composables/useSpeechToText.js'
 
 const props = defineProps({
   question: {
@@ -111,6 +123,32 @@ const props = defineProps({
 const emit = defineEmits(['update:question', 'submit'])
 
 const localQuestion = ref(props.question)
+const formKey = ref(0)
+const speechError = ref('')
+
+// Speech-to-text functionality
+const {
+  isListening,
+  isSupported: speechSupported,
+  transcript,
+  error: speechApiError,
+  startListening,
+  stopListening,
+  clearTranscript
+} = useSpeechToText()
+
+
+const toggleSpeech = () => {
+  if (isListening.value) {
+    stopListening()
+  } else {
+    speechError.value = ''
+    startListening()
+  }
+}
+
+// Provide speech function to BaseTextarea
+provide('toggleSpeech', toggleSpeech)
 
 const quickSuggestions = [
   "What is love according to the Bible?",
@@ -120,6 +158,21 @@ const quickSuggestions = [
   "What does the Bible say about forgiveness?",
   "What is salvation?"
 ]
+
+// Watch for speech transcript
+watch(transcript, (newTranscript) => {
+  if (newTranscript) {
+    localQuestion.value = newTranscript
+    clearTranscript()
+  }
+})
+
+// Watch for speech errors
+watch(speechApiError, (error) => {
+  if (error) {
+    speechError.value = error
+  }
+})
 
 // Keep local state in sync with prop
 watch(() => props.question, (newVal) => {
@@ -142,6 +195,20 @@ const clearQuestion = () => {
 
 const selectSuggestion = (suggestion) => {
   localQuestion.value = suggestion
+}
+
+const handleSpeechResult = (transcript) => {
+  // For adults, append speech to existing text
+  if (localQuestion.value.trim()) {
+    localQuestion.value += ' ' + transcript
+  } else {
+    localQuestion.value = transcript
+  }
+  speechError.value = ''
+}
+
+const handleSpeechError = (error) => {
+  speechError.value = error
 }
 </script>
 
@@ -226,6 +293,46 @@ const selectSuggestion = (suggestion) => {
   position: relative;
 }
 
+.speech-error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--border-radius-lg);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  position: relative;
+}
+
+.speech-error-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.speech-error-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast);
+}
+
+.speech-error-dismiss:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
 .form-actions {
   display: flex;
   flex-direction: column;

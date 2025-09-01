@@ -1,40 +1,79 @@
 <template>
   <div class="kids-question-form animate-bounce-in">
     <div class="form-header">
-      <div class="form-mascot">
-        <div class="mascot-character">🦁</div>
-        <div class="mascot-speech">
-          <div class="speech-bubble">
-            {{ mascotMessage }}
+      <div class="mascot-section">
+        <div class="mascot">
+          <div class="mascot-character">🦁</div>
+          <div class="mascot-sparkles">
+            <span class="sparkle">✨</span>
+            <span class="sparkle">⭐</span>
+            <span class="sparkle">💫</span>
+          </div>
+        </div>
+        <div class="speech-bubble">
+          <div class="bubble-content">
+            {{ currentMessage }}
           </div>
         </div>
       </div>
+      
       <div class="form-title-section">
-        <h2 class="kids-form-title">What do you want to know?</h2>
-        <p class="kids-form-subtitle">Ask me anything about God, Jesus, or the Bible! 🌟</p>
+        <h2 class="kids-form-title">Ask Me Anything! 🌟</h2>
+        <p class="kids-form-subtitle">What do you want to know about God and the Bible?</p>
       </div>
     </div>
     
     <form @submit.prevent="handleSubmit" class="kids-form">
       <div class="question-input-wrapper">
         <label class="kids-label">
-          <span class="label-text">
-            <span class="label-emoji">💭</span>
-            Your Question
-          </span>
+          <span class="label-emoji">💭</span>
+          Your Question
         </label>
-        <textarea
-          v-model="localQuestion"
-          :placeholder="currentPlaceholder"
-          :disabled="loading"
-          :maxlength="300"
-          rows="4"
-          class="kids-textarea"
-          @focus="handleFocus"
-          @blur="handleBlur"
-        />
-        <div class="char-count">
-          <span :class="charCountClasses">{{ localQuestion.length }}/300</span>
+        
+        <div class="textarea-container">
+          <textarea
+            v-model="localQuestion"
+            :placeholder="currentPlaceholder"
+            :disabled="loading"
+            maxlength="300"
+            rows="4"
+            class="kids-textarea"
+            @input="handleInput"
+          />
+          
+          <!-- Speech Button -->
+          <button
+            v-if="speechSupported"
+            @click="toggleSpeech"
+            :disabled="loading"
+            type="button"
+            class="kids-speech-button"
+            :class="{ 'kids-speech-button--listening': isListening }"
+          >
+            <span class="speech-emoji">{{ isListening ? '🔴' : '🎤' }}</span>
+          </button>
+          
+          <!-- Character Count -->
+          <div class="kids-char-count">
+            <span :class="charCountClasses">{{ localQuestion.length }}/300</span>
+          </div>
+        </div>
+        
+        <!-- Speech Status -->
+        <div v-if="isListening" class="speech-status">
+          <div class="listening-animation">
+            <span class="music-note">🎵</span>
+            <span class="music-note">🎶</span>
+            <span class="music-note">🎵</span>
+          </div>
+          <span class="listening-text">I'm listening... speak now! 👂</span>
+        </div>
+        
+        <!-- Speech Error -->
+        <div v-if="speechError" class="kids-speech-error">
+          <span class="error-emoji">😅</span>
+          <span>{{ speechError }}</span>
+          <button @click="speechError = ''" class="error-dismiss">❌</button>
         </div>
       </div>
       
@@ -42,15 +81,16 @@
         <button
           type="submit"
           :disabled="loading || !localQuestion.trim()"
-          :class="['kids-submit-button', { 'kids-submit-button--loading': loading }]"
+          class="kids-submit-button"
+          :class="{ 'kids-submit-button--loading': loading }"
         >
-          <span v-if="!loading" class="button-content">
-            <span class="button-emoji">🚀</span>
-            Ask My Question!
+          <span v-if="!loading" class="submit-content">
+            <span class="submit-emoji">🚀</span>
+            Ask Question!
           </span>
           <span v-else class="loading-content">
-            <span class="loading-emoji">🔍</span>
-            Looking for answers...
+            <span class="loading-emoji">⏳</span>
+            Thinking...
           </span>
         </button>
         
@@ -61,24 +101,22 @@
           :disabled="loading"
           class="kids-clear-button"
         >
-          <span class="button-emoji">🗑️</span>
+          <span class="clear-emoji">🗑️</span>
           Clear
         </button>
       </div>
       
-      <!-- Loading animation -->
-      <div v-if="loading" class="kids-loading">
-        <div class="loading-characters">
-          <span class="loading-char loading-char--1">📖</span>
-          <span class="loading-char loading-char--2">✨</span>
-          <span class="loading-char loading-char--3">🔍</span>
+      <div v-if="loading" class="kids-loading-section">
+        <div class="loading-character">🔍</div>
+        <div class="loading-text">
+          <p class="loading-primary">Looking through the Bible for you! 📖</p>
+          <p class="loading-secondary">Finding the perfect answer... ✨</p>
         </div>
-        <p class="loading-text">Looking through the Bible for you...</p>
       </div>
     </form>
     
-    <!-- Fun question suggestions -->
-    <div v-if="!localQuestion.trim() && !loading" class="question-suggestions">
+    <!-- Fun Suggestions -->
+    <div v-if="!localQuestion.trim() && !loading" class="kids-suggestions">
       <h3 class="suggestions-title">
         <span class="title-emoji">💡</span>
         Try asking about these!
@@ -86,13 +124,13 @@
       <div class="suggestions-grid">
         <button
           v-for="suggestion in kidsSuggestions"
-          :key="suggestion.text"
-          @click="selectSuggestion(suggestion.text)"
-          class="suggestion-card"
+          :key="suggestion"
+          @click="selectSuggestion(suggestion)"
+          class="kids-suggestion-button"
           type="button"
         >
-          <div class="suggestion-emoji">{{ suggestion.emoji }}</div>
-          <div class="suggestion-text">{{ suggestion.text }}</div>
+          <span class="suggestion-emoji">{{ getRandomEmoji() }}</span>
+          {{ suggestion }}
         </button>
       </div>
     </div>
@@ -100,7 +138,8 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useSpeechToText } from '../../composables/useSpeechToText.js'
 
 const props = defineProps({
   question: {
@@ -116,64 +155,93 @@ const props = defineProps({
 const emit = defineEmits(['update:question', 'submit'])
 
 const localQuestion = ref(props.question)
-const isFocused = ref(false)
+const speechError = ref('')
+const currentMessageIndex = ref(0)
+const currentPlaceholderIndex = ref(0)
 
-const kidsSuggestions = [
-  { emoji: '❤️', text: 'How much does God love me?' },
-  { emoji: '🙏', text: 'How should I pray to God?' },
-  { emoji: '👶', text: 'Who is baby Jesus?' },
-  { emoji: '🌈', text: 'Why did God make rainbows?' },
-  { emoji: '😇', text: 'How can I be good like Jesus?' },
-  { emoji: '🐑', text: 'Why does Jesus call us sheep?' },
-  { emoji: '🌟', text: 'What happened when Jesus was born?' },
-  { emoji: '🕊️', text: 'What is the Holy Spirit?' }
+// Speech-to-text functionality
+const {
+  isListening,
+  isSupported: speechSupported,
+  transcript,
+  error: speechApiError,
+  startListening,
+  stopListening,
+  clearTranscript
+} = useSpeechToText()
+
+const mascotMessages = [
+  "Hi there! What would you like to know? 🌟",
+  "Ask me anything about God and the Bible! 📖",
+  "I love answering questions! What's yours? ❤️",
+  "Ready to learn something amazing? 🚀",
+  "God loves curious kids like you! 💕"
 ]
 
 const placeholders = [
-  "Who is God? 🤔",
-  "Why did Jesus come to Earth? 🌍",
-  "How can I pray? 🙏",
-  "What is heaven like? ☁️",
-  "Why should I be kind? 💝"
+  "How much does God love me? 💖",
+  "Who is baby Jesus? 👶",
+  "Why did God make animals? 🦁",
+  "What is prayer? 🙏",
+  "Who is my guardian angel? 👼",
+  "Why is the sky blue? 🌤️"
 ]
 
-const mascotMessages = [
-  "I'm here to help you learn about God! 🦁",
-  "Ask me anything about the Bible! 📖",
-  "God loves curious kids like you! ❤️",
-  "Let's discover God's amazing stories! ✨",
-  "I can't wait to share Bible truths with you! 🌟"
+const kidsSuggestions = [
+  "How much does God love me?",
+  "Who is baby Jesus?",
+  "Why did God make animals?",
+  "What is prayer?",
+  "Who is my guardian angel?",
+  "What happens in heaven?",
+  "Why should I be kind?",
+  "Who was Noah?"
 ]
 
+const suggestionEmojis = ['🌟', '💖', '🦋', '🌈', '✨', '🎈', '🌸', '🦁']
+
+const currentMessage = ref(mascotMessages[0])
 const currentPlaceholder = ref(placeholders[0])
-const mascotMessage = ref(mascotMessages[0])
 
-// Rotate placeholders and mascot messages
-let placeholderIndex = 0
-let mascotIndex = 0
+// Character count styling
+const charCountClasses = ref({
+  'char-count': true,
+  'char-count--warning': false,
+  'char-count--danger': false
+})
 
-const rotatePlaceholder = () => {
-  if (!isFocused.value && !localQuestion.value.trim()) {
-    placeholderIndex = (placeholderIndex + 1) % placeholders.length
-    currentPlaceholder.value = placeholders[placeholderIndex]
+// Rotate messages and placeholders
+let messageInterval, placeholderInterval
+
+onMounted(() => {
+  messageInterval = setInterval(() => {
+    currentMessageIndex.value = (currentMessageIndex.value + 1) % mascotMessages.length
+    currentMessage.value = mascotMessages[currentMessageIndex.value]
+  }, 4000)
+  
+  placeholderInterval = setInterval(() => {
+    currentPlaceholderIndex.value = (currentPlaceholderIndex.value + 1) % placeholders.length
+    currentPlaceholder.value = placeholders[currentPlaceholderIndex.value]
+  }, 3000)
+})
+
+onUnmounted(() => {
+  if (messageInterval) clearInterval(messageInterval)
+  if (placeholderInterval) clearInterval(placeholderInterval)
+})
+
+// Watch for speech transcript
+watch(transcript, (newTranscript) => {
+  if (newTranscript) {
+    localQuestion.value = newTranscript
+    clearTranscript()
   }
-}
+})
 
-const rotateMascotMessage = () => {
-  mascotIndex = (mascotIndex + 1) % mascotMessages.length
-  mascotMessage.value = mascotMessages[mascotIndex]
-}
-
-// Set up intervals for rotation
-setInterval(rotatePlaceholder, 3000)
-setInterval(rotateMascotMessage, 5000)
-
-const charCountClasses = computed(() => {
-  const percentage = (localQuestion.value.length / 300) * 100
-  return {
-    'char-count-text': true,
-    'char-count--warning': percentage >= 80 && percentage < 100,
-    'char-count--danger': percentage >= 100
+// Watch for speech errors
+watch(speechApiError, (error) => {
+  if (error) {
+    speechError.value = getFriendlyErrorMessage(error)
   }
 })
 
@@ -187,9 +255,25 @@ watch(localQuestion, (newVal) => {
   emit('update:question', newVal)
 })
 
+// Update character count styling
+watch(localQuestion, (newVal) => {
+  const length = newVal.length
+  const percentage = (length / 300) * 100
+  
+  charCountClasses.value = {
+    'char-count': true,
+    'char-count--warning': percentage >= 80 && percentage < 100,
+    'char-count--danger': percentage >= 100
+  }
+})
+
 const handleSubmit = () => {
   if (!localQuestion.value.trim() || props.loading) return
   emit('submit', localQuestion.value)
+}
+
+const handleInput = (event) => {
+  localQuestion.value = event.target.value
 }
 
 const clearQuestion = () => {
@@ -200,12 +284,31 @@ const selectSuggestion = (suggestion) => {
   localQuestion.value = suggestion
 }
 
-const handleFocus = () => {
-  isFocused.value = true
+const toggleSpeech = () => {
+  if (isListening.value) {
+    stopListening()
+  } else {
+    speechError.value = ''
+    startListening()
+  }
 }
 
-const handleBlur = () => {
-  isFocused.value = false
+const getRandomEmoji = () => {
+  return suggestionEmojis[Math.floor(Math.random() * suggestionEmojis.length)]
+}
+
+const getFriendlyErrorMessage = (error) => {
+  const errorLower = error.toLowerCase()
+  
+  if (errorLower.includes('not-allowed') || errorLower.includes('denied')) {
+    return "I need permission to use your microphone! Ask a grown-up to help! 🎤"
+  } else if (errorLower.includes('no-speech')) {
+    return "I didn't hear anything! Try speaking a little louder! 📢"
+  } else if (errorLower.includes('network')) {
+    return "Oops! Check your internet connection! 🌐"
+  } else {
+    return "Something went wrong, but that's okay! Try again! 😊"
+  }
 }
 </script>
 
@@ -235,96 +338,148 @@ const handleBlur = () => {
   animation: rainbow-border 3s linear infinite;
 }
 
-.form-header {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-2xl);
+@keyframes rainbow-border {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
-.form-mascot {
+.form-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+  flex-wrap: wrap;
+}
+
+.mascot-section {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
   flex-shrink: 0;
 }
 
+.mascot {
+  position: relative;
+}
+
 .mascot-character {
-  font-size: 3rem;
+  font-size: 4rem;
   animation: mascot-bounce 2s ease-in-out infinite;
   filter: drop-shadow(0 4px 8px rgba(255, 107, 157, 0.3));
 }
 
 @keyframes mascot-bounce {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-8px) scale(1.05); }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
 }
 
-.mascot-speech {
-  position: relative;
+.mascot-sparkles {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  font-size: 1.2rem;
+  animation: sparkle-twinkle 1.5s ease-in-out infinite;
+}
+
+.sparkle:nth-child(1) {
+  top: 0;
+  left: 0;
+  animation-delay: 0s;
+}
+
+.sparkle:nth-child(2) {
+  top: 0;
+  right: 0;
+  animation-delay: 0.5s;
+}
+
+.sparkle:nth-child(3) {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 1s;
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
 }
 
 .speech-bubble {
   background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
-  border: 2px solid #ff6b9d;
-  border-radius: 15px;
-  padding: var(--spacing-md);
-  font-size: var(--font-size-sm);
-  color: #2d3748;
-  font-weight: var(--font-weight-semibold);
-  max-width: 200px;
-  text-align: center;
+  border: 3px solid #ff6b9d;
+  border-radius: 20px;
+  padding: var(--spacing-lg);
   position: relative;
-  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.2);
+  max-width: 250px;
+  box-shadow: 0 8px 25px rgba(255, 107, 157, 0.2);
 }
 
 .speech-bubble::before {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: -12px;
+  left: 30px;
   width: 0;
   height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 10px solid #ff6b9d;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 15px solid #ff6b9d;
 }
 
 .speech-bubble::after {
   content: '';
   position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: -9px;
+  left: 33px;
   width: 0;
   height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid #fff;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 12px solid #fff;
+}
+
+.bubble-content {
+  font-size: var(--font-size-sm);
+  color: #2d3748;
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  line-height: var(--line-height-normal);
 }
 
 .form-title-section {
   flex: 1;
+  text-align: center;
 }
 
 .kids-form-title {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);
-  color: #2d3748;
   margin: 0 0 var(--spacing-sm) 0;
-  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #f8b500 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: title-glow 2s ease-in-out infinite;
+}
+
+@keyframes title-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
 }
 
 .kids-form-subtitle {
   font-size: var(--font-size-base);
   color: #2d3748;
   margin: 0;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
 }
 
 .kids-form {
@@ -334,38 +489,41 @@ const handleBlur = () => {
 }
 
 .question-input-wrapper {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
 .kids-label {
-  display: block;
-  margin-bottom: var(--spacing-md);
-}
-
-.label-text {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
   color: #2d3748;
 }
 
 .label-emoji {
-  font-size: 1.2rem;
-  animation: emoji-pulse 2s ease-in-out infinite;
+  font-size: 1.3rem;
+  animation: emoji-wiggle 2s ease-in-out infinite;
 }
 
-@keyframes emoji-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+@keyframes emoji-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+.textarea-container {
+  position: relative;
 }
 
 .kids-textarea {
   width: 100%;
   padding: var(--spacing-lg);
+  padding-right: 80px;
   font-size: var(--font-size-lg);
-  font-family: inherit;
+  font-family: 'Comic Sans MS', cursive, system-ui;
   line-height: var(--line-height-relaxed);
   border: 3px solid #ff6b9d;
   border-radius: 20px;
@@ -374,7 +532,6 @@ const handleBlur = () => {
   resize: vertical;
   transition: all var(--transition-normal);
   font-weight: var(--font-weight-semibold);
-  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.1);
 }
 
 .kids-textarea::placeholder {
@@ -385,26 +542,67 @@ const handleBlur = () => {
 .kids-textarea:focus {
   outline: none;
   border-color: #c44569;
-  box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.2), 0 8px 25px rgba(255, 107, 157, 0.2);
+  box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.2);
   background: #fff;
-  transform: translateY(-2px);
 }
 
 .kids-textarea:disabled {
-  background: #f7fafc;
-  color: #a0aec0;
+  opacity: 0.6;
   cursor: not-allowed;
-  opacity: 0.7;
 }
 
-.char-count {
+.kids-speech-button {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+}
+
+.kids-speech-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+}
+
+.kids-speech-button--listening {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+  animation: pulse-recording 1s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.kids-speech-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.speech-emoji {
+  font-size: 1.5rem;
+}
+
+.kids-char-count {
   position: absolute;
   bottom: var(--spacing-sm);
   right: var(--spacing-sm);
   font-size: var(--font-size-xs);
 }
 
-.char-count-text {
+.char-count {
   background: rgba(255, 255, 255, 0.9);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: 15px;
@@ -415,74 +613,122 @@ const handleBlur = () => {
 }
 
 .char-count--warning {
-  border-color: #f8b500;
-  color: #d69e2e;
-  background: rgba(248, 181, 0, 0.1);
+  color: #ed8936;
+  border-color: #ed8936;
+  background: rgba(237, 137, 54, 0.1);
 }
 
 .char-count--danger {
-  border-color: #e53e3e;
   color: #e53e3e;
+  border-color: #e53e3e;
   background: rgba(229, 62, 62, 0.1);
+}
+
+.speech-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(49, 130, 206, 0.1) 100%);
+  border: 2px solid rgba(66, 153, 225, 0.3);
+  border-radius: 20px;
+  color: #2d3748;
+  font-weight: var(--font-weight-bold);
+}
+
+.listening-animation {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.music-note {
+  font-size: 1.2rem;
+  animation: music-bounce 0.6s ease-in-out infinite;
+}
+
+.music-note:nth-child(1) { animation-delay: 0s; }
+.music-note:nth-child(2) { animation-delay: 0.2s; }
+.music-note:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes music-bounce {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.listening-text {
+  font-size: var(--font-size-base);
+}
+
+.kids-speech-error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, rgba(229, 62, 62, 0.1) 0%, rgba(197, 48, 48, 0.1) 100%);
+  border: 2px solid rgba(229, 62, 62, 0.3);
+  border-radius: 20px;
+  color: #2d3748;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+}
+
+.error-emoji {
+  font-size: 1.2rem;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: auto;
 }
 
 .form-actions {
   display: flex;
-  gap: var(--spacing-lg);
-  align-items: center;
+  gap: var(--spacing-md);
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .kids-submit-button {
   flex: 1;
-  max-width: 300px;
-  padding: var(--spacing-lg) var(--spacing-2xl);
+  min-width: 200px;
+  padding: var(--spacing-lg) var(--spacing-xl);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
-  color: white;
   border: none;
   border-radius: 25px;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
   cursor: pointer;
   transition: all var(--transition-normal);
-  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
-  font-family: inherit;
-  position: relative;
-  overflow: hidden;
-}
-
-.kids-submit-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
+  font-family: 'Comic Sans MS', cursive, system-ui;
+  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.3);
 }
 
 .kids-submit-button:hover:not(:disabled) {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 10px 30px rgba(255, 107, 157, 0.5);
-}
-
-.kids-submit-button:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.kids-submit-button:active:not(:disabled) {
-  transform: translateY(-1px) scale(0.98);
+  background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
 }
 
 .kids-submit-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-  box-shadow: 0 2px 8px rgba(255, 107, 157, 0.2);
 }
 
-.button-content,
+.kids-submit-button--loading {
+  animation: button-pulse 1s ease-in-out infinite;
+}
+
+@keyframes button-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.submit-content,
 .loading-content {
   display: flex;
   align-items: center;
@@ -490,18 +736,56 @@ const handleBlur = () => {
   gap: var(--spacing-sm);
 }
 
-.button-emoji {
+.submit-emoji,
+.loading-emoji {
   font-size: 1.3rem;
-  animation: button-emoji-bounce 2s ease-in-out infinite;
+  animation: emoji-bounce 2s ease-in-out infinite;
 }
 
-@keyframes button-emoji-bounce {
+@keyframes emoji-bounce {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.1); }
 }
 
-.loading-emoji {
-  font-size: 1.3rem;
+.kids-clear-button {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+  color: #4a5568;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-family: 'Comic Sans MS', cursive, system-ui;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-shadow: 0 4px 15px rgba(160, 174, 192, 0.3);
+}
+
+.kids-clear-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+  transform: translateY(-2px);
+}
+
+.clear-emoji {
+  font-size: 1.1rem;
+}
+
+.kids-loading-section {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
+  border: 3px solid rgba(72, 187, 120, 0.3);
+  border-radius: 25px;
+  text-align: center;
+}
+
+.loading-character {
+  font-size: 3rem;
   animation: loading-spin 2s linear infinite;
 }
 
@@ -510,80 +794,39 @@ const handleBlur = () => {
   100% { transform: rotate(360deg); }
 }
 
-.kids-clear-button {
-  padding: var(--spacing-md) var(--spacing-lg);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
-  color: #4a5568;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.kids-clear-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(160, 174, 192, 0.3);
-}
-
-.kids-loading {
-  text-align: center;
-  padding: var(--spacing-xl);
-  background: linear-gradient(135deg, rgba(255, 107, 157, 0.1) 0%, rgba(196, 69, 105, 0.1) 100%);
-  border-radius: 20px;
-  border: 2px solid rgba(255, 107, 157, 0.2);
-}
-
-.loading-characters {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-}
-
-.loading-char {
-  font-size: 2rem;
-  animation: loading-bounce 1.5s ease-in-out infinite;
-}
-
-.loading-char--1 { animation-delay: 0s; }
-.loading-char--2 { animation-delay: 0.3s; }
-.loading-char--3 { animation-delay: 0.6s; }
-
-@keyframes loading-bounce {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
 .loading-text {
-  font-size: var(--font-size-base);
-  color: #2d3748;
-  font-weight: var(--font-weight-bold);
-  margin: 0;
+  flex: 1;
 }
 
-.question-suggestions {
+.loading-primary {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: #2d3748;
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.loading-secondary {
+  font-size: var(--font-size-base);
+  color: #4a5568;
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.kids-suggestions {
   margin-top: var(--spacing-2xl);
   padding-top: var(--spacing-xl);
   border-top: 3px dashed rgba(255, 107, 157, 0.3);
 }
 
 .suggestions-title {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  color: #2d3748;
-  margin: 0 0 var(--spacing-lg) 0;
-  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: #2d3748;
+  margin: 0 0 var(--spacing-lg) 0;
 }
 
 .title-emoji {
@@ -602,30 +845,32 @@ const handleBlur = () => {
   gap: var(--spacing-md);
 }
 
-.suggestion-card {
+.kids-suggestion-button {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-lg);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
   border: 2px solid rgba(255, 107, 157, 0.3);
   border-radius: 20px;
+  color: #2d3748;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
   cursor: pointer;
   transition: all var(--transition-normal);
-  font-family: inherit;
-  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.1);
+  text-align: left;
+  font-family: 'Comic Sans MS', cursive, system-ui;
 }
 
-.suggestion-card:hover {
+.kids-suggestion-button:hover {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
   border-color: #ff6b9d;
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(255, 107, 157, 0.3);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.3);
 }
 
 .suggestion-emoji {
-  font-size: 2rem;
+  font-size: 1.3rem;
   animation: suggestion-wiggle 3s ease-in-out infinite;
 }
 
@@ -633,14 +878,6 @@ const handleBlur = () => {
   0%, 100% { transform: rotate(0deg); }
   25% { transform: rotate(3deg); }
   75% { transform: rotate(-3deg); }
-}
-
-.suggestion-text {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-  color: #2d3748;
-  text-align: center;
-  line-height: var(--line-height-tight);
 }
 
 /* Responsive Design */
@@ -655,21 +892,34 @@ const handleBlur = () => {
     gap: var(--spacing-lg);
   }
   
+  .mascot-section {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .speech-bubble {
+    max-width: 200px;
+  }
+  
   .kids-form-title {
     font-size: var(--font-size-xl);
   }
   
   .form-actions {
     flex-direction: column;
-    gap: var(--spacing-md);
   }
   
   .kids-submit-button {
-    max-width: none;
+    min-width: auto;
+  }
+  
+  .kids-loading-section {
+    flex-direction: column;
+    text-align: center;
   }
   
   .suggestions-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
@@ -679,19 +929,15 @@ const handleBlur = () => {
   }
   
   .mascot-character {
-    font-size: 2.5rem;
+    font-size: 3rem;
   }
   
-  .kids-form-title {
-    font-size: var(--font-size-lg);
+  .speech-bubble {
+    max-width: 180px;
   }
   
-  .kids-textarea {
-    font-size: var(--font-size-base);
-  }
-  
-  .suggestions-grid {
-    grid-template-columns: 1fr;
+  .bubble-content {
+    font-size: var(--font-size-xs);
   }
 }
 </style>
