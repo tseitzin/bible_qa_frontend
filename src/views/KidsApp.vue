@@ -107,6 +107,8 @@
           <KidsAnswerDisplay 
             :answer="answer" 
             :question="question"
+            :image="image"
+            :image-loading="imageLoading"
             class="kids-answer-section"
             @answer-saved="handleAnswerSaved"
           />
@@ -151,17 +153,19 @@ import KidsQuestionForm from '../components/kids/KidsQuestionForm.vue'
 import KidsAnswerDisplay from '../components/kids/KidsAnswerDisplay.vue'
 import KidsErrorMessage from '../components/kids/KidsErrorMessage.vue'
 import KidsSavedAnswers from '../components/kids/KidsSavedAnswers.vue'
-import { useBibleQA } from '../composables/useBibleQA.js'
+import { useKidsBibleQA } from '../composables/useKidsBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 
 const {
   question,
   answer,
+  image,
   loading,
+  imageLoading,
   error,
   askQuestion,
   clearError
-} = useBibleQA()
+} = useKidsBibleQA()
 
 // Tab management
 const activeTab = ref('ask')

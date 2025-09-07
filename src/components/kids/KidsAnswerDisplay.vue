@@ -22,6 +22,26 @@
       
       <div class="answer-content">
         <div class="answer-text-wrapper">
+          <!-- Biblical Image Section -->
+          <div v-if="image || imageLoading" class="answer-image-section">
+            <div v-if="imageLoading" class="image-loading">
+              <div class="image-loading-spinner">🎨</div>
+              <p class="image-loading-text">Creating a special picture for you...</p>
+            </div>
+            <div v-else-if="image" class="answer-image-wrapper">
+              <img 
+                :src="image" 
+                :alt="`Biblical illustration for: ${question}`"
+                class="answer-image"
+                @error="handleImageError"
+              />
+              <div class="image-caption">
+                <span class="caption-emoji">🎨</span>
+                A special picture just for your question!
+              </div>
+            </div>
+          </div>
+          
           <div class="answer-text">{{ answer }}</div>
           
           <!-- Fun reading info -->
@@ -111,6 +131,14 @@ const props = defineProps({
   question: {
     type: String,
     default: ''
+  },
+  image: {
+    type: String,
+    default: ''
+  },
+  imageLoading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -216,6 +244,11 @@ const saveAnswer = async () => {
 const provideFeedback = (type) => {
   console.log(`Kids feedback: ${type}`)
   // Could add fun animations or sounds here
+}
+
+const handleImageError = () => {
+  console.warn('Failed to load generated image')
+  // Could emit an event to parent to handle image error
 }
 </script>
 
@@ -358,6 +391,82 @@ const provideFeedback = (type) => {
 
 .answer-text-wrapper {
   margin-bottom: var(--spacing-xl);
+}
+
+.answer-image-section {
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.image-loading {
+  padding: var(--spacing-2xl);
+  background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
+  border: 3px dashed rgba(72, 187, 120, 0.3);
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.image-loading-spinner {
+  font-size: 3rem;
+  animation: image-loading-spin 2s linear infinite;
+}
+
+@keyframes image-loading-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.image-loading-text {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: #2d3748;
+  margin: 0;
+}
+
+.answer-image-wrapper {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.8) 100%);
+  border: 3px solid rgba(255, 107, 157, 0.3);
+  border-radius: 25px;
+  padding: var(--spacing-lg);
+  box-shadow: 0 10px 30px rgba(255, 107, 157, 0.2);
+}
+
+.answer-image {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-normal);
+}
+
+.answer-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+}
+
+.image-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: #2d3748;
+}
+
+.caption-emoji {
+  font-size: 1.2rem;
+  animation: caption-glow 2s ease-in-out infinite;
+}
+
+@keyframes caption-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
 }
 
 .answer-text {
@@ -643,6 +752,18 @@ const provideFeedback = (type) => {
 @media (max-width: 480px) {
   .answer-text {
     font-size: var(--font-size-base);
+  }
+  
+  .answer-image {
+    max-width: 300px;
+  }
+  
+  .image-loading {
+    padding: var(--spacing-xl);
+  }
+  
+  .image-loading-spinner {
+    font-size: 2.5rem;
   }
   
   .character-icon {
