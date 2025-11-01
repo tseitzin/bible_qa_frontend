@@ -1,0 +1,9 @@
+node_modules/
+.dist/
+.vite/
+*.log
+.env
+.git/
+.vscode/
+.idea/
+Dockerfile*
