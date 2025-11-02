@@ -136,7 +136,20 @@
 
         <!-- Saved Answers Tab -->
         <div v-else-if="activeTab === 'saved'" class="saved-content animate-fade-in">
+          <!-- Show login prompt for guest users -->
+          <div v-if="!currentUser" class="guest-message">
+            <div class="guest-message-icon">🔒</div>
+            <h3>Sign in to Save Answers</h3>
+            <p>Create an account or log in to save your favorite Bible Q&A answers and access them anytime.</p>
+            <div class="guest-actions">
+              <router-link to="/login" class="btn-primary">Log In</router-link>
+              <router-link to="/register" class="btn-secondary">Create Account</router-link>
+            </div>
+          </div>
+          
+          <!-- Show saved answers for authenticated users -->
           <SavedAnswers 
+            v-else
             ref="savedAnswersRef" 
             @update="handleSavedAnswersUpdated"
           />
@@ -212,6 +225,12 @@ const currentAnswer = ref('')
 const savedCount = ref(0)
 
 const updateSavedCount = async () => {
+  // Only fetch saved count if user is authenticated
+  if (!currentUser.value) {
+    savedCount.value = 0
+    return
+  }
+  
   try {
     const answers = await savedAnswersService.getAll()
     savedCount.value = answers.length
@@ -250,9 +269,15 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-// Load saved count on mount
+// Load saved count on mount and check for tab query parameter
 onMounted(async () => {
   await updateSavedCount()
+  
+  // Check if we should open saved tab from query parameter
+  const route = router.currentRoute.value
+  if (route.query.tab === 'saved') {
+    activeTab.value = 'saved'
+  }
 })
 </script>
 
@@ -696,6 +721,77 @@ onMounted(async () => {
 
 .saved-content {
   flex: 1;
+}
+
+.guest-message {
+  text-align: center;
+  padding: var(--spacing-3xl);
+  background: var(--gradient-card);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-2xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.guest-message-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+}
+
+.guest-message h3 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.guest-message p {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-xl);
+}
+
+.guest-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  transition: all var(--transition-normal);
+  display: inline-block;
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-primary);
+  color: white;
+  transform: translateY(-2px);
 }
 
 .question-section,

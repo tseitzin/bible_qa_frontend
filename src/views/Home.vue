@@ -38,8 +38,10 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
+const router = useRouter()
 const { currentUser, logout } = useAuth()
 
 const handleLogout = () => {
@@ -47,7 +49,8 @@ const handleLogout = () => {
 }
 
 const showSavedAnswers = () => {
-  alert('Saved answers feature coming soon! Access your saved answers from the main Bible Q&A page.')
+  // Navigate to main app with saved tab active
+  router.push({ path: '/', query: { tab: 'saved' } })
 }
 </script>
 

@@ -23,9 +23,14 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - logout user
-      authService.logout()
-      window.location.href = '/login'
+      // Only redirect to login if user had a token (was authenticated)
+      // This prevents guest users from being redirected when accessing auth-only features
+      const hadToken = authService.isAuthenticated()
+      if (hadToken) {
+        // Token expired or invalid - logout user
+        authService.logout()
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
