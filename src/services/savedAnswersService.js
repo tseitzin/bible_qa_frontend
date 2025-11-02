@@ -29,7 +29,7 @@ const service = {
       
       return {
         success: true,
-        id: response.data.id,
+        id: response?.data?.id,
         message: 'Answer saved successfully!'
       }
     } catch (error) {
@@ -58,7 +58,7 @@ const service = {
         params
       })
       
-      return response.data.saved_answers || []
+      return response?.data?.saved_answers || []
     } catch (error) {
       console.error('Failed to load saved answers:', error)
       return []
@@ -176,8 +176,13 @@ const service = {
   // Placeholder methods for backward compatibility
   updateTags() { console.warn('updateTags not yet implemented for API') },
   importData() { console.warn('importData not yet implemented for API') },
-  getStorageInfo() { 
-    return { used: 0, total: 100, remaining: 100, percentage: 0 }
+  async getStorageInfo() { 
+    const saved = await this.getAll()
+    const used = saved.length
+    const total = 100
+    const remaining = total - used
+    const percentage = (used / total) * 100
+    return { used, total, remaining, percentage }
   },
   clearAll() { console.warn('clearAll not available for API - delete individually') }
 }
