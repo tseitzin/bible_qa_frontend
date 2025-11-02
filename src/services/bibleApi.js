@@ -1,6 +1,7 @@
 import axios from 'axios'
+import authService from './authService'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://your-bible-qa-api-81c2e54b07f7.herokuapp.com'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,10 +10,13 @@ const apiClient = axios.create({
   },
 })
 
-// Request interceptor for adding auth tokens later
+// Request interceptor for adding auth tokens
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token here when implemented
+    const token = authService.getToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {

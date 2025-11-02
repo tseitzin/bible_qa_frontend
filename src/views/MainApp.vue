@@ -12,6 +12,11 @@
         <div class="nav-links">
           <router-link to="/" class="nav-link nav-link--active">Adults</router-link>
           <router-link to="/kids" class="nav-link">Kids</router-link>
+          <div v-if="currentUser" class="user-menu">
+            <span class="user-name">{{ currentUser.username }}</span>
+            <button @click="handleLogout" class="logout-button">Logout</button>
+          </div>
+          <router-link v-else to="/login" class="nav-link">Login</router-link>
         </div>
       </div>
     </nav>
@@ -117,6 +122,7 @@
           <AnswerDisplay 
             :answer="answer" 
             :question="question"
+            :question-id="questionId"
             class="answer-section"
             @answer-saved="handleAnswerSaved"
           />
@@ -172,16 +178,22 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import QuestionForm from '../components/QuestionForm.vue'
 import AnswerDisplay from '../components/AnswerDisplay.vue'
 import ErrorMessage from '../components/ErrorMessage.vue'
 import SavedAnswers from '../components/SavedAnswers.vue'
 import { useBibleQA } from '../composables/useBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
+import { useAuth } from '../composables/useAuth.js'
+
+const router = useRouter()
+const { currentUser, logout } = useAuth()
 
 const {
   question,
   answer,
+  questionId,
   loading,
   error,
   askQuestion,
@@ -199,9 +211,10 @@ const currentAnswer = ref('')
 // Saved answers count for badge
 const savedCount = ref(0)
 
-const updateSavedCount = () => {
+const updateSavedCount = async () => {
   try {
-    savedCount.value = savedAnswersService.getAll().length
+    const answers = await savedAnswersService.getAll()
+    savedCount.value = answers.length
   } catch (error) {
     console.error('Error updating saved count:', error)
     savedCount.value = 0
@@ -220,8 +233,8 @@ const handleQuestionSubmit = (questionText, answerText) => {
   }
 }
 
-const handleAnswerSaved = () => {
-  updateSavedCount()
+const handleAnswerSaved = async () => {
+  await updateSavedCount()
   // Refresh the saved answers component if it exists
   if (savedAnswersRef.value) {
     savedAnswersRef.value.refresh()
@@ -232,9 +245,14 @@ const handleSavedAnswersUpdated = () => {
   updateSavedCount()
 }
 
+const handleLogout = () => {
+  logout()
+  router.push('/login')
+}
+
 // Load saved count on mount
-onMounted(() => {
-  updateSavedCount()
+onMounted(async () => {
+  await updateSavedCount()
 })
 </script>
 
@@ -276,6 +294,7 @@ onMounted(() => {
 
 .nav-links {
   display: flex;
+  align-items: center;
   gap: var(--spacing-lg);
 }
 
@@ -305,6 +324,40 @@ onMounted(() => {
   color: var(--color-text-inverse);
   border-color: var(--color-primary);
   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.logout-button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.logout-button:hover {
+  background: var(--color-danger-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .app {

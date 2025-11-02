@@ -121,10 +121,14 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseButton from './ui/BaseButton.vue'
 import { savedAnswersService } from '../services/savedAnswersService.js'
+import { useAuth } from '../composables/useAuth.js'
 
 const emit = defineEmits(['answerSaved'])
+const router = useRouter()
+const { currentUser } = useAuth()
 
 const props = defineProps({
   answer: {
@@ -134,6 +138,10 @@ const props = defineProps({
   question: {
     type: String,
     default: ''
+  },
+  questionId: {
+    type: Number,
+    default: null
   }
 })
 
@@ -191,16 +199,32 @@ const shareAnswer = async () => {
 const saveAnswer = async () => {
   if (saving.value) return // Prevent multiple saves
   
+  // Check if user is logged in
+  if (!currentUser.value) {
+    if (confirm('You need to be logged in to save answers. Would you like to create an account or log in?')) {
+      router.push('/login')
+    }
+    return
+  }
+  
+  if (!props.questionId) {
+    console.error('Cannot save: questionId is missing')
+    saveSuccess.value = false
+    saveMessage.value = 'Cannot save answer without a question ID'
+    setTimeout(() => {
+      saveSuccess.value = null
+      saveMessage.value = ''
+    }, 3000)
+    return
+  }
+  
   try {
     saving.value = true
     
     // Small delay to allow tests to see the saving state
     await new Promise(resolve => setTimeout(resolve, 0))
     
-    // Get the current question from the parent or context
-    const question = props.question || ''
-    
-    const result = savedAnswersService.save(question, props.answer)
+    const result = await savedAnswersService.save(props.questionId)
     
     if (result.success) {
       // Show success feedback

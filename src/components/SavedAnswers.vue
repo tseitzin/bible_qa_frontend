@@ -217,14 +217,16 @@ const expandedCards = ref(new Set())
 const showExportModal = ref(false)
 
 // Computed properties
-const availableTags = computed(() => {
+const availableTags = ref([])
+
+const loadTags = async () => {
   try {
-    return savedAnswersService.getAllTags() || []
+    availableTags.value = await savedAnswersService.getAllTags() || []
   } catch (error) {
     console.error('Error getting tags:', error)
-    return []
+    availableTags.value = []
   }
-})
+}
 
 const filteredAnswers = computed(() => {
   // Start with all saved answers
@@ -232,12 +234,11 @@ const filteredAnswers = computed(() => {
 
   // Apply search filter if there's a search query
   if (searchQuery.value && searchQuery.value.trim()) {
-    try {
-      filtered = savedAnswersService.search(searchQuery.value.trim())
-    } catch (error) {
-      console.error('Search error:', error)
-      filtered = []
-    }
+    const query = searchQuery.value.trim().toLowerCase()
+    filtered = filtered.filter(answer => 
+      answer.question?.toLowerCase().includes(query) ||
+      answer.answer?.toLowerCase().includes(query)
+    )
   }
 
   // Apply tag filter if a tag is selected
@@ -251,24 +252,33 @@ const filteredAnswers = computed(() => {
 })
 
 const stats = computed(() => {
-  try {
-    return savedAnswersService.getStats() || { totalWords: 0, totalTags: 0 }
-  } catch (error) {
-    console.error('Error getting stats:', error)
-    return { totalWords: 0, totalTags: 0 }
+  const totalWords = savedAnswers.value.reduce((sum, item) => {
+    const wordCount = item.answer ? item.answer.split(/\s+/).filter(w => w.length > 0).length : 0
+    return sum + wordCount
+  }, 0)
+  
+  return {
+    totalWords,
+    totalTags: availableTags.value.length
   }
 })
 
 // Methods
-const loadSavedAnswers = () => {
-  savedAnswers.value = savedAnswersService.getAll()
+const loadSavedAnswers = async () => {
+  try {
+    savedAnswers.value = await savedAnswersService.getAll()
+  } catch (error) {
+    console.error('Failed to load saved answers:', error)
+    savedAnswers.value = []
+  }
 }
 
-const deleteAnswer = (id) => {
+const deleteAnswer = async (id) => {
   if (confirm('Are you sure you want to delete this saved answer?')) {
-    const result = savedAnswersService.delete(id)
+    const result = await savedAnswersService.delete(id)
     if (result.success) {
-      loadSavedAnswers()
+      await loadSavedAnswers()
+      await loadTags()
       expandedCards.value.delete(id)
       emit('update')
     } else {
@@ -295,9 +305,9 @@ const copyAnswer = async (answer) => {
   }
 }
 
-const exportData = () => {
+const exportData = async () => {
   try {
-    const exportString = savedAnswersService.exportData()
+    const exportString = await savedAnswersService.exportData()
     const blob = new Blob([exportString], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     
@@ -327,8 +337,9 @@ const formatDate = (timestamp) => {
 }
 
 // Lifecycle
-onMounted(() => {
-  loadSavedAnswers()
+onMounted(async () => {
+  await loadSavedAnswers()
+  await loadTags()
 })
 
 // Watch for debugging (can be removed later)

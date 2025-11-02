@@ -4,6 +4,7 @@ import { bibleApi } from '../services/bibleApi.js'
 export function useBibleQA() {
   const question = ref('')
   const answer = ref('')
+  const questionId = ref(null)
   const loading = ref(false)
   const error = ref('')
 
@@ -20,6 +21,7 @@ export function useBibleQA() {
     try {
       const response = await bibleApi.askQuestion(questionText)
       answer.value = response.answer
+      questionId.value = response.question_id
     } catch (err) {
       error.value = err.message
       console.error('Bible Q&A Error:', err)
@@ -31,6 +33,7 @@ export function useBibleQA() {
   const clearAll = () => {
     question.value = ''
     answer.value = ''
+    questionId.value = null
     error.value = ''
     loading.value = false
   }
@@ -43,6 +46,7 @@ export function useBibleQA() {
     // State
     question,
     answer,
+    questionId,
     loading,
     error,
     
