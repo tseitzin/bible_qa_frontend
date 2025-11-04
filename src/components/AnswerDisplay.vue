@@ -95,6 +95,39 @@
         </div>
       </div>
       
+      <!-- Follow-up Question Section -->
+      <div class="followup-section">
+        <div class="followup-header">
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+          </svg>
+          <span class="followup-title">Want to know more?</span>
+        </div>
+        <p class="followup-description">Ask a follow-up question to dive deeper into this topic</p>
+        <div class="followup-input-group">
+          <input
+            v-model="followUpQuestion"
+            type="text"
+            class="followup-input"
+            placeholder="e.g., Tell me more about King David's reign..."
+            @keyup.enter="submitFollowUp"
+            :disabled="loading"
+          />
+          <BaseButton
+            @click="submitFollowUp"
+            :disabled="!followUpQuestion.trim() || loading"
+            variant="primary"
+            class="followup-button"
+          >
+            <svg v-if="!loading" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" />
+            </svg>
+            <span v-if="loading">Asking...</span>
+            <span v-else>Ask Follow-up</span>
+          </BaseButton>
+        </div>
+      </div>
+
       <!-- Feedback section -->
       <div class="feedback-section">
         <div class="feedback-header">
@@ -120,13 +153,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from './ui/BaseButton.vue'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { useAuth } from '../composables/useAuth.js'
 
-const emit = defineEmits(['answerSaved'])
+const emit = defineEmits(['answerSaved', 'followUpQuestion'])
 const router = useRouter()
 const { currentUser } = useAuth()
 
@@ -142,6 +175,10 @@ const props = defineProps({
   questionId: {
     type: Number,
     default: null
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -149,6 +186,8 @@ const copySuccess = ref(false)
 const saveSuccess = ref(null)
 const saveMessage = ref('')
 const saving = ref(false)
+const followUpQuestion = ref('')
+const answerElement = ref(null)
 
 const formattedTime = computed(() => {
   return new Date().toLocaleTimeString('en-US', { 
@@ -265,6 +304,27 @@ const provideFeedback = (type) => {
   // Placeholder for feedback functionality
   console.log(`Feedback provided: ${type}`)
 }
+
+const submitFollowUp = () => {
+  if (!followUpQuestion.value.trim() || props.loading) return
+  
+  emit('followUpQuestion', followUpQuestion.value)
+  followUpQuestion.value = ''
+}
+
+// Auto-scroll to answer when it changes
+watch(() => props.answer, async (newAnswer) => {
+  if (newAnswer) {
+    await nextTick()
+    // Small delay to ensure animations have started
+    setTimeout(() => {
+      const element = document.querySelector('.answer-display')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
+  }
+})
 </script>
 
 <style scoped>
@@ -442,6 +502,77 @@ const provideFeedback = (type) => {
 
 .word-count {
   font-weight: var(--font-weight-medium);
+}
+
+.followup-section {
+  padding: var(--spacing-xl);
+  background: rgba(37, 99, 235, 0.05);
+  border-top: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+.followup-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.followup-header svg {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary);
+}
+
+.followup-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.followup-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+}
+
+.followup-input-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: stretch;
+}
+
+.followup-input {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 2px solid rgba(37, 99, 235, 0.2);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-normal);
+  background: white;
+}
+
+.followup-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.followup-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.followup-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  white-space: nowrap;
+}
+
+.followup-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .feedback-section {

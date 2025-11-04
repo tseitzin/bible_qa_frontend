@@ -116,20 +116,34 @@
 
         <transition name="card-expand">
           <div v-if="expandedCards.has(savedAnswer.id)" class="answer-card-content">
-            <div class="answer-text">{{ savedAnswer.answer }}</div>
+            <!-- Show conversation thread if it exists -->
+            <ConversationThread 
+              v-if="savedAnswer.conversation_thread && savedAnswer.conversation_thread.length > 1"
+              :thread="savedAnswer.conversation_thread"
+            />
+            
+            <!-- Show single answer if no thread -->
+            <div v-else class="answer-text">{{ savedAnswer.answer }}</div>
             
             <div class="answer-meta">
               <div class="meta-item">
                 <svg viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
                 </svg>
-                <span>{{ formatDate(savedAnswer.timestamp) }}</span>
+                <span>{{ formatDate(savedAnswer.saved_at) }}</span>
               </div>
               <div class="meta-item">
                 <svg viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
                 </svg>
                 <span>{{ savedAnswer.wordCount }} words</span>
+              </div>
+              <div v-if="savedAnswer.conversation_thread && savedAnswer.conversation_thread.length > 1" class="meta-item">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/>
+                  <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/>
+                </svg>
+                <span>{{ savedAnswer.conversation_thread.length }} messages</span>
               </div>
             </div>
 
@@ -145,7 +159,7 @@
 
             <div class="answer-card-actions">
               <BaseButton
-                @click="copyAnswer(savedAnswer.answer)"
+                @click="copyAnswer(savedAnswer)"
                 variant="secondary"
                 size="sm"
               >
@@ -153,7 +167,7 @@
                   <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"/>
                   <path d="M3 5a2 2 0 012-2 3 3 0 003 3h6a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L14.586 13H19v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11.586V13a1 1 0 11-2 0v-1.586l.293.293a1 1 0 001.414-1.414z"/>
                 </svg>
-                Copy Answer
+                Copy Conversation
               </BaseButton>
             </div>
           </div>
@@ -205,6 +219,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import BaseButton from './ui/BaseButton.vue'
+import ConversationThread from './ConversationThread.vue'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 
 const emit = defineEmits(['update'])
@@ -296,9 +311,22 @@ const toggleExpanded = (id) => {
   }
 }
 
-const copyAnswer = async (answer) => {
+const copyAnswer = async (savedAnswer) => {
   try {
-    await navigator.clipboard.writeText(answer)
+    let textToCopy = ''
+    
+    // If there's a conversation thread, format it nicely
+    if (savedAnswer.conversation_thread && savedAnswer.conversation_thread.length > 1) {
+      textToCopy = savedAnswer.conversation_thread.map((item, index) => {
+        const label = index === 0 ? 'Question' : `Follow-up ${index}`
+        return `${label}: ${item.question}\n\nAnswer: ${item.answer}\n\n${'='.repeat(60)}`
+      }).join('\n\n')
+    } else {
+      // Single Q&A
+      textToCopy = `Question: ${savedAnswer.question}\n\nAnswer: ${savedAnswer.answer}`
+    }
+    
+    await navigator.clipboard.writeText(textToCopy)
     // You could add a toast notification here
   } catch (err) {
     console.error('Failed to copy text: ', err)

@@ -123,8 +123,10 @@
             :answer="answer" 
             :question="question"
             :question-id="questionId"
+            :loading="loading"
             class="answer-section"
             @answer-saved="handleAnswerSaved"
+            @follow-up-question="handleFollowUpQuestion"
           />
           
           <ErrorMessage 
@@ -210,6 +212,7 @@ const {
   loading,
   error,
   askQuestion,
+  askFollowUpQuestion,
   clearError
 } = useBibleQA()
 
@@ -262,6 +265,10 @@ const handleAnswerSaved = async () => {
 
 const handleSavedAnswersUpdated = () => {
   updateSavedCount()
+}
+
+const handleFollowUpQuestion = async (followUpText) => {
+  await askFollowUpQuestion(followUpText)
 }
 
 const handleLogout = () => {

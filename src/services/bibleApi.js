@@ -53,6 +53,25 @@ export const bibleApi = {
     } catch (error) {
       throw error
     }
+  },
+
+  async askFollowUpQuestion({ question, conversation_history = [], parent_question_id = null, userId = 1 }) {
+    if (!question?.trim()) {
+      throw new Error('Question cannot be empty')
+    }
+
+    try {
+      const response = await apiClient.post('/api/ask/followup', {
+        question: question.trim(),
+        conversation_history,
+        parent_question_id,
+        user_id: userId,
+      })
+      
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
 

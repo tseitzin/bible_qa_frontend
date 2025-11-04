@@ -5,8 +5,10 @@ export function useBibleQA() {
   const question = ref('')
   const answer = ref('')
   const questionId = ref(null)
+  const rootQuestionId = ref(null) // Track the root question ID for conversation threading
   const loading = ref(false)
   const error = ref('')
+  const conversationHistory = ref([])
 
   const askQuestion = async (questionText = question.value) => {
     if (!questionText?.trim()) {
@@ -22,9 +24,49 @@ export function useBibleQA() {
       const response = await bibleApi.askQuestion(questionText)
       answer.value = response.answer
       questionId.value = response.question_id
+      rootQuestionId.value = response.question_id // Set root for new conversation
+      
+      // Reset conversation history for a new question
+      conversationHistory.value = [
+        { role: 'user', content: questionText },
+        { role: 'assistant', content: response.answer }
+      ]
     } catch (err) {
       error.value = err.message
       console.error('Bible Q&A Error:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const askFollowUpQuestion = async (followUpText) => {
+    if (!followUpText?.trim()) {
+      error.value = 'Please enter a follow-up question'
+      return
+    }
+
+    loading.value = true
+    error.value = ''
+
+    try {
+      const response = await bibleApi.askFollowUpQuestion({
+        question: followUpText,
+        conversation_history: conversationHistory.value,
+        parent_question_id: rootQuestionId.value // Pass the root question ID
+      })
+      
+      // Update conversation history
+      conversationHistory.value.push(
+        { role: 'user', content: followUpText },
+        { role: 'assistant', content: response.answer }
+      )
+      
+      // Update current answer and question ID (but keep rootQuestionId unchanged)
+      answer.value = response.answer
+      questionId.value = response.question_id
+    } catch (err) {
+      error.value = err.message
+      console.error('Follow-up Question Error:', err)
     } finally {
       loading.value = false
     }
@@ -34,8 +76,10 @@ export function useBibleQA() {
     question.value = ''
     answer.value = ''
     questionId.value = null
+    rootQuestionId.value = null
     error.value = ''
     loading.value = false
+    conversationHistory.value = []
   }
 
   const clearError = () => {
@@ -47,11 +91,14 @@ export function useBibleQA() {
     question,
     answer,
     questionId,
+    rootQuestionId,
     loading,
     error,
+    conversationHistory,
     
     // Actions
     askQuestion,
+    askFollowUpQuestion,
     clearAll,
     clearError
   }
