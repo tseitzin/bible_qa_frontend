@@ -44,7 +44,7 @@
             type="submit"
             :disabled="loading || !localQuestion.trim()"
             :loading="loading"
-            size="lg"
+            size="md"
             class="submit-button"
           >
             <template v-if="!loading">
@@ -59,7 +59,7 @@
             v-if="localQuestion.trim()"
             type="button"
             variant="ghost"
-            size="lg"
+            size="md"
             @click="clearQuestion"
             :disabled="loading"
             class="clear-button"
@@ -224,22 +224,12 @@ const handleSpeechError = (error) => {
   overflow: hidden;
 }
 
-.question-form::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--gradient-primary);
-}
-
 .form-header {
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-2xl);
-  padding-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -286,7 +276,7 @@ const handleSpeechError = (error) => {
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
 }
 
 .question-input {
@@ -397,8 +387,8 @@ const handleSpeechError = (error) => {
 }
 
 .quick-suggestions {
-  margin-top: var(--spacing-2xl);
-  padding-top: var(--spacing-xl);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -406,21 +396,21 @@ const handleSpeechError = (error) => {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: #1a202c;
-  margin: 0 0 var(--spacing-lg) 0;
+  margin: 0 0 var(--spacing-sm) 0;
   text-align: center;
 }
 
 .suggestions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-md);
+  gap: 0.375rem; /* 6px - custom tighter spacing */
 }
 
 .suggestion-button {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--border-radius-lg);

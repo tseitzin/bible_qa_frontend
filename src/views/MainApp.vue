@@ -162,27 +162,21 @@
       <footer class="app-footer">
         <div class="footer-content">
           <div class="footer-main">
-            <div class="footer-logo">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-              </svg>
-              <span>Bible Q&A</span>
+            <div class="footer-disclaimer">
+              <div class="disclaimer-icon">
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <p>
+                <strong>Important:</strong> Always verify answers with Scripture and consult trusted biblical sources, 
+                pastors, or theologians for important spiritual matters.
+              </p>
             </div>
+            
             <p class="footer-description">
               Powered by advanced AI technology to provide thoughtful, scripture-based answers 
               to your biblical questions.
-            </p>
-          </div>
-          
-          <div class="footer-disclaimer">
-            <div class="disclaimer-icon">
-              <svg viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <p>
-              <strong>Important:</strong> Always verify answers with Scripture and consult trusted biblical sources, 
-              pastors, or theologians for important spiritual matters.
             </p>
           </div>
         </div>
@@ -498,52 +492,42 @@ onMounted(async () => {
   padding: var(--spacing-xl);
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 80px);
+  min-height: calc(100vh - 40px);
   position: relative;
   z-index: 1;
 }
 
 .app-header {
   text-align: center;
-  margin-bottom: var(--spacing-3xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .header-content {
   background: var(--gradient-card);
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-2xl);
-  padding: var(--spacing-3xl);
+  padding: var(--spacing-lg) var(--spacing-lg);
   box-shadow: var(--shadow-xl);
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
 }
 
-.header-content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--gradient-primary);
-}
-
 .logo-section {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-md);
 }
 
 .logo-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
 }
 
 .logo-icon {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   background: var(--gradient-primary);
   border-radius: var(--border-radius-xl);
   display: flex;
@@ -566,8 +550,8 @@ onMounted(async () => {
 }
 
 .logo-icon svg {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 
 .logo-text {
@@ -575,7 +559,7 @@ onMounted(async () => {
 }
 
 .app-title {
-  font-size: var(--font-size-5xl);
+  font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-extrabold);
   color: var(--color-text-primary);
   margin: 0;
@@ -596,10 +580,10 @@ onMounted(async () => {
 }
 
 .app-subtitle {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   color: #1a202c;
   margin: 0;
-  line-height: var(--line-height-relaxed);
+  line-height: var(--line-height-normal);
   max-width: 600px;
   margin: 0 auto;
   font-weight: var(--font-weight-semibold);
@@ -607,31 +591,30 @@ onMounted(async () => {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-2xl);
+  grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+  justify-content: center;
+  justify-items: center;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all var(--transition-normal);
-}
-
-.feature-item:hover {
-  background: rgba(255, 255, 255, 0.7);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  padding: var(--spacing-xs) 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  cursor: default;
+  justify-content: center;
+  text-align: center;
 }
 
 .feature-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   color: var(--color-primary);
   flex-shrink: 0;
 }
@@ -655,7 +638,7 @@ onMounted(async () => {
 
 .nav-tabs {
   display: flex;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-xl);
@@ -722,7 +705,7 @@ onMounted(async () => {
 .content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
   flex: 1;
 }
 
@@ -808,22 +791,22 @@ onMounted(async () => {
 }
 
 .app-footer {
-  margin-top: var(--spacing-3xl);
-  padding-top: var(--spacing-2xl);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
 }
 
 .footer-content {
   background: var(--gradient-card);
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-xl);
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .footer-main {
   text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
 }
 
 .footer-logo {
@@ -853,8 +836,8 @@ onMounted(async () => {
 .footer-disclaimer {
   display: flex;
   align-items: flex-start;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.2);
   border-radius: var(--border-radius-lg);

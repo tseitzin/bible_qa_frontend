@@ -1,5 +1,5 @@
 <template>
-  <div class="textarea-wrapper">
+  <div :class="['textarea-wrapper', { 'textarea-wrapper--dense': dense }]">
     <div v-if="label" class="textarea-label-wrapper">
       <label :for="inputId" class="textarea-label">
         {{ label }}
@@ -11,7 +11,7 @@
     </div>
     
     <div class="textarea-container">
-      <div class="textarea-inner">
+      <div :class="['textarea-inner', { 'textarea-inner--dense': dense }]">
         <textarea
           :id="inputId"
           :value="modelValue"
@@ -57,19 +57,19 @@
       </div>
       
       <!-- Character count (bottom right) -->
-      <div v-if="showCharCount && maxLength && !label" class="char-count-bottom">
+      <div v-if="showCharCount && maxLength && !label" :class="['char-count-bottom', { 'char-count-bottom--dense': dense }]">
         <span :class="charCountClasses">Characters: {{ modelValue.length }}/{{ maxLength }}</span>
       </div>
     </div>
     
-    <div v-if="helpText" :id="`${inputId}-help`" class="help-text">
+    <div v-if="helpText" :id="`${inputId}-help`" :class="['help-text', { 'help-text--dense': dense }]">
       <svg class="help-icon" viewBox="0 0 20 20" fill="currentColor">
         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
       </svg>
       {{ helpText }}
     </div>
     
-    <div v-if="error" class="error-text">
+    <div v-if="error" :class="['error-text', { 'error-text--dense': dense }]">
       <svg class="error-icon" viewBox="0 0 20 20" fill="currentColor">
         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
       </svg>
@@ -137,6 +137,10 @@ const props = defineProps({
   isListening: {
     type: Boolean,
     default: false
+  },
+  dense: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -154,7 +158,8 @@ const textareaClasses = computed(() => ({
   'base-textarea--error': props.error,
   'base-textarea--disabled': props.disabled,
   'base-textarea--floating': props.floatingLabel && props.label,
-  'base-textarea--has-value': props.modelValue.length > 0
+  'base-textarea--has-value': props.modelValue.length > 0,
+  'base-textarea--dense': props.dense
 }))
 
 const floatingLabelClasses = computed(() => ({
@@ -207,6 +212,24 @@ const autoResizeTextarea = (textarea) => {
   gap: var(--spacing-sm);
 }
 
+.textarea-wrapper--dense {
+  gap: 1px;
+}
+
+.textarea-wrapper--dense .textarea-label {
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.15;
+}
+
+.textarea-wrapper--dense .char-count-header {
+  font-size: 0.62rem;
+}
+
+.textarea-wrapper--dense .char-count-header span {
+  font-weight: var(--font-weight-medium);
+}
+
 .textarea-label-wrapper {
   display: flex;
   justify-content: space-between;
@@ -241,6 +264,10 @@ const autoResizeTextarea = (textarea) => {
   flex-direction: column;
 }
 
+.textarea-inner--dense {
+  gap: 0;
+}
+
 .base-textarea {
   width: 100%;
   padding: var(--spacing-lg);
@@ -258,6 +285,19 @@ const autoResizeTextarea = (textarea) => {
   position: relative;
   z-index: 1;
   font-weight: var(--font-weight-medium);
+}
+
+.base-textarea--dense {
+  padding: 5px 36px 5px 6px;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.textarea-wrapper--dense .speech-button {
+  top: 5px;
+  right: 5px;
+  width: 26px;
+  height: 26px;
 }
 
 .speech-button {
@@ -308,8 +348,14 @@ const autoResizeTextarea = (textarea) => {
   height: 20px;
 }
 
+.textarea-wrapper--dense .speech-button svg {
+  width: 15px;
+  height: 15px;
+}
+
 .base-textarea::placeholder {
-  color: #eaecef;
+  color: #9ca3af;
+  opacity: 0.6;
   transition: all var(--transition-fast);
 }
 
@@ -400,6 +446,11 @@ const autoResizeTextarea = (textarea) => {
   z-index: 2;
 }
 
+.char-count-bottom--dense {
+  bottom: 3px;
+  right: 5px;
+}
+
 .char-count {
   background: var(--color-background);
   padding: var(--spacing-xs) var(--spacing-sm);
@@ -408,6 +459,11 @@ const autoResizeTextarea = (textarea) => {
   color: white;
   font-weight: var(--font-weight-medium);
   box-shadow: var(--shadow-xs);
+}
+
+.textarea-wrapper--dense .char-count {
+  padding: 2px 4px;
+  font-size: 0.62rem;
 }
 
 .char-count--warning {
@@ -432,9 +488,15 @@ const autoResizeTextarea = (textarea) => {
   font-weight: var(--font-weight-semibold);
 }
 
+.help-text--dense {
+  font-size: 0.64rem;
+  padding: 2px 0 3px;
+  gap: 3px;
+}
+
 .help-icon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   color: var(--color-primary);
   flex-shrink: 0;
 }
@@ -449,9 +511,14 @@ const autoResizeTextarea = (textarea) => {
   padding: var(--spacing-xs) 0;
 }
 
+.error-text--dense {
+  font-size: 0.64rem;
+  padding: 2px 0 3px;
+  gap: 3px;
+}
 .error-icon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
 }
 
