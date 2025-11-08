@@ -278,7 +278,7 @@ const autoResizeTextarea = (textarea) => {
   border: 2px solid var(--color-border);
   border-radius: var(--border-radius-lg);
   background: var(--color-background);
-  color: #eef1f6;
+  color: var(--color-text-primary);
   resize: vertical;
   transition: all var(--transition-normal);
   min-height: 2.5rem;
@@ -364,7 +364,7 @@ const autoResizeTextarea = (textarea) => {
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   background: var(--color-background);
-  color: #dee3eb;
+  color: var(--color-text-primary);
 }
 
 .base-textarea:focus::placeholder {
