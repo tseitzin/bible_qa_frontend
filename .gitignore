@@ -59,21 +59,19 @@ node_modules/
 +# Next.js build output
 +.next
 +
-+# Nuxt.js build / generate output
-+.nuxt
-dist
-+
-+# Vite build output
+# Nuxt.js build / generate output
+.nuxt
+
+# Vite build output
 +dist-ssr
 +*.local
 +
-+# Rollup build output
-+build/
-+
-+# Webpack build output
-+/dist/
-+
-+# Serverless directories
+# Rollup build output
+build/
+
+# Webpack build output
+
+# Serverless directories
 +.serverless/
 +
 +# FuseBox cache
