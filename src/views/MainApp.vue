@@ -12,11 +12,15 @@
         <div class="nav-links">
           <router-link to="/" class="nav-link nav-link--active">Adults</router-link>
           <router-link to="/kids" class="nav-link">Kids</router-link>
-          <div v-if="currentUser" class="user-menu">
-            <span class="user-name">{{ currentUser.username }}</span>
-            <button @click="handleLogout" class="logout-button">Logout</button>
-          </div>
-          <router-link v-else to="/login" class="nav-link">Login</router-link>
+          <button
+            v-if="currentUser"
+            type="button"
+            @click="handleLogout"
+            class="nav-link logout-button"
+          >
+            Logout
+          </button>
+          <router-link v-else to="/login" class="nav-link login-button">Login</router-link>
         </div>
       </div>
     </nav>
@@ -325,6 +329,9 @@ onMounted(async () => {
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--border-radius-lg);
   text-decoration: none;
@@ -335,6 +342,7 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .nav-link:hover {
@@ -352,38 +360,33 @@ onMounted(async () => {
   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 }
 
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.user-name {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-}
-
 .logout-button {
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: var(--color-danger);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-normal);
+  appearance: none;
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: rgba(136, 19, 55, 0.85);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.18);
 }
 
 .logout-button:hover {
-  background: var(--color-danger-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: rgba(136, 19, 55, 1);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+}
+
+.login-button {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: rgba(6, 95, 70, 0.9);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.18);
+}
+
+.login-button:hover {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: rgba(6, 95, 70, 1);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
 }
 
 .app {
