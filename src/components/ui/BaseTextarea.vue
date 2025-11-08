@@ -277,9 +277,12 @@ const autoResizeTextarea = (textarea) => {
   line-height: var(--line-height-relaxed);
   border: 2px solid var(--color-border);
   border-radius: var(--border-radius-lg);
-  background: rgba(15, 23, 42, 0.92);
+  background-color: rgba(15, 23, 42, 0.92);
+  background-image: none;
   color: var(--color-text-inverse);
   -webkit-text-fill-color: var(--color-text-inverse);
+  caret-color: var(--color-text-inverse);
+  color-scheme: dark;
   resize: vertical;
   transition: all var(--transition-normal);
   min-height: 2.5rem;
@@ -364,9 +367,11 @@ const autoResizeTextarea = (textarea) => {
   outline: none;
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  background: rgba(15, 23, 42, 0.95);
+  background-color: rgba(15, 23, 42, 0.95);
+  background-image: none;
   color: var(--color-text-inverse);
   -webkit-text-fill-color: var(--color-text-inverse);
+  caret-color: var(--color-text-inverse);
 }
 
 .base-textarea:focus::placeholder {
@@ -526,11 +531,11 @@ const autoResizeTextarea = (textarea) => {
 
 /* Enhanced animations */
 .base-textarea {
-  background-image: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.85) 100%);
+  background-image: none;
 }
 
 .base-textarea:focus {
-  background-image: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.88) 100%);
+  background-image: none;
 }
 
 /* Responsive adjustments */
