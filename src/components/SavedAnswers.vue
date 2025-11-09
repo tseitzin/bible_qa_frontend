@@ -436,11 +436,16 @@ defineExpose({
   padding-left: var(--spacing-3xl);
   border: 2px solid var(--color-border);
   border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-base);
+  font-size: 0.95rem;
   background: var(--color-background);
   color: var(--color-text-primary);
-  width: 280px;
+  width: 340px;
+  max-width: 100%;
   transition: all var(--transition-normal);
+}
+
+.search-input::placeholder {
+  font-size: 0.9rem;
 }
 
 .search-input:focus {
@@ -542,7 +547,7 @@ defineExpose({
 
 .answers-grid {
   display: grid;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-sm);
 }
 
 .answer-card {
@@ -561,13 +566,13 @@ defineExpose({
 .answer-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: var(--spacing-lg);
-  gap: var(--spacing-md);
+  align-items: center;
+  padding: var(--spacing-sm);
+  gap: var(--spacing-sm);
 }
 
 .answer-question {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
   color: white;
   margin: 0;

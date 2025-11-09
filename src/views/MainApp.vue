@@ -39,89 +39,60 @@
     <div class="app-container">
       <!-- Header Section -->
       <header class="app-header animate-fade-in">
-        <div class="header-content">
-          <div class="logo-section">
-            <div class="logo-wrapper">
-              <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                </svg>
-              </div>
-              <div class="logo-text">
-                <h1 class="app-title">Bible Q&A</h1>
-                <div class="app-tagline">Scripture • Wisdom • Truth</div>
-              </div>
-            </div>
-            <p class="app-subtitle">
-              Discover biblical wisdom through AI-powered Scripture exploration. 
-              Ask questions about faith, theology, and biblical teachings to receive 
-              thoughtful, scripture-based answers.
-            </p>
-          </div>
-          
-          <!-- Feature highlights -->
-          <div class="features-grid">
-            <div class="feature-item">
-              <div class="feature-icon">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <span>Scripture-Based</span>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span>Accurate Answers</span>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <span>Instant Results</span>
-            </div>
-          </div>
+  <div class="header-content">
+    <div class="logo-section">
+      <div class="logo-wrapper">
+        <div class="logo-text">
+          <h2 class="app-title">Answers to your Bible Questions</h2>
+          <div class="app-tagline">Scripture • Wisdom • Truth</div>
         </div>
-      </header>
+      </div>
+      <p class="app-subtitle">
+        Discover biblical wisdom through AI-powered Scripture exploration.
+      </p>
+    </div>
+  </div>
+</header>
+
       
       <!-- Main Content -->
       <main class="app-main">
         <!-- Navigation Tabs -->
         <div class="nav-tabs">
+          <!-- Ask Question Button -->
           <button 
-            @click="activeTab = 'ask'" 
+            @click="handleAskTabClick" 
             :class="['nav-tab', { 'nav-tab--active': activeTab === 'ask' }]"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
             </svg>
             Ask Question
           </button>
+
+          <!-- Saved Answers Button -->
           <button 
-            @click="activeTab = 'saved'" 
+            @click="handleSavedTabClick" 
             :class="['nav-tab', { 'nav-tab--active': activeTab === 'saved' }]"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
             </svg>
             Saved Answers
             <span v-if="savedCount > 0" class="saved-badge">{{ savedCount }}</span>
           </button>
+
         </div>
 
         <!-- Ask Question Tab -->
         <div v-if="activeTab === 'ask'" class="content-wrapper animate-slide-in">
-          <QuestionForm
-            v-model:question="question"
-            :loading="loading"
-            @submit="handleQuestionSubmit"
-            class="question-section"
-          />
+          <div ref="questionSectionRef" class="question-section">
+            <QuestionForm
+              v-model:question="question"
+              :loading="loading"
+              @submit="handleQuestionSubmit"
+            />
+          </div>
           
           <AnswerDisplay 
             :answer="answer" 
@@ -141,7 +112,11 @@
         </div>
 
         <!-- Saved Answers Tab -->
-        <div v-else-if="activeTab === 'saved'" class="saved-content animate-fade-in">
+        <div
+          v-else-if="activeTab === 'saved'"
+          ref="savedSectionRef"
+          class="saved-content animate-fade-in"
+        >
           <!-- Show login prompt for guest users -->
           <div v-if="!currentUser" class="guest-message">
             <div class="guest-message-icon">🔒</div>
@@ -190,7 +165,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import QuestionForm from '../components/QuestionForm.vue'
 import AnswerDisplay from '../components/AnswerDisplay.vue'
@@ -217,6 +192,8 @@ const {
 // Tab management
 const activeTab = ref('ask')
 const savedAnswersRef = ref(null)
+const questionSectionRef = ref(null)
+const savedSectionRef = ref(null)
 
 // Store current question and answer for accessibility by tests
 const currentQuestion = ref('')
@@ -251,6 +228,56 @@ const handleQuestionSubmit = (questionText, answerText) => {
   if (activeTab.value !== 'ask') {
     activeTab.value = 'ask'
   }
+}
+
+const SCROLL_OFFSET = 120
+
+const scrollToQuestionForm = () => {
+  if (typeof window === 'undefined') return
+  const sectionEl = questionSectionRef.value
+  if (!sectionEl) return
+
+  const titleEl = sectionEl.querySelector('.form-title')
+  const targetEl = titleEl ?? sectionEl
+  const top = targetEl.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  window.scrollTo({
+    top: Math.max(top, 0),
+    behavior: prefersReducedMotion ? 'auto' : 'smooth'
+  })
+}
+
+const handleAskTabClick = async () => {
+  if (activeTab.value !== 'ask') {
+    activeTab.value = 'ask'
+    await nextTick()
+  }
+  scrollToQuestionForm()
+}
+
+const scrollToSavedSection = () => {
+  if (typeof window === 'undefined') return
+  const sectionEl = savedSectionRef.value
+  if (!sectionEl) return
+
+  const top = sectionEl.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  window.scrollTo({
+    top: Math.max(top, 0),
+    behavior: prefersReducedMotion ? 'auto' : 'smooth'
+  })
+}
+
+const handleSavedTabClick = async () => {
+  if (activeTab.value !== 'saved') {
+    activeTab.value = 'saved'
+    await nextTick()
+  } else {
+    await nextTick()
+  }
+  scrollToSavedSection()
 }
 
 const handleAnswerSaved = async () => {
@@ -492,7 +519,7 @@ onMounted(async () => {
 .app-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 40px);
@@ -508,8 +535,8 @@ onMounted(async () => {
 .header-content {
   background: var(--gradient-card);
   backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-2xl);
-  padding: var(--spacing-lg) var(--spacing-lg);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-md);
   box-shadow: var(--shadow-xl);
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
@@ -517,7 +544,7 @@ onMounted(async () => {
 }
 
 .logo-section {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
 }
 
 .logo-wrapper {
@@ -562,8 +589,8 @@ onMounted(async () => {
 }
 
 .app-title {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin: 0;
   background: var(--gradient-primary);
@@ -580,6 +607,7 @@ onMounted(async () => {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-top: var(--spacing-xs);
+  text-align: center;
 }
 
 .app-subtitle {
@@ -641,69 +669,78 @@ onMounted(async () => {
 
 .nav-tabs {
   display: flex;
+  gap: 0.75rem;                       /* space between buttons */
+  justify-content: center;             /* center buttons horizontally */
   margin-bottom: var(--spacing-lg);
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
+  background: var(--gradient-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--border-radius-xl);
-  padding: var(--spacing-xs);
-  box-shadow: var(--shadow-sm);
-}
-
-.nav-tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border: none;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
-  border-radius: var(--border-radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  position: relative;
-}
-
-.nav-tab svg {
-  width: 18px;
-  height: 18px;
-}
-
-.nav-tab:hover {
-  color: var(--color-primary);
-  background: rgba(37, 99, 235, 0.1);
-}
-
-.nav-tab--active {
-  background: var(--gradient-primary);
-  color: var(--color-text-inverse);
+  padding: var(--spacing-sm);          /* slightly more padding for bigger buttons */
   box-shadow: var(--shadow-md);
+  transition: all 0.2s ease-in-out;
 }
 
+
+/* Nav button styling */
+.nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.15); /* darker grayish background */
+  color: #fff;                            /* white text for contrast */
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-width: 160px;
+  justify-content: center;
+}
+
+/* Inactive hover effect */
+.nav-tab:hover {
+  background-color: rgba(0, 0, 0, 0.25); /* slightly darker on hover */
+}
+
+/* Active button */
+.nav-tab--active {
+  background-color: rgba(0, 119, 204, 0.8); /* blue */
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 119, 204, 0.3);
+}
+
+/* Active hover effect */
 .nav-tab--active:hover {
-  color: var(--color-text-inverse);
-  background: var(--gradient-primary);
+  background-color: rgba(0, 119, 204, 1);
+  box-shadow: 0 6px 15px rgba(0, 119, 204, 0.4);
+  transform: translateY(-1px);
 }
 
+
+
+/* SVG icons */
+.nav-icon {
+  width: 1.25rem;   /* consistent width */
+  height: 1.25rem;  /* consistent height */
+  flex-shrink: 0;   /* prevents icon from shrinking */
+}
+
+/* Optional: saved badge */
 .saved-badge {
-  background: var(--color-text-inverse);
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  padding: 2px 6px;
-  border-radius: var(--border-radius-full);
-  min-width: 18px;
-  text-align: center;
-  line-height: 1;
+  display: inline-block;
+  background-color: #cb8283;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  margin-left: 0.25rem;
+  pointer-events: none; /* ensures hover passes through badge */
 }
 
-.nav-tab--active .saved-badge {
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--color-primary);
-}
 
 .content-wrapper {
   display: flex;
