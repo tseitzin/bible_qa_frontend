@@ -7,9 +7,12 @@
         </svg>
       </div>
       <div class="form-title-section">
-        <h2 class="form-title">Ask Your Question</h2>
-        <p class="form-subtitle">What would you like to know about Scripture?</p>
+        <h2 class="form-title">Ask or Explore Bible Topics</h2>
+          <p class="form-subtitle">
+          Enter one or more questions or request information you’d like to research — from Bible verses to explanations of biblical themes.
+          </p>
       </div>
+
     </div>
     
     <form @submit.prevent="handleSubmit" class="form" :key="formKey">

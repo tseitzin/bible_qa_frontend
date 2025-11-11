@@ -197,7 +197,7 @@ import BaseButton from './ui/BaseButton.vue'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { useAuth } from '../composables/useAuth.js'
 import { bibleApi } from '../services/bibleApi.js'
-import { BIBLE_BOOKS } from '../constants/bibleBooks.js'
+import { BIBLE_BOOKS, BIBLE_BOOK_ALIASES } from '../constants/bibleBooks.js'
 
 const emit = defineEmits(['answerSaved', 'followUpQuestion'])
 const router = useRouter()
@@ -229,13 +229,76 @@ const saving = ref(false)
 const followUpQuestion = ref('')
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const bookPattern = BIBLE_BOOKS
-  .map((book) => escapeRegex(book).replace(/\\s+/g, '\\s+'))
+
+const bookNamesSet = new Set()
+const BOOK_CANONICAL_MAP = new Map()
+
+const registerBookName = (name, canonical) => {
+  if (!name || !canonical) {
+    return
+  }
+
+  const normalizedName = name.replace(/\s+/g, ' ').trim()
+  if (!normalizedName) {
+    return
+  }
+
+  const canonicalName = canonical.replace(/\s+/g, ' ').trim()
+  bookNamesSet.add(normalizedName)
+
+  const variants = new Set([
+    normalizedName.toLowerCase(),
+    normalizedName.replace(/\./g, '').toLowerCase(),
+    normalizedName.replace(/[\s.]/g, '').toLowerCase(),
+  ])
+
+  variants.forEach((key) => {
+    if (!BOOK_CANONICAL_MAP.has(key)) {
+      BOOK_CANONICAL_MAP.set(key, canonicalName)
+    }
+  })
+}
+
+BIBLE_BOOKS.forEach((book) => registerBookName(book, book))
+Object.entries(BIBLE_BOOK_ALIASES).forEach(([canonical, aliases]) => {
+  registerBookName(canonical, canonical)
+  aliases.forEach((alias) => registerBookName(alias, canonical))
+})
+
+const bookPattern = Array.from(bookNamesSet)
+  .sort((a, b) => b.length - a.length)
+  .map((book) => escapeRegex(book).replace(/\s+/g, '\\s+'))
   .join('|')
+
 const referenceRegex = new RegExp(
   `\\b(${bookPattern})\\s+\\d{1,3}(?::\\d{1,3})?(?:[-–—]\\d{1,3}(?::\\d{1,3})?)?`,
   'gi'
 )
+
+const canonicalizeBookName = (book) => {
+  if (!book) {
+    return null
+  }
+
+  const normalized = book.replace(/\s+/g, ' ').trim()
+  if (!normalized) {
+    return null
+  }
+
+  const keys = [
+    normalized.toLowerCase(),
+    normalized.replace(/\./g, '').toLowerCase(),
+    normalized.replace(/[\s.]/g, '').toLowerCase(),
+  ]
+
+  for (const key of keys) {
+    if (BOOK_CANONICAL_MAP.has(key)) {
+      return BOOK_CANONICAL_MAP.get(key)
+    }
+  }
+
+  return null
+}
 
 const POPUP_MAX_WIDTH = 320
 const POPUP_MARGIN = 16
@@ -257,7 +320,7 @@ const versePopup = ref({
 const versePopupEl = ref(null)
 const versePopupTarget = ref(null)
 const answerTextWrapper = ref(null)
-const continuationRegex = /^(\s*[;,]\s*(?:and\s+)?)(\d{1,3}(?::\d{1,3})?(?:[-–—]\d{1,3}(?::\d{1,3})?)?)/
+const continuationRegex = /^(\s*[;,]\s*(?:and\s+)?)(\d{1,3}(?::\d{1,3})?(?:[-–—]\d{1,3}(?::\d{1,3})?)?)(?!\s*[A-Za-z])/
 
 const normalizeRangeValue = (value) => value.replace(/\s+/g, '').replace(/[–—]/g, '-')
 
@@ -516,18 +579,19 @@ const createSegments = (text) => {
   while ((match = referenceRegex.exec(text)) !== null) {
     const start = match.index
     const matchedText = match[0]
-    const book = match[1]
+    const matchedBook = match[1]
+    const canonicalBook = canonicalizeBookName(matchedBook) || matchedBook
 
     if (start > lastIndex) {
       segments.push({ type: 'text', text: text.slice(lastIndex, start) })
     }
 
-    const remaining = matchedText.slice(book.length).trim()
+    const remaining = matchedText.slice(matchedBook.length).trim()
     const colonIndex = remaining.indexOf(':')
     const chapterPart = colonIndex >= 0 ? remaining.slice(0, colonIndex) : remaining
     const versePartRaw = colonIndex >= 0 ? remaining.slice(colonIndex + 1) : ''
     const primarySegment = buildReferenceSegment({
-      book,
+      book: canonicalBook,
       chapterPart,
       versePart: versePartRaw,
       display: matchedText,
@@ -561,14 +625,14 @@ const createSegments = (text) => {
       if (trimmedFragment.includes(':')) {
         const [fragmentChapterPart, fragmentVersePart = ''] = trimmedFragment.split(':')
         continuationSegment = buildReferenceSegment({
-          book,
+          book: canonicalBook,
           chapterPart: fragmentChapterPart,
           versePart: fragmentVersePart,
           display: fragment,
         })
       } else if (lastSegment?.hasVerseSpec) {
         continuationSegment = buildReferenceSegment({
-          book,
+          book: canonicalBook,
           chapterPart: '',
           versePart: trimmedFragment,
           display: fragment,
@@ -576,7 +640,7 @@ const createSegments = (text) => {
         })
       } else {
         continuationSegment = buildReferenceSegment({
-          book,
+          book: canonicalBook,
           chapterPart: trimmedFragment,
           versePart: '',
           display: fragment,
