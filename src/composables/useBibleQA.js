@@ -32,7 +32,10 @@ export function useBibleQA() {
         { role: 'assistant', content: response.answer }
       ]
     } catch (err) {
-      error.value = err.message
+      const message = err?.message === 'Network Error'
+        ? 'The request took too long. Please try again.'
+        : err?.message || 'Unable to process your question right now.'
+      error.value = message
       console.error('Bible Q&A Error:', err)
     } finally {
       loading.value = false
@@ -65,7 +68,10 @@ export function useBibleQA() {
       answer.value = response.answer
       questionId.value = response.question_id
     } catch (err) {
-      error.value = err.message
+      const message = err?.message === 'Network Error'
+        ? 'The follow-up request timed out. Please try again in a moment.'
+        : err?.message || 'Unable to process your follow-up question right now.'
+      error.value = message
       console.error('Follow-up Question Error:', err)
     } finally {
       loading.value = false
