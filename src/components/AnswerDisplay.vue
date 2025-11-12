@@ -531,7 +531,7 @@ watch(
   border-radius: var(--border-radius-lg);
   border: 1px solid rgba(148, 163, 184, 0.3);
   background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-primary);
+  color: #0f172a;
 }
 
 .followup-input:focus {
