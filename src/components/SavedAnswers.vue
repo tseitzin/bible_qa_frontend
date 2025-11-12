@@ -123,7 +123,9 @@
             />
             
             <!-- Show single answer if no thread -->
-            <div v-else class="answer-text">{{ savedAnswer.answer }}</div>
+            <div v-else class="answer-text">
+              <ScriptureText :text="savedAnswer.answer" />
+            </div>
             
             <div class="answer-meta">
               <div class="meta-item">
@@ -220,6 +222,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import BaseButton from './ui/BaseButton.vue'
 import ConversationThread from './ConversationThread.vue'
+import ScriptureText from './ScriptureText.vue'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 
 const emit = defineEmits(['update'])

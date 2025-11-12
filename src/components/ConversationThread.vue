@@ -17,18 +17,24 @@
       
       <div class="question-section">
         <h4>Question:</h4>
-        <p class="question-text">{{ item.question }}</p>
+        <div class="question-text">
+          <ScriptureText :text="item.question" />
+        </div>
       </div>
       
       <div class="answer-section">
         <h4>Answer:</h4>
-        <p class="answer-text">{{ item.answer }}</p>
+        <div class="answer-text">
+          <ScriptureText :text="item.answer" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import ScriptureText from './ScriptureText.vue'
+
 defineProps({
   thread: {
     type: Array,

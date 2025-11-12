@@ -1,285 +1,239 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import SavedAnswers from '../../components/SavedAnswers.vue'
 import { savedAnswersService } from '../../services/savedAnswersService.js'
 
-// Mock the savedAnswersService
 vi.mock('../../services/savedAnswersService.js', () => ({
   savedAnswersService: {
     getAll: vi.fn(),
     delete: vi.fn(),
-    search: vi.fn(),
     getAllTags: vi.fn(),
-    getStats: vi.fn(),
-    exportData: vi.fn(),
-    importData: vi.fn(),
-    getStorageInfo: vi.fn()
+    exportData: vi.fn()
   }
 }))
 
-// Mock URL APIs used by export
 const mockClick = vi.fn()
 const originalCreateElement = document.createElement.bind(document)
-const originalBodyAppendChild = document.body.appendChild.bind(document.body)
-const originalBodyRemoveChild = document.body.removeChild.bind(document.body)
+const originalUrlCreate = global.URL?.createObjectURL
+const originalUrlRevoke = global.URL?.revokeObjectURL
+
+const mockAnswers = [
+  {
+    id: '1',
+    question: 'What is love?',
+    answer: 'Love is patient and kind.',
+    saved_at: '2024-01-01T10:00:00.000Z',
+    tags: ['love', 'relationships'],
+    wordCount: 6
+  },
+  {
+    id: '2',
+    question: 'How should we pray?',
+    answer: 'Jesus taught us to pray with faith.',
+    saved_at: '2024-01-02T10:00:00.000Z',
+    tags: ['prayer', 'jesus'],
+    wordCount: 7
+  },
+  {
+    id: '3',
+    question: 'What about faith?',
+    answer: 'Faith without works is dead.',
+    saved_at: '2024-01-03T10:00:00.000Z',
+    tags: ['faith', 'works'],
+    wordCount: 5
+  }
+]
+
+const mockTags = ['love', 'relationships', 'prayer', 'jesus', 'faith', 'works']
+
+const mountComponent = async () => {
+  const wrapper = mount(SavedAnswers)
+  await flushPromises()
+  return wrapper
+}
 
 beforeEach(() => {
-  // Reset URL mocks each test
+  vi.clearAllMocks()
+
+  savedAnswersService.getAll.mockResolvedValue(mockAnswers)
+  savedAnswersService.delete.mockResolvedValue({ success: true })
+  savedAnswersService.getAllTags.mockResolvedValue(mockTags)
+  savedAnswersService.exportData.mockResolvedValue(JSON.stringify({ answers: mockAnswers }))
+
   global.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
   global.URL.revokeObjectURL = vi.fn()
 
-  // Only mock anchor elements for download; delegate others to real DOM
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+
   vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
     if (String(tagName).toLowerCase() === 'a') {
-      return Object.assign(originalCreateElement('a', options), {
-        click: mockClick
-      })
+      const anchor = originalCreateElement('a', options)
+      anchor.click = mockClick
+      return anchor
     }
     return originalCreateElement(tagName, options)
   })
 
-  // Keep body append/remove behavior intact to avoid breaking mount
-  vi.spyOn(document.body, 'appendChild').mockImplementation((node) => originalBodyAppendChild(node))
-  vi.spyOn(document.body, 'removeChild').mockImplementation((node) => originalBodyRemoveChild(node))
+  vi.spyOn(document.body, 'appendChild')
+  vi.spyOn(document.body, 'removeChild')
+
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  mockClick.mockReset()
+
+  if (originalUrlCreate) {
+    global.URL.createObjectURL = originalUrlCreate
+  } else {
+    delete global.URL.createObjectURL
+  }
+
+  if (originalUrlRevoke) {
+    global.URL.revokeObjectURL = originalUrlRevoke
+  } else {
+    delete global.URL.revokeObjectURL
+  }
+
 })
 
 describe('SavedAnswers.vue', () => {
-  const mockAnswers = [
-    {
-      id: '1',
-      question: 'What is love?',
-      answer: 'Love is patient and kind...',
-      timestamp: '2023-12-01T10:00:00.000Z',
-      tags: ['love', 'relationships']
-    },
-    {
-      id: '2',
-      question: 'How should we pray?',
-      answer: 'Jesus taught us to pray...',
-      timestamp: '2023-12-02T10:00:00.000Z',
-      tags: ['prayer', 'jesus']
-    },
-    {
-      id: '3',
-      question: 'What about faith?',
-      answer: 'Faith without works is dead...',
-      timestamp: '2023-12-03T10:00:00.000Z',
-      tags: ['faith', 'works']
-    }
-  ]
-
-  beforeEach(() => {
-    // Reset all mocks
-    vi.clearAllMocks()
-    
-    // Default mock implementations
-    savedAnswersService.getAll.mockReturnValue(mockAnswers)
-    savedAnswersService.search.mockReturnValue(mockAnswers)
-    savedAnswersService.delete.mockReturnValue({ success: true, message: 'Deleted successfully' })
-    savedAnswersService.exportData.mockReturnValue(JSON.stringify({ answers: mockAnswers }))
-    savedAnswersService.importData.mockReturnValue({ success: true, message: 'Import successful' })
-    savedAnswersService.getStorageInfo.mockReturnValue({ used: 3, total: 100, remaining: 97, percentage: 3 })
-    savedAnswersService.getAllTags.mockReturnValue(['love', 'relationships', 'prayer', 'jesus', 'faith', 'works'])
+  it('loads saved answers on mount', async () => {
+    await mountComponent()
+    expect(savedAnswersService.getAll).toHaveBeenCalled()
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
+  it('renders saved answer cards after data load', async () => {
+    const wrapper = await mountComponent()
+    const cards = wrapper.findAll('.answer-card')
+    expect(cards.length).toBe(mockAnswers.length)
   })
 
-  describe('Component Mounting', () => {
-    it('should render without crashing', () => {
-      const wrapper = mount(SavedAnswers)
-      expect(wrapper.exists()).toBe(true)
-    })
-
-    it('should load saved answers on mount', () => {
-      mount(SavedAnswers)
-      expect(savedAnswersService.getAll).toHaveBeenCalled()
-    })
-
-    it('should display correct number of answers', async () => {
-      const wrapper = mount(SavedAnswers)
-      await wrapper.vm.$nextTick()
-      const answerCards = wrapper.findAll('.answer-card')
-      expect(answerCards.length).toBe(3)
-    })
+  it('shows empty state when no answers are stored', async () => {
+    savedAnswersService.getAll.mockResolvedValueOnce([])
+    const wrapper = await mountComponent()
+    expect(wrapper.text()).toContain('No Saved Answers Yet')
   })
 
-  describe('Empty State', () => {
-    it('should show empty state when no answers are saved', () => {
-      savedAnswersService.getAll.mockReturnValue([])
-      savedAnswersService.search.mockReturnValue([])
-      
-      const wrapper = mount(SavedAnswers)
-      expect(wrapper.text()).toContain('No Saved Answers Yet')
-    })
-
-    it('should show empty state when search returns no results', async () => {
-      savedAnswersService.search.mockReturnValue([])
-      
-      const wrapper = mount(SavedAnswers)
-      const searchInput = wrapper.find('input.search-input')
-      await searchInput.setValue('nonexistent')
-      
-      expect(wrapper.text()).toContain('No Results Found')
-    })
+  it('filters answers using the search input', async () => {
+    const wrapper = await mountComponent()
+    const input = wrapper.find('input.search-input')
+    await input.setValue('faith')
+    await flushPromises()
+    const cards = wrapper.findAll('.answer-card')
+    expect(cards.length).toBe(2)
+    expect(cards.some(card => card.text().toLowerCase().includes('faith'))).toBe(true)
   })
 
-  describe('Search Functionality', () => {
-    it('should call search service when search input changes', async () => {
-      const wrapper = mount(SavedAnswers)
-      const searchInput = wrapper.find('input.search-input')
-      
-      await searchInput.setValue('love')
-      
-      expect(savedAnswersService.search).toHaveBeenCalledWith('love')
-    })
-
-    it('should clear search when clear button is clicked', async () => {
-      const wrapper = mount(SavedAnswers)
-      const searchInput = wrapper.find('input.search-input')
-      
-      await searchInput.setValue('love')
-      expect(wrapper.vm.searchQuery).toBe('love')
-      
-      const clearButton = wrapper.find('button.search-clear')
-      await clearButton.trigger('click')
-      
-      expect(wrapper.vm.searchQuery).toBe('')
-    })
+  it('shows filtered empty state when nothing matches search', async () => {
+    const wrapper = await mountComponent()
+    const input = wrapper.find('input.search-input')
+    await input.setValue('nonexistent term')
+    await flushPromises()
+    expect(wrapper.text()).toContain('No Results Found')
   })
 
-  describe('Answer Card Interactions', () => {
-    it('should expand answer when expand button is clicked', async () => {
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-  const firstExpand = wrapper.find('.answer-card .expand-button')
-      
-      expect(wrapper.vm.expandedCards.size).toBe(0)
-      
-  await firstExpand.trigger('click')
-      
-      // First item id is '1'
-      expect(wrapper.vm.expandedCards.has('1')).toBe(true)
-    })
+  it('clears the search query when clear button is clicked', async () => {
+    const wrapper = await mountComponent()
+    const input = wrapper.find('input.search-input')
+    await input.setValue('love')
+    await flushPromises()
+    expect(wrapper.findAll('.answer-card').length).toBe(1)
 
-    it('should collapse answer when expanded and button clicked again', async () => {
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-  const firstExpand = wrapper.find('.answer-card .expand-button')
-      
-  await firstExpand.trigger('click')
-      expect(wrapper.vm.expandedCards.has('1')).toBe(true)
-      
-  await firstExpand.trigger('click')
-      expect(wrapper.vm.expandedCards.has('1')).toBe(false)
-    })
+    const clearButton = wrapper.find('button.search-clear')
+    await clearButton.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.vm.searchQuery).toBe('')
+    expect(wrapper.findAll('.answer-card').length).toBe(mockAnswers.length)
   })
 
-  describe('Delete Functionality', () => {
-    it('should delete answer when delete button is clicked', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-  const deleteButton = wrapper.find('.answer-card .delete-button')
-      
-      await deleteButton.trigger('click')
-      
-      expect(savedAnswersService.delete).toHaveBeenCalledWith('1')
-    })
+  it('renders tag filters and filters by selected tag', async () => {
+    const wrapper = await mountComponent()
+    const tagButtons = wrapper.findAll('.tags-filter .tag-button')
+    expect(tagButtons.length).toBe(mockTags.length + 1)
 
-    it('should emit update event after successful deletion', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-  const deleteButton = wrapper.find('.answer-card .delete-button')
-      
-      await deleteButton.trigger('click')
-      
-      expect(wrapper.emitted('update')).toBeTruthy()
-    })
-
-    it('should refresh answers list after deletion', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
-      savedAnswersService.getAll.mockReturnValueOnce(mockAnswers)
-        .mockReturnValueOnce(mockAnswers.slice(1)) // After deletion
-      
-      const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-      expect(wrapper.vm.savedAnswers.length).toBe(3)
-      
-      const deleteButton = wrapper.find('.answer-card .delete-button')
-      await deleteButton.trigger('click')
-      
-      expect(savedAnswersService.getAll).toHaveBeenCalledTimes(2)
-    })
+    const faithButton = tagButtons.find(button => button.text() === 'faith')
+    await faithButton.trigger('click')
+    await flushPromises()
+    const cards = wrapper.findAll('.answer-card')
+    expect(cards.length).toBe(1)
+    expect(cards[0].text()).toContain('faith')
   })
 
-  describe('Export Functionality', () => {
-    it('should open export modal when export button is clicked', async () => {
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-  const exportButton = wrapper.find('.header-actions .btn.btn--secondary')
-      
-      await exportButton.trigger('click')
-      
-      expect(wrapper.find('.modal').exists()).toBe(true)
-    })
+  it('expands and collapses a saved answer card', async () => {
+    const wrapper = await mountComponent()
+    const expandButton = wrapper.find('.answer-card .expand-button')
+    await expandButton.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.answer-card-content').exists()).toBe(true)
 
-    it('should close export modal when close button is clicked', async () => {
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-      
-      // Open modal
-      // click export button
-  const exportButton = wrapper.find('.header-actions .btn.btn--secondary')
-      await exportButton.trigger('click')
-      
-      const closeButton = wrapper.find('.modal-close')
-      await closeButton.trigger('click')
-      
-      expect(wrapper.find('.modal').exists()).toBe(false)
-    })
-
-    it('should trigger download when export is confirmed', async () => {
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-      
-  const exportButton = wrapper.find('.header-actions .btn.btn--secondary')
-      await exportButton.trigger('click')
-      
-      const confirmButton = wrapper.find('.modal-footer button:last-child')
-      await confirmButton.trigger('click')
-      
-      expect(savedAnswersService.exportData).toHaveBeenCalled()
-      expect(global.URL.createObjectURL).toHaveBeenCalled()
-      expect(mockClick).toHaveBeenCalled()
-    })
+    await expandButton.trigger('click')
+    await flushPromises()
+    expect(wrapper.vm.expandedCards.has('1')).toBe(false)
   })
 
-  // Optional: Accessibility basics present in component
-  describe('Accessibility', () => {
-    it('search input should be focusable and labeled via placeholder', () => {
-      const wrapper = mount(SavedAnswers)
-      const searchInput = wrapper.find('input.search-input')
-      expect(searchInput.exists()).toBe(true)
-      expect(searchInput.attributes('placeholder')).toContain('Search')
-    })
+  it('requests deletion and emits an update when confirmed', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    savedAnswersService.getAll
+      .mockResolvedValueOnce(mockAnswers)
+      .mockResolvedValueOnce(mockAnswers.slice(1))
+
+    const wrapper = await mountComponent()
+    const deleteButton = wrapper.find('.answer-card .delete-button')
+    await deleteButton.trigger('click')
+    await flushPromises()
+
+    expect(savedAnswersService.delete).toHaveBeenCalledWith('1')
+    expect(savedAnswersService.getAll).toHaveBeenCalledTimes(2)
+    expect(wrapper.emitted('update')).toBeTruthy()
   })
 
-  describe('Error Handling', () => {
-    it('should handle service errors gracefully', async () => {
-      savedAnswersService.delete.mockReturnValue({ success: false, message: 'Delete failed' })
-      
-  const wrapper = mount(SavedAnswers)
-  await wrapper.vm.$nextTick()
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
-      const deleteButton = wrapper.find('.answer-card .delete-button')
-      
-      await deleteButton.trigger('click')
-      
-      // Should not crash and should handle the error
-      expect(wrapper.exists()).toBe(true)
-    })
+  it('gracefully handles failed deletions', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    savedAnswersService.delete.mockResolvedValueOnce({ success: false })
+
+    const wrapper = await mountComponent()
+    const deleteButton = wrapper.find('.answer-card .delete-button')
+    await deleteButton.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.exists()).toBe(true)
+    expect(wrapper.emitted('update')).toBeFalsy()
+  })
+
+  it('opens and closes the export modal', async () => {
+    const wrapper = await mountComponent()
+    const exportButton = wrapper.find('button.btn--secondary')
+    await exportButton.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.modal').exists()).toBe(true)
+
+    const closeButton = wrapper.find('.modal-close')
+    await closeButton.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.modal').exists()).toBe(false)
+  })
+
+  it('downloads exported data when confirmed', async () => {
+    const wrapper = await mountComponent()
+    const exportButton = wrapper.find('button.btn--secondary')
+    await exportButton.trigger('click')
+    await flushPromises()
+
+    const confirmButton = wrapper.find('.modal-footer .btn--primary')
+    await confirmButton.trigger('click')
+    await flushPromises()
+
+    expect(savedAnswersService.exportData).toHaveBeenCalled()
+    expect(global.URL.createObjectURL).toHaveBeenCalled()
+    expect(mockClick).toHaveBeenCalled()
+  })
+
+  it('exposes a refresh method for parents to call', async () => {
+    const wrapper = await mountComponent()
+    await wrapper.vm.refresh()
+    expect(savedAnswersService.getAll).toHaveBeenCalledTimes(2)
   })
 })
