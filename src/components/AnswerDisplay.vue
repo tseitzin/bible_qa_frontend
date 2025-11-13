@@ -125,7 +125,7 @@
             class="followup-input"
             type="text"
             :disabled="loading"
-            placeholder="e.g., Tell me more about King David's reign..."
+            placeholder="e.g., Tell me more about ..."
             @keyup.enter="submitFollowUp"
           />
           <BaseButton
@@ -515,7 +515,7 @@ watch(
 
 .followup-description {
   margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-text-muted);
+  color: black;
 }
 
 .followup-input-group {
