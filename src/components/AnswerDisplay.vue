@@ -25,6 +25,10 @@
 
       <div class="answer-content">
         <div class="answer-text-wrapper">
+          <div v-if="latestQuestion" class="question-prompt">
+            <span class="question-prompt__label">You asked:</span>
+            <p class="question-prompt__text">{{ latestQuestion }}</p>
+          </div>
           <ScriptureText :text="answer" text-class="answer-text" />
 
           <div class="reading-info">
@@ -131,6 +135,7 @@
           <BaseButton
             class="followup-button"
             variant="primary"
+            :loading="loading"
             :disabled="loading || !followUpQuestion.trim()"
             @click="submitFollowUp"
           >
@@ -205,6 +210,7 @@ const copySuccess = ref(false)
 const saveSuccess = ref(null)
 const saving = ref(false)
 const followUpQuestion = ref('')
+const latestQuestion = ref('')
 
 const formattedTime = computed(() => new Date().toLocaleTimeString('en-US', {
   hour: 'numeric',
@@ -212,7 +218,23 @@ const formattedTime = computed(() => new Date().toLocaleTimeString('en-US', {
   hour12: true,
 }))
 
-const wordCount = computed(() => props.answer.split(/\s+/).filter(Boolean).length)
+const normalizedAnswer = computed(() => {
+  if (typeof props.answer === 'string') {
+    return props.answer
+  }
+
+  if (props.answer == null) {
+    return ''
+  }
+
+  return String(props.answer)
+})
+
+const wordCount = computed(() => {
+  const trimmed = normalizedAnswer.value.trim()
+  return trimmed ? trimmed.split(/\s+/).length : 0
+})
+
 const readingTime = computed(() => Math.max(1, Math.ceil(wordCount.value / 200)))
 
 const copyAnswer = async () => {
@@ -303,6 +325,7 @@ const submitFollowUp = () => {
   }
 
   emit('followUpQuestion', followUpQuestion.value)
+  latestQuestion.value = followUpQuestion.value
   followUpQuestion.value = ''
 }
 
@@ -321,6 +344,14 @@ watch(
       }
     }, 100)
   },
+)
+
+watch(
+  () => props.question,
+  (newQuestion) => {
+    latestQuestion.value = newQuestion || ''
+  },
+  { immediate: true },
 )
 </script>
 
@@ -412,6 +443,33 @@ watch(
   position: relative;
 }
 
+.question-prompt {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.question-prompt__label {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(30, 64, 175, 0.9);
+  margin-bottom: var(--spacing-xs);
+}
+
+.question-prompt__text {
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: #0f172a;
+  font-weight: var(--font-weight-medium);
+}
+
 :deep(.answer-text) {
   font-size: var(--font-size-lg);
   line-height: var(--line-height-relaxed);
@@ -456,6 +514,28 @@ watch(
   gap: var(--spacing-xs);
 }
 
+:deep(.action-button.btn--ghost) {
+  border: 2px solid rgba(37, 99, 235, 0.75);
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-bold);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+:deep(.action-button.btn--ghost:hover:not(:disabled)) {
+  border-color: rgba(37, 99, 235, 0.95);
+  background: rgba(37, 99, 235, 0.18);
+  color: var(--color-primary);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+}
+
+:deep(.action-button.btn--ghost:focus-visible) {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
 .action-button svg {
   width: 16px;
   height: 16px;
@@ -478,6 +558,7 @@ watch(
 .word-count {
   display: flex;
   align-items: center;
+  color: black;
   gap: var(--spacing-xs);
 }
 

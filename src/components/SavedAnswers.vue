@@ -234,6 +234,51 @@ const selectedTag = ref('')
 const expandedCards = ref(new Set())
 const showExportModal = ref(false)
 
+const normalizeText = (value) => {
+  if (typeof value === 'string') {
+    return value
+  }
+
+  if (value == null) {
+    return ''
+  }
+
+  try {
+    return String(value)
+  } catch (error) {
+    console.warn('Failed to normalize text value:', error)
+    return ''
+  }
+}
+
+const calculateWordCount = (value) => {
+  const normalized = normalizeText(value).trim()
+  return normalized ? normalized.split(/\s+/).length : 0
+}
+
+const deriveWordCount = (item) => {
+  if (Array.isArray(item?.conversation_thread) && item.conversation_thread.length > 0) {
+    return item.conversation_thread.reduce((total, entry) => total + calculateWordCount(entry?.answer), 0)
+  }
+
+  return calculateWordCount(item?.answer)
+}
+
+const withDerivedFields = (item) => {
+  if (!item || typeof item !== 'object') {
+    return {
+      wordCount: 0,
+    }
+  }
+
+  const wordCount = typeof item.wordCount === 'number' ? item.wordCount : deriveWordCount(item)
+
+  return {
+    ...item,
+    wordCount,
+  }
+}
+
 // Computed properties
 const availableTags = ref([])
 
@@ -253,10 +298,11 @@ const filteredAnswers = computed(() => {
   // Apply search filter if there's a search query
   if (searchQuery.value && searchQuery.value.trim()) {
     const query = searchQuery.value.trim().toLowerCase()
-    filtered = filtered.filter(answer => 
-      answer.question?.toLowerCase().includes(query) ||
-      answer.answer?.toLowerCase().includes(query)
-    )
+    filtered = filtered.filter(answer => {
+      const questionText = normalizeText(answer.question).toLowerCase()
+      const answerText = normalizeText(answer.answer).toLowerCase()
+      return questionText.includes(query) || answerText.includes(query)
+    })
   }
 
   // Apply tag filter if a tag is selected
@@ -270,10 +316,7 @@ const filteredAnswers = computed(() => {
 })
 
 const stats = computed(() => {
-  const totalWords = savedAnswers.value.reduce((sum, item) => {
-    const wordCount = item.answer ? item.answer.split(/\s+/).filter(w => w.length > 0).length : 0
-    return sum + wordCount
-  }, 0)
+  const totalWords = savedAnswers.value.reduce((sum, item) => sum + deriveWordCount(item), 0)
   
   return {
     totalWords,
@@ -284,7 +327,8 @@ const stats = computed(() => {
 // Methods
 const loadSavedAnswers = async () => {
   try {
-    savedAnswers.value = await savedAnswersService.getAll()
+    const fetched = await savedAnswersService.getAll()
+    savedAnswers.value = (Array.isArray(fetched) ? fetched : []).map(withDerivedFields)
   } catch (error) {
     console.error('Failed to load saved answers:', error)
     savedAnswers.value = []
