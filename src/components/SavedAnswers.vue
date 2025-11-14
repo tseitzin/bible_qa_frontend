@@ -568,21 +568,21 @@ defineExpose({
 .empty-state {
   text-align: center;
   padding: var(--spacing-4xl) var(--spacing-xl);
-  color: var(--color-text-muted);
+  color: black;
 }
 
 .empty-icon {
   width: 64px;
   height: 64px;
   margin: 0 auto var(--spacing-lg);
-  color: var(--color-text-muted);
-  opacity: 0.5;
+  color: black;
+  opacity: 0.6;
 }
 
 .empty-state h3 {
   font-size: var(--font-size-xl);
   margin-bottom: var(--spacing-sm);
-  color: white;
+  color: black;
 }
 
 .empty-state p {
@@ -590,6 +590,7 @@ defineExpose({
   max-width: 400px;
   margin: 0 auto;
   line-height: var(--line-height-relaxed);
+  color: black;
 }
 
 .answers-grid {

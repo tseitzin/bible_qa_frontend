@@ -4,10 +4,7 @@
     <nav class="app-nav">
       <div class="nav-container">
         <div class="nav-logo">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-          </svg>
-          <span>Bible Q&A</span>
+          <img :src="navLogo" alt="Word of Life Answers logo" />
         </div>
         <div class="nav-links">
           <router-link to="/" class="nav-link nav-link--active">Adults</router-link>
@@ -174,6 +171,7 @@ import SavedAnswers from '../components/SavedAnswers.vue'
 import { useBibleQA } from '../composables/useBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { useAuth } from '../composables/useAuth.js'
+import navLogo from '../assets/logo_cross.png'
 
 const router = useRouter()
 const { currentUser, logout } = useAuth()
@@ -303,6 +301,10 @@ const handleLogout = () => {
 
 // Load saved count on mount and check for tab query parameter
 onMounted(async () => {
+  if (typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }
+
   await updateSavedCount()
   
   // Check if we should open saved tab from query parameter
@@ -327,9 +329,10 @@ onMounted(async () => {
 }
 
 .nav-container {
-  max-width: 1200px;
+  max-width: 1432px;
+  height: 76px;
   margin: 0 auto;
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: 0 var(--spacing-xl);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -342,11 +345,13 @@ onMounted(async () => {
   color: var(--color-primary);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-lg);
+  margin-right: auto;
 }
 
-.nav-logo svg {
-  width: 24px;
-  height: 24px;
+.nav-logo img {
+  height: 92px;
+  width: auto;
+  display: block;
 }
 
 .nav-links {
@@ -589,8 +594,7 @@ onMounted(async () => {
 }
 
 .app-title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-3xl);
   color: var(--color-text-primary);
   margin: 0;
   background: var(--gradient-primary);
@@ -911,11 +915,17 @@ onMounted(async () => {
 /* Responsive Design */
 @media (max-width: 768px) {
   .nav-container {
-    padding: var(--spacing-sm) var(--spacing-lg);
+    height: auto;
+    padding: var(--spacing-xs) var(--spacing-lg);
   }
   
   .nav-logo {
     font-size: var(--font-size-base);
+    margin-right: auto;
+  }
+
+  .nav-logo img {
+    height: 64px;
   }
   
   .nav-links {
@@ -965,7 +975,7 @@ onMounted(async () => {
 
 @media (max-width: 480px) {
   .app-container {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-lg);
   }
   
   .header-content {
@@ -975,10 +985,10 @@ onMounted(async () => {
   .app-title {
     font-size: var(--font-size-3xl);
   }
-  
+
   .logo-icon {
     width: 50px;
-    height: 50px;
+    padding: var(--spacing-xs) var(--spacing-md);
   }
   
   .logo-icon svg {

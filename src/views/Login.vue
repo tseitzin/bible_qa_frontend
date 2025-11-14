@@ -14,12 +14,10 @@
     <div class="auth-container">
       <!-- Logo Header -->
       <div class="auth-logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-          </svg>
+        <div class="logo-icon" aria-hidden="true">
+          <img :src="logoImage" alt="Word of Life Answers logo" />
         </div>
-        <h1 class="logo-title">Bible Q&A</h1>
+        <h1 class="logo-title">Word of Life Answers</h1>
       </div>
 
       <!-- Auth Card -->
@@ -93,6 +91,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import logoImage from '../assets/logo_wider.png'
 
 const router = useRouter()
 const { login, isLoading, error: authError } = useAuth()
@@ -242,33 +241,29 @@ const continueAsGuest = () => {
 }
 
 .logo-icon {
-  width: 80px;
-  height: 80px;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-2xl);
+  width: 160px;
+  margin: 0 auto 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: var(--shadow-xl);
-  margin-bottom: var(--spacing-md);
   position: relative;
+}
+
+.logo-icon img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .logo-icon::after {
   content: '';
   position: absolute;
-  inset: -2px;
+  inset: -8px;
   background: var(--gradient-primary);
   border-radius: var(--border-radius-2xl);
   z-index: -1;
-  opacity: 0.3;
-  filter: blur(12px);
-}
-
-.logo-icon svg {
-  width: 40px;
-  height: 40px;
+  opacity: 0.25;
+  filter: blur(20px);
 }
 
 .logo-title {
