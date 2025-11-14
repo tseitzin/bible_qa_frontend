@@ -12,20 +12,13 @@
     </div>
 
     <div class="auth-container">
-      <!-- Logo Header -->
-      <div class="auth-logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-          </svg>
-        </div>
-        <h1 class="logo-title">Bible Q&A</h1>
-      </div>
-
       <!-- Auth Card -->
       <div class="auth-card">
+        <div class="logo-icon" aria-hidden="true">
+          <img :src="logoImage" alt="Word of Life Answers logo" />
+        </div>
         <h2>Create Account</h2>
-        <p class="subtitle">Join to save and organize your Bible answers</p>
+        <p class="subtitle">Sign in to save answers, revisit your saved answers anytime, and view your recently asked questions.</p>
 
         <form @submit.prevent="handleRegister" class="auth-form">
           <div v-if="error" class="error-message">
@@ -60,17 +53,54 @@
             />
           </div>
 
-          <div class="form-group">
+          <div class="form-group password-group">
             <label for="password">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              required
-              minlength="8"
-              placeholder="At least 8 characters"
-              :disabled="isLoading"
-            />
+            <div class="password-input">
+              <input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                minlength="8"
+                placeholder="At least 8 characters"
+                :disabled="isLoading"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="togglePasswordVisibility"
+                :aria-pressed="showPassword"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                :title="showPassword ? 'Hide password' : 'Show password'"
+                :disabled="isLoading"
+              >
+                <svg
+                  v-if="!showPassword"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2.5 12s3-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3 5.5-9.5 5.5S2.5 12 2.5 12z" />
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <svg
+                  v-else
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2.5 12s3-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3 5.5-9.5 5.5S2.5 12 2.5 12z" />
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path d="M4 4l16 16" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <button type="submit" class="btn-primary" :disabled="isLoading">
@@ -90,15 +120,15 @@
           Continue as Guest
         </button>
 
+        <p class="guest-note guest-note--inline">
+          💡 You can use Word of Life Answers without an account. Create one only if you want to save answers.
+        </p>
+
         <p class="auth-footer">
           Already have an account?
           <router-link to="/login">Sign in</router-link>
         </p>
       </div>
-
-      <p class="guest-note">
-        💡 You can use Bible Q&A without an account. Create one only if you want to save answers.
-      </p>
     </div>
   </div>
 </template>
@@ -107,6 +137,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import logoImage from '../assets/logo_cross.png'
 
 const router = useRouter()
 const { register, isLoading, error: authError } = useAuth()
@@ -115,6 +146,7 @@ const username = ref('')
 const email = ref('')
 const password = ref('')
 const error = ref('')
+const showPassword = ref(false)
 
 const handleRegister = async () => {
   error.value = ''
@@ -131,6 +163,10 @@ const handleRegister = async () => {
 const continueAsGuest = () => {
   router.push('/')
 }
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
 </script>
 
 <style scoped>
@@ -143,6 +179,12 @@ const continueAsGuest = () => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  --login-primary: #16365c;
+  --login-primary-light: #1f4c80;
+  --login-primary-dark: #0b1f33;
+  --login-accent: #e6eef6;
+  --login-muted: #4a6178;
+  --login-highlight: rgba(22, 54, 92, 0.12);
 }
 
 /* Background Elements */
@@ -162,13 +204,11 @@ const continueAsGuest = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    #667eea 0%, 
-    #764ba2 25%, 
-    #f093fb 50%, 
-    #f5576c 75%, 
-    #4facfe 100%);
-  opacity: 0.1;
+  background: linear-gradient(140deg,
+    var(--login-primary-dark) 0%,
+    var(--login-primary) 45%,
+    var(--login-primary-light) 100%);
+  opacity: 0.28;
 }
 
 .bg-pattern {
@@ -177,10 +217,10 @@ const continueAsGuest = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(37, 99, 235, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 70% 30%, rgba(22, 54, 92, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 55%);
   background-size: 800px 800px, 600px 600px, 400px 400px;
   animation: float 20s ease-in-out infinite;
 }
@@ -248,97 +288,54 @@ const continueAsGuest = () => {
 }
 
 /* Logo Header */
-.auth-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: var(--spacing-2xl);
-  animation: fadeInDown 0.6s ease-out;
-}
-
 .logo-icon {
-  width: 80px;
-  height: 80px;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-2xl);
+  width: 160px;
+  margin: 0 auto 0.125rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: var(--shadow-xl);
-  margin-bottom: var(--spacing-md);
   position: relative;
 }
 
-.logo-icon::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-2xl);
-  z-index: -1;
-  opacity: 0.3;
-  filter: blur(12px);
-}
-
-.logo-icon svg {
-  width: 40px;
-  height: 40px;
-}
-
-.logo-title {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-extrabold);
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
+.logo-icon img {
+  width: 140%;
+  height: auto;
+  display: block;
 }
 
 /* Auth Card */
 .auth-card {
-  background: var(--gradient-card);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(230, 238, 246, 0.94));
   backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-2xl);
-  padding: var(--spacing-3xl);
-  box-shadow: var(--shadow-2xl);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+  box-shadow: 0 30px 60px rgba(11, 31, 51, 0.18);
+  border: 1px solid rgba(22, 54, 92, 0.12);
   position: relative;
   animation: fadeInUp 0.6s ease-out;
-}
-
-.auth-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-2xl) var(--border-radius-2xl) 0 0;
 }
 
 h2 {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: #1a202c;
-  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--login-primary);
+  margin: 0 0 var(--spacing-xs) 0;
   text-align: center;
 }
 
 .subtitle {
-  color: #4a5568;
+  color: var(--login-muted);
   text-align: center;
-  margin-bottom: var(--spacing-2xl);
-  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
 }
 
 /* Form */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .form-group {
@@ -354,18 +351,63 @@ label {
 }
 
 input {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 2px solid rgba(22, 54, 92, 0.14);
   border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   transition: all var(--transition-normal);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
+  width: 100%;
+}
+
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  padding-right: calc(var(--spacing-md) + 2.25rem);
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-sm);
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--login-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.password-toggle:hover:not(:disabled) {
+  color: var(--login-primary);
+}
+
+.password-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(22, 54, 92, 0.25);
+}
+
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
 input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--login-primary);
+  box-shadow: 0 0 0 3px rgba(22, 54, 92, 0.16);
   background: white;
 }
 
@@ -377,8 +419,8 @@ input:disabled {
 
 /* Buttons */
 .btn-primary {
-  padding: var(--spacing-md) var(--spacing-xl);
-  background: var(--gradient-primary);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: linear-gradient(135deg, var(--login-primary), var(--login-primary-light));
   color: white;
   border: none;
   border-radius: var(--border-radius-lg);
@@ -386,7 +428,7 @@ input:disabled {
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all var(--transition-normal);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 14px 30px rgba(22, 54, 92, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -408,16 +450,18 @@ input:disabled {
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 18px 34px rgba(22, 54, 92, 0.28);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow: 0 10px 22px rgba(22, 54, 92, 0.2);
 }
 
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  background: linear-gradient(135deg, rgba(22, 54, 92, 0.6), rgba(31, 76, 128, 0.6));
 }
 
 /* Divider */
@@ -425,21 +469,21 @@ input:disabled {
   display: flex;
   align-items: center;
   text-align: center;
-  margin: var(--spacing-xl) 0;
-  color: #4a5568;
+  margin: var(--spacing-xs) 0;
+  color: var(--login-muted);
 }
 
 .auth-divider::before,
 .auth-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(22, 54, 92, 0.50);
 }
 
 .auth-divider span {
   padding: 0 var(--spacing-md);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-bold);
 }
 
 /* Guest Button */
@@ -448,10 +492,10 @@ input:disabled {
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: white;
-  color: var(--color-primary);
-  border: 2px solid var(--color-primary);
+  color: var(--login-primary);
+  border: 2px solid var(--login-primary);
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
@@ -466,10 +510,15 @@ input:disabled {
 }
 
 .btn-guest:hover {
-  background: var(--color-primary);
+  background: var(--login-primary);
   color: white;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 12px 24px rgba(22, 54, 92, 0.22);
+}
+
+.btn-guest:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(22, 54, 92, 0.28);
 }
 
 /* Error Message */
@@ -494,35 +543,45 @@ input:disabled {
 /* Footer */
 .auth-footer {
   text-align: center;
-  margin-top: var(--spacing-xl);
-  color: #4a5568;
+  margin-top: var(--spacing-xs);
+  color: var(--login-primary-dark);
   font-size: var(--font-size-sm);
 }
 
 .auth-footer a {
-  color: var(--color-primary);
+  color: var(--login-primary);
   text-decoration: none;
   font-weight: var(--font-weight-semibold);
   transition: color var(--transition-normal);
 }
 
 .auth-footer a:hover {
-  color: var(--color-primary-dark);
+  color: var(--login-primary-light);
   text-decoration: underline;
 }
 
 /* Guest Note */
 .guest-note {
   text-align: center;
-  margin-top: var(--spacing-xl);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: var(--font-size-sm);
-  padding: var(--spacing-md);
-  background: rgba(255, 255, 255, 0.1);
+  margin-top: var(--spacing-sm);
+  color: var(--login-primary-dark);
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid rgba(22, 54, 92, 0.18);
+  box-shadow: 0 14px 30px rgba(11, 31, 51, 0.14);
   animation: fadeIn 0.8s ease-out 0.3s both;
+}
+
+.guest-note--inline {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  background: rgba(22, 54, 92, 0.08);
+  border: 1px solid rgba(22, 54, 92, 0.15);
+  box-shadow: 0 6px 16px rgba(11, 31, 51, 0.08);
+  animation: none;
 }
 
 /* Animations */
@@ -562,23 +621,19 @@ input:disabled {
   .auth-container {
     padding: var(--spacing-lg);
   }
-  
+
   .auth-card {
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-md) var(--spacing-lg);
   }
-  
+
   .logo-icon {
     width: 60px;
     height: 60px;
   }
-  
-  .logo-icon svg {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .logo-title {
-    font-size: var(--font-size-2xl);
+
+  .logo-icon img {
+    width: 100%;
+    height: auto;
   }
 }
 </style>
