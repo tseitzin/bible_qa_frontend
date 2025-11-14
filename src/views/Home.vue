@@ -3,10 +3,8 @@
     <nav class="app-nav">
       <div class="nav-container">
         <div class="nav-logo">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-          </svg>
-          <span>Bible Q&A</span>
+          <img :src="navLogo" alt="Word of Life Answers logo" />
+          <span class="sr-only">Word of Life Answers</span>
         </div>
         <div class="nav-links">
           <router-link to="/home" class="nav-link nav-link--active">Home</router-link>
@@ -40,11 +38,6 @@
         <div class="header-content">
           <div class="logo-section">
             <div class="logo-wrapper">
-              <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                </svg>
-              </div>
               <div class="logo-text">
                 <h1 class="app-title">Welcome Back{{ currentUser?.username ? `, ${currentUser.username}` : '' }}</h1>
                 <div class="app-tagline">Scripture • Wisdom • Truth</div>
@@ -109,6 +102,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import navLogo from '../assets/logo_cross.png'
 
 const router = useRouter()
 const { currentUser, logout } = useAuth()
@@ -134,6 +128,12 @@ const goToAdults = () => {
   display: flex;
   flex-direction: column;
   padding-top: 80px;
+  --app-primary: #16365c;
+  --app-primary-light: #1f4c80;
+  --app-primary-dark: #0b1f33;
+  --app-accent: #e6eef6;
+  --app-muted: #4a6178;
+  --app-highlight: rgba(22, 54, 92, 0.12);
 }
 
 .app-nav {
@@ -144,14 +144,15 @@ const goToAdults = () => {
   z-index: 100;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid rgba(22, 54, 92, 0.12);
+  box-shadow: 0 12px 26px rgba(11, 31, 51, 0.12);
 }
 
 .nav-container {
-  max-width: 1200px;
+  max-width: 1432px;
+  height: 76px;
   margin: 0 auto;
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: 0 var(--spacing-xl);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -161,14 +162,13 @@ const goToAdults = () => {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  color: var(--color-primary);
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-lg);
+  margin-right: auto;
 }
 
-.nav-logo svg {
-  width: 24px;
-  height: 24px;
+.nav-logo img {
+  height: 92px;
+  width: auto;
+  display: block;
 }
 
 .nav-links {
@@ -184,58 +184,58 @@ const goToAdults = () => {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--border-radius-lg);
   text-decoration: none;
-  color: #1a202c;
+  color: var(--app-primary-dark);
   font-weight: var(--font-weight-semibold);
   transition: all var(--transition-normal);
-  border: 2px solid transparent;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(22, 54, 92, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 20px rgba(11, 31, 51, 0.12);
   cursor: pointer;
 }
 
 .nav-link:hover {
-  color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(37, 99, 235, 0.3);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--app-primary);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(22, 54, 92, 0.28);
+  box-shadow: 0 12px 28px rgba(11, 31, 51, 0.18);
   transform: translateY(-1px);
 }
 
 .nav-link--active {
-  background: var(--gradient-primary);
-  color: var(--color-text-inverse);
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
+  color: #ffffff;
+  border-color: rgba(22, 54, 92, 0.32);
+  box-shadow: 0 16px 30px rgba(22, 54, 92, 0.28);
 }
 
 .logout-button {
   appearance: none;
-  background: rgba(239, 68, 68, 0.18);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: rgba(136, 19, 55, 0.85);
-  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.32);
+  color: rgba(136, 19, 55, 0.88);
+  box-shadow: 0 12px 24px rgba(239, 68, 68, 0.18);
 }
 
 .logout-button:hover {
-  background: rgba(239, 68, 68, 0.28);
-  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.24);
+  border-color: rgba(239, 68, 68, 0.42);
   color: rgba(136, 19, 55, 1);
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+  box-shadow: 0 18px 30px rgba(239, 68, 68, 0.24);
 }
 
 .login-button {
-  background: rgba(34, 197, 94, 0.2);
-  border-color: rgba(16, 185, 129, 0.4);
-  color: rgba(6, 95, 70, 0.9);
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.18);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
+  border-color: rgba(22, 54, 92, 0.32);
+  color: #ffffff;
+  box-shadow: 0 16px 30px rgba(22, 54, 92, 0.28);
 }
 
 .login-button:hover {
-  background: rgba(34, 197, 94, 0.3);
-  border-color: rgba(16, 185, 129, 0.5);
-  color: rgba(6, 95, 70, 1);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+  background: linear-gradient(135deg, var(--app-primary-light), var(--app-primary));
+  border-color: rgba(22, 54, 92, 0.4);
+  color: #ffffff;
+  box-shadow: 0 22px 36px rgba(22, 54, 92, 0.32);
 }
 
 .app-background {
@@ -250,25 +250,37 @@ const goToAdults = () => {
 
 .bg-gradient {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-  opacity: 0.1;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(140deg,
+    var(--app-primary-dark) 0%,
+    var(--app-primary) 45%,
+    var(--app-primary-light) 100%);
+  opacity: 0.28;
 }
 
 .bg-pattern {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-image:
-    radial-gradient(circle at 25% 25%, rgba(37, 99, 235, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 70% 30%, rgba(22, 54, 92, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 55%);
   background-size: 800px 800px, 600px 600px, 400px 400px;
   animation: float 20s ease-in-out infinite;
 }
 
 .floating-elements {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
 }
 
@@ -283,34 +295,33 @@ const goToAdults = () => {
 .floating-element--1 {
   width: 200px;
   height: 200px;
-  top: 12%;
-  left: 12%;
+  top: 10%;
+  left: 10%;
   animation-delay: 0s;
 }
 
 .floating-element--2 {
   width: 150px;
   height: 150px;
-  top: 58%;
+  top: 60%;
   right: 15%;
   animation-delay: -5s;
 }
 
 .floating-element--3 {
-  width: 110px;
-  height: 110px;
-  bottom: 18%;
-  left: 24%;
+  width: 100px;
+  height: 100px;
+  bottom: 20%;
+  left: 20%;
   animation-delay: -10s;
 }
 
 @keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
   }
   33% {
-    transform: translateY(-18px) rotate(120deg);
+    transform: translateY(-20px) rotate(120deg);
   }
   66% {
     transform: translateY(10px) rotate(240deg);
@@ -318,9 +329,9 @@ const goToAdults = () => {
 }
 
 .app-container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -334,18 +345,18 @@ const goToAdults = () => {
 }
 
 .header-content {
-  background: var(--gradient-card);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(230, 238, 246, 0.94));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-2xl);
-  padding: var(--spacing-xl) var(--spacing-xl);
-  box-shadow: var(--shadow-xl);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: var(--spacing-xl);
+  box-shadow: 0 30px 60px rgba(11, 31, 51, 0.18);
+  border: 1px solid rgba(22, 54, 92, 0.12);
   position: relative;
   overflow: hidden;
 }
 
 .logo-section {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
 }
 
 .logo-wrapper {
@@ -357,32 +368,33 @@ const goToAdults = () => {
 }
 
 .logo-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-xl);
+  width: 96px;
+  height: 96px;
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
+  border-radius: var(--border-radius-2xl);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-inverse);
-  box-shadow: var(--shadow-lg);
+  color: #ffffff;
+  box-shadow: 0 24px 48px rgba(22, 54, 92, 0.28);
   position: relative;
+}
+
+.logo-icon img {
+  width: 140%;
+  height: auto;
+  display: block;
 }
 
 .logo-icon::after {
   content: '';
   position: absolute;
   inset: -2px;
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
   border-radius: var(--border-radius-xl);
   z-index: -1;
-  opacity: 0.3;
-  filter: blur(8px);
-}
-
-.logo-icon svg {
-  width: 28px;
-  height: 28px;
+  opacity: 0.28;
+  filter: blur(12px);
 }
 
 .logo-text {
@@ -391,19 +403,18 @@ const goToAdults = () => {
 
 .app-title {
   font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-extrabold);
-  color: var(--color-text-primary);
   margin: 0;
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1.1;
+  line-height: 1.08;
+  font-weight: var(--font-weight-extrabold);
 }
 
 .app-tagline {
   font-size: var(--font-size-sm);
-  color: var(--color-text-accent);
+  color: var(--app-primary-light);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -412,9 +423,9 @@ const goToAdults = () => {
 
 .app-subtitle {
   font-size: var(--font-size-base);
-  color: #1a202c;
+  color: var(--app-muted);
   margin: 0;
-  line-height: var(--line-height-normal);
+  line-height: var(--line-height-tight);
   max-width: 640px;
   margin: 0 auto;
   font-weight: var(--font-weight-semibold);
@@ -429,9 +440,9 @@ const goToAdults = () => {
 .section-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  color: black;
   margin-bottom: var(--spacing-md);
   text-align: center;
+  color: var(--app-primary-dark);
 }
 
 .action-grid {
@@ -441,48 +452,48 @@ const goToAdults = () => {
 }
 
 .action-card {
-  background: #f8fafc;
-  border-radius: var(--border-radius-xl);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(230, 238, 246, 0.9));
+  border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
   text-align: left;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(22, 54, 92, 0.12);
+  box-shadow: 0 24px 48px rgba(11, 31, 51, 0.18);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
   text-decoration: none;
-  color: #0f172a;
+  color: var(--app-primary-dark);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
 }
 
 .action-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  border-color: rgba(37, 99, 235, 0.35);
-  background: #ffffff;
+  box-shadow: 0 32px 58px rgba(11, 31, 51, 0.22);
+  border-color: rgba(22, 54, 92, 0.28);
 }
 
 .action-card--button {
   cursor: pointer;
-  background: #f8fafc;
 }
 
 .action-icon {
   width: 48px;
   height: 48px;
-  border-radius: var(--border-radius-full);
+  border-radius: var(--border-radius-xl);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 1.75rem;
-  color: var(--color-primary);
+  color: var(--app-primary);
+  background: rgba(22, 54, 92, 0.08);
+  box-shadow: 0 12px 24px rgba(11, 31, 51, 0.1);
 }
 
 .action-card h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
-  color: #0f172a;
+  color: var(--app-primary-dark);
 }
 
 .action-card p {
@@ -498,29 +509,27 @@ const goToAdults = () => {
 }
 
 .insights-card {
-  background: #f8fafc;
-  border-radius: var(--border-radius-xl);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(230, 238, 246, 0.92));
+  border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
-  box-shadow: var(--shadow-md);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 40px rgba(11, 31, 51, 0.16);
+  border: 1px solid rgba(22, 54, 92, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
 .insights-card h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  margin-bottom: var(--spacing-sm);
-  color: black;
+  margin: 0;
+  color: var(--app-primary-dark);
 }
 
 .insights-card p {
-  margin: 0 0 var(--spacing-md) 0;
-  color: rgba(15, 23, 42, 0.75);
+  margin: 0;
+  color: rgba(15, 23, 42, 0.74);
   line-height: var(--line-height-relaxed);
-}
-
-.insights-card--secondary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.05) 100%);
-  border-color: rgba(37, 99, 235, 0.25);
 }
 
 .btn-primary {
@@ -529,23 +538,28 @@ const goToAdults = () => {
   justify-content: center;
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--border-radius-lg);
-  background: var(--gradient-primary);
-  color: var(--color-text-inverse);
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
+  color: #ffffff;
   font-weight: var(--font-weight-semibold);
-  border: none;
+  border: 1px solid rgba(22, 54, 92, 0.32);
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 18px 36px rgba(22, 54, 92, 0.28);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 24px 44px rgba(22, 54, 92, 0.32);
 }
 
 @media (max-width: 768px) {
   .nav-container {
-    padding: var(--spacing-sm) var(--spacing-lg);
+    height: auto;
+    padding: var(--spacing-xs) var(--spacing-lg);
+  }
+
+  .nav-logo img {
+    height: 72px;
   }
 
   .nav-links {
@@ -573,10 +587,11 @@ const goToAdults = () => {
     text-align: center;
   }
 
-  .action-grid {
-    grid-template-columns: 1fr;
+  .home-main {
+    gap: var(--spacing-lg);
   }
 
+  .action-grid,
   .home-insights {
     grid-template-columns: 1fr;
   }
@@ -588,7 +603,7 @@ const goToAdults = () => {
   }
 
   .header-content {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl);
   }
 
   .app-title {
@@ -597,6 +612,11 @@ const goToAdults = () => {
 
   .nav-links {
     gap: var(--spacing-sm);
+  }
+
+  .logo-icon {
+    width: 72px;
+    height: 72px;
   }
 }
 </style>
