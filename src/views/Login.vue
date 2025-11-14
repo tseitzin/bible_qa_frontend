@@ -562,14 +562,17 @@ input:disabled {
   text-align: center;
   margin-top: var(--spacing-xs);
   color: var(--login-primary-dark);
-  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
 }
 
 .auth-footer a {
   color: var(--login-primary);
   text-decoration: none;
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
   transition: color var(--transition-normal);
+  text-underline-offset: 3px;
 }
 
 .auth-footer a:hover {
