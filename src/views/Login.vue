@@ -18,8 +18,8 @@
         <div class="logo-icon" aria-hidden="true">
           <img :src="logoImage" alt="Word of Life Answers logo" />
         </div>
-        <h2>Welcome Back</h2>
-        <p class="subtitle">Sign in to save and access your answers</p>
+        <h2>Welcome Back!</h2>
+        <p class="subtitle">Sign in to save answers, revisit your saved answers anytime, and view your recently asked questions.</p>
 
         <form @submit.prevent="handleLogin" class="auth-form">
           <div v-if="error" class="error-message">
@@ -41,16 +41,53 @@
             />
           </div>
 
-          <div class="form-group">
+          <div class="form-group password-group">
             <label for="password">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              :disabled="isLoading"
-            />
+            <div class="password-input">
+              <input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                placeholder="••••••••"
+                :disabled="isLoading"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="togglePasswordVisibility"
+                :aria-pressed="showPassword"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                :title="showPassword ? 'Hide password' : 'Show password'"
+                :disabled="isLoading"
+              >
+                <svg
+                  v-if="!showPassword"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2.5 12s3-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3 5.5-9.5 5.5S2.5 12 2.5 12z" />
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <svg
+                  v-else
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2.5 12s3-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3 5.5-9.5 5.5S2.5 12 2.5 12z" />
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path d="M4 4l16 16" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <button type="submit" class="btn-primary" :disabled="isLoading">
@@ -97,6 +134,7 @@ const { login, isLoading, error: authError } = useAuth()
 const email = ref('')
 const password = ref('')
 const error = ref('')
+const showPassword = ref(false)
 
 const handleLogin = async () => {
   error.value = ''
@@ -112,6 +150,10 @@ const handleLogin = async () => {
 
 const continueAsGuest = () => {
   router.push('/')
+}
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
 }
 </script>
 
@@ -290,17 +332,6 @@ const continueAsGuest = () => {
   animation: fadeInUp 0.6s ease-out;
 }
 
-.auth-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--login-primary), var(--login-primary-light));
-  border-radius: var(--border-radius-2xl) var(--border-radius-2xl) 0 0;
-}
-
 h2 {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
@@ -312,8 +343,9 @@ h2 {
 .subtitle {
   color: var(--login-muted);
   text-align: center;
-  margin-bottom: var(--spacing-md);
-  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
 }
 
 /* Form */
@@ -336,12 +368,57 @@ label {
 }
 
 input {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
   border: 2px solid rgba(22, 54, 92, 0.14);
   border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   transition: all var(--transition-normal);
   background: rgba(255, 255, 255, 0.95);
+  width: 100%;
+}
+
+.password-input {
+  position: relative;
+}
+
+.password-input input {
+  padding-right: calc(var(--spacing-md) + 2.25rem);
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--spacing-sm);
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--login-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.password-toggle:hover:not(:disabled) {
+  color: var(--login-primary);
+}
+
+.password-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(22, 54, 92, 0.25);
+}
+
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
 input:focus {
@@ -362,7 +439,7 @@ input:disabled {
   padding: var(--spacing-sm) var(--spacing-lg);
   background: linear-gradient(135deg, var(--login-primary), var(--login-primary-light));
   color: white;
-  border: none;
+    position: relative;
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
@@ -417,13 +494,13 @@ input:disabled {
 .auth-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid rgba(22, 54, 92, 0.12);
+  border-bottom: 1px solid rgba(22, 54, 92, 0.50);
 }
 
 .auth-divider span {
   padding: 0 var(--spacing-md);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-bold);
 }
 
 /* Guest Button */
@@ -484,7 +561,7 @@ input:disabled {
 .auth-footer {
   text-align: center;
   margin-top: var(--spacing-xs);
-  color: var(--login-muted);
+  color: var(--login-primary-dark);
   font-size: var(--font-size-sm);
 }
 
