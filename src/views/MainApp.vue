@@ -93,10 +93,12 @@
               :recent-questions="recentQuestions"
               :show-recent-questions="Boolean(currentUser)"
               @submit="handleQuestionSubmit"
+              @clear="handleQuestionCleared"
             />
           </div>
           
           <AnswerDisplay 
+            v-if="showAnswer"
             :answer="answer" 
             :question="question"
             :question-id="questionId"
@@ -194,6 +196,7 @@ const {
   error,
   askQuestion,
   askFollowUpQuestion,
+  clearAll,
   clearError
 } = useBibleQA()
 
@@ -206,10 +209,18 @@ const savedSectionRef = ref(null)
 // Store current question and answer for accessibility by tests
 const currentQuestion = ref('')
 const currentAnswer = ref('')
+const showAnswer = ref(false)
 
 // Saved answers count for badge
 const savedCount = ref(0)
 const recentQuestions = ref([])
+
+const resetQAState = () => {
+  clearAll()
+  currentQuestion.value = ''
+  currentAnswer.value = ''
+  showAnswer.value = false
+}
 
 const updateSavedCount = async () => {
   // Only fetch saved count if user is authenticated
@@ -278,6 +289,11 @@ const handleQuestionSubmit = async (questionText) => {
   currentQuestion.value = trimmedQuestion
   currentAnswer.value = ''
   question.value = trimmedQuestion
+  answer.value = ''
+  questionId.value = null
+  rootQuestionId.value = null
+  conversationHistory.value = []
+  showAnswer.value = false
 
   if (activeTab.value !== 'ask') {
     activeTab.value = 'ask'
@@ -287,6 +303,7 @@ const handleQuestionSubmit = async (questionText) => {
   await askQuestion(trimmedQuestion)
 
   currentAnswer.value = answer.value
+  showAnswer.value = Boolean(answer.value)
 
   if (currentUser.value && !error.value && answer.value) {
     recordRecentQuestion(trimmedQuestion)
@@ -335,6 +352,9 @@ const scrollToSavedSection = () => {
 
 const handleSavedTabClick = async () => {
   if (activeTab.value !== 'saved') {
+    resetQAState()
+  }
+  if (activeTab.value !== 'saved') {
     activeTab.value = 'saved'
     await nextTick()
   } else {
@@ -361,11 +381,21 @@ const handleFollowUpQuestion = async (followUpText) => {
     return
   }
 
+  currentAnswer.value = ''
+  answer.value = ''
+  showAnswer.value = false
   await askFollowUpQuestion(trimmedFollowUp)
+
+  currentAnswer.value = answer.value
+  showAnswer.value = Boolean(answer.value)
 
   if (currentUser.value && !error.value && answer.value) {
     recordRecentQuestion(trimmedFollowUp)
   }
+}
+
+const handleQuestionCleared = () => {
+  resetQAState()
 }
 
 const handleLoginRequired = (payload) => {
@@ -428,6 +458,7 @@ const restorePendingAnswer = async () => {
     currentQuestion.value = payload.question
     currentAnswer.value = payload.answer
     activeTab.value = 'ask'
+    showAnswer.value = Boolean(payload.answer)
 
     await nextTick()
     scrollToQuestionForm()
@@ -445,7 +476,14 @@ watch(currentUser, () => {
   void loadRecentQuestions()
 }, { immediate: true })
 
+watch(activeTab, (tab) => {
+  if (tab !== 'ask') {
+    resetQAState()
+  }
+})
+
 const handleLogout = () => {
+  resetQAState()
   recentQuestions.value = []
   logout()
   router.push('/login')

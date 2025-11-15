@@ -151,7 +151,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:question', 'submit'])
+const emit = defineEmits(['update:question', 'submit', 'clear'])
 
 const localQuestion = ref(props.question)
 const formKey = ref(0)
@@ -222,6 +222,7 @@ const handleSubmit = () => {
 
 const clearQuestion = () => {
   localQuestion.value = ''
+  emit('clear')
 }
 
 const selectSuggestion = (suggestion) => {
