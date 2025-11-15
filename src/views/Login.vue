@@ -145,7 +145,7 @@ const handleLogin = async () => {
   if (result.success) {
     const redirectParam = route.query.redirect
     if (redirectParam === 'pending-save') {
-      router.push({ name: 'main' })
+      router.push({ name: 'main', query: { restored: 'pending' } })
     } else if (redirectParam === 'saved') {
       router.push({ name: 'main', query: { tab: 'saved' } })
     } else {

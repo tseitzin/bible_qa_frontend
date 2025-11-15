@@ -387,14 +387,22 @@ onMounted(async () => {
 
   await updateSavedCount()
 
-  const restoredPending = await restorePendingAnswer()
-
-  if (!restoredPending) {
-    // Check if we should open saved tab from query parameter
-    const route = router.currentRoute.value
-    if (route.query.tab === 'saved') {
-      activeTab.value = 'saved'
+  const route = router.currentRoute.value
+  
+  // Check if we're restoring a pending answer
+  if (route.query.restored === 'pending') {
+    const restoredPending = await restorePendingAnswer()
+    
+    if (restoredPending) {
+      // Clear the query parameter after restoring
+      router.replace({ name: 'main' })
+      return
     }
+  }
+
+  // Check if we should open saved tab from query parameter
+  if (route.query.tab === 'saved') {
+    activeTab.value = 'saved'
   }
 })
 </script>
