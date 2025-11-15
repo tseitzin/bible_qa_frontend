@@ -276,9 +276,9 @@ const handleSpeechError = (error) => {
 
 .form-subtitle {
   font-size: var(--font-size-base);
-  color: var(--question-muted);
+  color: var(--question-primary);
   margin: 0;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
 }
 
 .form {

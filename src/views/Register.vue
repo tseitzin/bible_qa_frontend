@@ -324,7 +324,7 @@ h2 {
 }
 
 .subtitle {
-  color: var(--login-muted);
+  color: var(--login-primary);
   text-align: center;
   margin-bottom: var(--spacing-lg);
   font-size: var(--font-size-sm);

@@ -688,6 +688,23 @@ defineExpose({
   white-space: pre-wrap;
 }
 
+.answer-text :deep(.scripture-reference),
+.question-text :deep(.scripture-reference) {
+  color: var(--color-primary-bright, #5c7fd0);
+  text-decoration: underline dotted;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--color-primary-bright, #5c7fd0);
+  transition: color var(--transition-normal, 0.2s), text-decoration-color var(--transition-normal, 0.2s);
+}
+
+.answer-text :deep(.scripture-reference:hover),
+.answer-text :deep(.scripture-reference:focus),
+.question-text :deep(.scripture-reference:hover),
+.question-text :deep(.scripture-reference:focus) {
+  color: var(--color-primary, #2f4a7e);
+  text-decoration-color: var(--color-primary, #2f4a7e);
+}
+
 .answer-meta {
   display: flex;
   gap: var(--spacing-lg);

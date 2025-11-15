@@ -724,18 +724,19 @@ onBeforeUnmount(() => {
 }
 
 .scripture-reference {
-  color: var(--color-secondary, #7c3aed);
+  color: var(--color-primary-bright, #5c7fd0);
   cursor: pointer;
   text-decoration: underline dotted;
   text-decoration-thickness: 2px;
+  text-decoration-color: var(--color-primary-bright, #5c7fd0);
   transition: color var(--transition-normal, 0.2s), text-decoration-color var(--transition-normal, 0.2s);
   outline: none;
 }
 
 .scripture-reference:hover,
 .scripture-reference:focus {
-  color: var(--color-primary, #2563eb);
-  text-decoration-color: var(--color-primary, #2563eb);
+  color: var(--color-primary, #2f4a7e);
+  text-decoration-color: var(--color-primary, #2f4a7e);
 }
 
 .verse-popup {

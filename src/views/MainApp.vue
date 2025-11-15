@@ -622,7 +622,7 @@ onMounted(async () => {
 
 .app-subtitle {
   font-size: var(--font-size-base);
-  color: var(--color-text-muted);
+  color: var(--color-primary-dark);
   margin: 0;
   line-height: var(--line-height-tight);
   max-width: 600px;
