@@ -128,12 +128,12 @@ const goToAdults = () => {
   display: flex;
   flex-direction: column;
   padding-top: 80px;
-  --app-primary: #16365c;
-  --app-primary-light: #1f4c80;
-  --app-primary-dark: #0b1f33;
-  --app-accent: #e6eef6;
-  --app-muted: #4a6178;
-  --app-highlight: rgba(22, 54, 92, 0.12);
+  --app-primary: var(--color-primary);
+  --app-primary-light: var(--color-primary-light);
+  --app-primary-dark: var(--color-primary-dark);
+  --app-accent: var(--color-secondary-light);
+  --app-muted: var(--color-text-muted);
+  --app-highlight: var(--color-highlight);
 }
 
 .app-nav {
@@ -144,8 +144,8 @@ const goToAdults = () => {
   z-index: 100;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(22, 54, 92, 0.12);
-  box-shadow: 0 12px 26px rgba(11, 31, 51, 0.12);
+  border-bottom: 1px solid rgba(47, 74, 126, 0.12);
+  box-shadow: 0 12px 26px rgba(31, 50, 86, 0.12);
 }
 
 .nav-container {
@@ -187,26 +187,26 @@ const goToAdults = () => {
   color: var(--app-primary-dark);
   font-weight: var(--font-weight-semibold);
   transition: all var(--transition-normal);
-  border: 1px solid rgba(22, 54, 92, 0.12);
+  border: 1px solid rgba(47, 74, 126, 0.12);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
-  box-shadow: 0 8px 20px rgba(11, 31, 51, 0.12);
+  box-shadow: 0 8px 20px rgba(31, 50, 86, 0.12);
   cursor: pointer;
 }
 
 .nav-link:hover {
   color: var(--app-primary);
   background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(22, 54, 92, 0.28);
-  box-shadow: 0 12px 28px rgba(11, 31, 51, 0.18);
+  border-color: rgba(47, 74, 126, 0.28);
+  box-shadow: 0 12px 28px rgba(31, 50, 86, 0.18);
   transform: translateY(-1px);
 }
 
 .nav-link--active {
   background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
   color: #ffffff;
-  border-color: rgba(22, 54, 92, 0.32);
-  box-shadow: 0 16px 30px rgba(22, 54, 92, 0.28);
+  border-color: rgba(47, 74, 126, 0.32);
+  box-shadow: 0 16px 30px rgba(47, 74, 126, 0.28);
 }
 
 .logout-button {
@@ -226,16 +226,16 @@ const goToAdults = () => {
 
 .login-button {
   background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
-  border-color: rgba(22, 54, 92, 0.32);
+  border-color: rgba(47, 74, 126, 0.32);
   color: #ffffff;
-  box-shadow: 0 16px 30px rgba(22, 54, 92, 0.28);
+  box-shadow: 0 16px 30px rgba(47, 74, 126, 0.28);
 }
 
 .login-button:hover {
   background: linear-gradient(135deg, var(--app-primary-light), var(--app-primary));
-  border-color: rgba(22, 54, 92, 0.4);
+  border-color: rgba(47, 74, 126, 0.4);
   color: #ffffff;
-  box-shadow: 0 22px 36px rgba(22, 54, 92, 0.32);
+  box-shadow: 0 22px 36px rgba(47, 74, 126, 0.32);
 }
 
 .app-background {
@@ -269,7 +269,7 @@ const goToAdults = () => {
   bottom: 0;
   background-image:
     radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
-    radial-gradient(circle at 70% 30%, rgba(22, 54, 92, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 70% 30%, rgba(47, 74, 126, 0.22) 0%, transparent 55%),
     radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 55%);
   background-size: 800px 800px, 600px 600px, 400px 400px;
   animation: float 20s ease-in-out infinite;
@@ -345,12 +345,12 @@ const goToAdults = () => {
 }
 
 .header-content {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(230, 238, 246, 0.94));
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-xl);
-  box-shadow: 0 30px 60px rgba(11, 31, 51, 0.18);
-  border: 1px solid rgba(22, 54, 92, 0.12);
+  box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
+  border: 1px solid rgba(47, 74, 126, 0.12);
   position: relative;
   overflow: hidden;
 }
@@ -376,7 +376,7 @@ const goToAdults = () => {
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  box-shadow: 0 24px 48px rgba(22, 54, 92, 0.28);
+  box-shadow: 0 24px 48px rgba(47, 74, 126, 0.28);
   position: relative;
 }
 
@@ -452,12 +452,12 @@ const goToAdults = () => {
 }
 
 .action-card {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(230, 238, 246, 0.9));
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.9));
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
   text-align: left;
-  border: 1px solid rgba(22, 54, 92, 0.12);
-  box-shadow: 0 24px 48px rgba(11, 31, 51, 0.18);
+  border: 1px solid rgba(47, 74, 126, 0.12);
+  box-shadow: 0 24px 48px rgba(31, 50, 86, 0.18);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -468,8 +468,8 @@ const goToAdults = () => {
 
 .action-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 32px 58px rgba(11, 31, 51, 0.22);
-  border-color: rgba(22, 54, 92, 0.28);
+  box-shadow: 0 32px 58px rgba(31, 50, 86, 0.22);
+  border-color: rgba(47, 74, 126, 0.28);
 }
 
 .action-card--button {
@@ -485,8 +485,8 @@ const goToAdults = () => {
   justify-content: center;
   font-size: 1.75rem;
   color: var(--app-primary);
-  background: rgba(22, 54, 92, 0.08);
-  box-shadow: 0 12px 24px rgba(11, 31, 51, 0.1);
+  background: rgba(47, 74, 126, 0.08);
+  box-shadow: 0 12px 24px rgba(31, 50, 86, 0.1);
 }
 
 .action-card h3 {
@@ -509,11 +509,11 @@ const goToAdults = () => {
 }
 
 .insights-card {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(230, 238, 246, 0.92));
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.92));
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
-  box-shadow: 0 20px 40px rgba(11, 31, 51, 0.16);
-  border: 1px solid rgba(22, 54, 92, 0.12);
+  box-shadow: 0 20px 40px rgba(31, 50, 86, 0.16);
+  border: 1px solid rgba(47, 74, 126, 0.12);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -541,15 +541,15 @@ const goToAdults = () => {
   background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
   color: #ffffff;
   font-weight: var(--font-weight-semibold);
-  border: 1px solid rgba(22, 54, 92, 0.32);
+  border: 1px solid rgba(47, 74, 126, 0.32);
   cursor: pointer;
-  box-shadow: 0 18px 36px rgba(22, 54, 92, 0.28);
+  box-shadow: 0 18px 36px rgba(47, 74, 126, 0.28);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 24px 44px rgba(22, 54, 92, 0.32);
+  box-shadow: 0 24px 44px rgba(47, 74, 126, 0.32);
 }
 
 @media (max-width: 768px) {

@@ -167,12 +167,12 @@ const togglePasswordVisibility = () => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  --login-primary: #16365c;
-  --login-primary-light: #1f4c80;
-  --login-primary-dark: #0b1f33;
-  --login-accent: #e6eef6;
-  --login-muted: #4a6178;
-  --login-highlight: rgba(22, 54, 92, 0.12);
+  --login-primary: var(--color-primary);
+  --login-primary-light: var(--color-primary-light);
+  --login-primary-dark: var(--color-primary-dark);
+  --login-accent: var(--color-secondary-light);
+  --login-muted: var(--color-text-muted);
+  --login-highlight: var(--color-highlight);
 }
 
 /* Background Elements */
@@ -207,7 +207,7 @@ const togglePasswordVisibility = () => {
   bottom: 0;
   background-image: 
     radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
-    radial-gradient(circle at 70% 30%, rgba(22, 54, 92, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 70% 30%, rgba(47, 74, 126, 0.22) 0%, transparent 55%),
     radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 55%);
   background-size: 800px 800px, 600px 600px, 400px 400px;
   animation: float 20s ease-in-out infinite;
@@ -322,12 +322,12 @@ const togglePasswordVisibility = () => {
 
 /* Auth Card */
 .auth-card {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(230, 238, 246, 0.94));
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
-  box-shadow: 0 30px 60px rgba(11, 31, 51, 0.18);
-  border: 1px solid rgba(22, 54, 92, 0.12);
+  box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
+  border: 1px solid rgba(47, 74, 126, 0.12);
   position: relative;
   animation: fadeInUp 0.6s ease-out;
 }
@@ -369,7 +369,7 @@ label {
 
 input {
   padding: var(--spacing-sm) var(--spacing-md);
-  border: 2px solid rgba(22, 54, 92, 0.14);
+  border: 2px solid rgba(47, 74, 126, 0.14);
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-sm);
   transition: all var(--transition-normal);
@@ -408,7 +408,7 @@ input {
 
 .password-toggle:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(22, 54, 92, 0.25);
+  box-shadow: 0 0 0 2px rgba(47, 74, 126, 0.25);
 }
 
 .password-toggle:disabled {
@@ -424,7 +424,7 @@ input {
 input:focus {
   outline: none;
   border-color: var(--login-primary);
-  box-shadow: 0 0 0 3px rgba(22, 54, 92, 0.16);
+  box-shadow: 0 0 0 3px rgba(47, 74, 126, 0.16);
   background: white;
 }
 
@@ -445,7 +445,7 @@ input:disabled {
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all var(--transition-normal);
-  box-shadow: 0 14px 30px rgba(22, 54, 92, 0.25);
+  box-shadow: 0 14px 30px rgba(47, 74, 126, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -467,18 +467,18 @@ input:disabled {
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 18px 34px rgba(22, 54, 92, 0.28);
+  box-shadow: 0 18px 34px rgba(47, 74, 126, 0.28);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 10px 22px rgba(22, 54, 92, 0.2);
+  box-shadow: 0 10px 22px rgba(47, 74, 126, 0.2);
 }
 
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: linear-gradient(135deg, rgba(22, 54, 92, 0.6), rgba(31, 76, 128, 0.6));
+  background: linear-gradient(135deg, rgba(47, 74, 126, 0.6), rgba(127, 175, 154, 0.6));
 }
 
 /* Divider */
@@ -494,7 +494,7 @@ input:disabled {
 .auth-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid rgba(22, 54, 92, 0.50);
+  border-bottom: 1px solid rgba(47, 74, 126, 0.5);
 }
 
 .auth-divider span {
@@ -530,12 +530,12 @@ input:disabled {
   background: var(--login-primary);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(22, 54, 92, 0.22);
+  box-shadow: 0 12px 24px rgba(47, 74, 126, 0.22);
 }
 
 .btn-guest:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(22, 54, 92, 0.28);
+  box-shadow: 0 0 0 3px rgba(47, 74, 126, 0.28);
 }
 
 /* Error Message */
@@ -590,17 +590,17 @@ input:disabled {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius-sm);
-  border: 1px solid rgba(22, 54, 92, 0.18);
-  box-shadow: 0 14px 30px rgba(11, 31, 51, 0.14);
+  border: 1px solid rgba(47, 74, 126, 0.18);
+  box-shadow: 0 14px 30px rgba(31, 50, 86, 0.14);
   animation: fadeIn 0.8s ease-out 0.3s both;
 }
 
 .guest-note--inline {
   margin-top: 0;
   margin-bottom: var(--spacing-sm);
-  background: rgba(22, 54, 92, 0.08);
-  border: 1px solid rgba(22, 54, 92, 0.15);
-  box-shadow: 0 6px 16px rgba(11, 31, 51, 0.08);
+  background: rgba(47, 74, 126, 0.08);
+  border: 1px solid rgba(47, 74, 126, 0.15);
+  box-shadow: 0 6px 16px rgba(31, 50, 86, 0.08);
   animation: none;
 }
 
