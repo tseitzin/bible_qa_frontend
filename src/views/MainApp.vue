@@ -102,6 +102,7 @@
             class="answer-section"
             @answer-saved="handleAnswerSaved"
             @follow-up-question="handleFollowUpQuestion"
+            @login-required="handleLoginRequired"
           />
           
           <ErrorMessage 
@@ -123,8 +124,8 @@
             <h3>Sign in to Save Answers</h3>
             <p>Create an account or log in to save your favorite Bible Q&A answers and access them anytime.</p>
             <div class="guest-actions">
-              <router-link to="/login" class="btn-primary">Log In</router-link>
-              <router-link to="/register" class="btn-secondary">Create Account</router-link>
+              <router-link :to="{ name: 'login', query: { redirect: 'saved' } }" class="btn-primary">Log In</router-link>
+              <router-link :to="{ name: 'register', query: { redirect: 'saved' } }" class="btn-secondary">Create Account</router-link>
             </div>
           </div>
           
@@ -174,6 +175,7 @@ import SavedAnswers from '../components/SavedAnswers.vue'
 import { useBibleQA } from '../composables/useBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { useAuth } from '../composables/useAuth.js'
+import { PENDING_SAVED_ANSWER_KEY } from '../constants/storageKeys.js'
 import navLogo from '../assets/logo_cross.png'
 
 const router = useRouter()
@@ -183,6 +185,8 @@ const {
   question,
   answer,
   questionId,
+  rootQuestionId,
+  conversationHistory,
   loading,
   error,
   askQuestion,
@@ -297,6 +301,79 @@ const handleFollowUpQuestion = async (followUpText) => {
   await askFollowUpQuestion(followUpText)
 }
 
+const handleLoginRequired = (payload) => {
+  if (typeof window !== 'undefined') {
+    try {
+      const pendingData = {
+        question: payload?.question || question.value || '',
+        answer: payload?.answer || answer.value || '',
+        questionId: payload?.questionId ?? questionId.value,
+        rootQuestionId: rootQuestionId.value,
+        conversationHistory: Array.isArray(conversationHistory.value)
+          ? JSON.parse(JSON.stringify(conversationHistory.value))
+          : []
+      }
+
+      if (pendingData.question && pendingData.answer) {
+        sessionStorage.setItem(PENDING_SAVED_ANSWER_KEY, JSON.stringify(pendingData))
+      }
+    } catch (storageError) {
+      console.error('Failed to persist pending answer before login:', storageError)
+    }
+  }
+
+  router.push({ name: 'login', query: { redirect: 'pending-save' } })
+}
+
+const restorePendingAnswer = async () => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const stored = sessionStorage.getItem(PENDING_SAVED_ANSWER_KEY)
+  if (!stored) {
+    return false
+  }
+
+  try {
+    const payload = JSON.parse(stored)
+    if (!payload?.question || !payload?.answer) {
+      return false
+    }
+
+    question.value = payload.question
+    answer.value = payload.answer
+    questionId.value = payload.questionId ?? null
+
+    if (payload.rootQuestionId) {
+      rootQuestionId.value = payload.rootQuestionId
+    }
+
+    if (Array.isArray(payload.conversationHistory) && payload.conversationHistory.length > 0) {
+      conversationHistory.value = payload.conversationHistory
+    } else {
+      conversationHistory.value = [
+        { role: 'user', content: payload.question },
+        { role: 'assistant', content: payload.answer }
+      ]
+    }
+
+    currentQuestion.value = payload.question
+    currentAnswer.value = payload.answer
+    activeTab.value = 'ask'
+
+    await nextTick()
+    scrollToQuestionForm()
+
+    return true
+  } catch (error) {
+    console.error('Failed to restore pending answer after login:', error)
+    return false
+  } finally {
+    sessionStorage.removeItem(PENDING_SAVED_ANSWER_KEY)
+  }
+}
+
 const handleLogout = () => {
   logout()
   router.push('/login')
@@ -309,11 +386,15 @@ onMounted(async () => {
   }
 
   await updateSavedCount()
-  
-  // Check if we should open saved tab from query parameter
-  const route = router.currentRoute.value
-  if (route.query.tab === 'saved') {
-    activeTab.value = 'saved'
+
+  const restoredPending = await restorePendingAnswer()
+
+  if (!restoredPending) {
+    // Check if we should open saved tab from query parameter
+    const route = router.currentRoute.value
+    if (route.query.tab === 'saved') {
+      activeTab.value = 'saved'
+    }
   }
 })
 </script>

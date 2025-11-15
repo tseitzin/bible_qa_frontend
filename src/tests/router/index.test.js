@@ -86,7 +86,7 @@ describe('Router Navigation Guards', () => {
       } else if (requiresGuest) {
         const user = await authService.getCurrentUser()
         if (user) {
-          next('/home')
+          next({ name: 'main' })
           return
         }
       }
@@ -142,7 +142,7 @@ describe('Router Navigation Guards', () => {
   })
 
   describe('Guest Routes', () => {
-    it('should redirect authenticated users from login to home', async () => {
+    it('should redirect authenticated users from login to main app', async () => {
       const mockUser = {
         id: 1,
         email: 'test@example.com',
@@ -153,11 +153,11 @@ describe('Router Navigation Guards', () => {
 
       await router.push('/login')
 
-      expect(router.currentRoute.value.path).toBe('/home')
+      expect(router.currentRoute.value.path).toBe('/')
       expect(authService.getCurrentUser).toHaveBeenCalled()
     })
 
-    it('should redirect authenticated users from register to home', async () => {
+    it('should redirect authenticated users from register to main app', async () => {
       const mockUser = {
         id: 1,
         email: 'test@example.com',
@@ -168,7 +168,7 @@ describe('Router Navigation Guards', () => {
 
       await router.push('/register')
 
-      expect(router.currentRoute.value.path).toBe('/home')
+      expect(router.currentRoute.value.path).toBe('/')
       expect(authService.getCurrentUser).toHaveBeenCalled()
     })
 

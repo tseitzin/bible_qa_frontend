@@ -135,11 +135,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import logoImage from '../assets/logo_cross.png'
 
 const router = useRouter()
+const route = useRoute()
 const { register, isLoading, error: authError } = useAuth()
 
 const username = ref('')
@@ -154,7 +155,14 @@ const handleRegister = async () => {
   const result = await register(email.value, username.value, password.value)
   
   if (result.success) {
-    router.push('/home')
+    const redirectParam = route.query.redirect
+    if (redirectParam === 'pending-save') {
+      router.push({ name: 'main' })
+    } else if (redirectParam === 'saved') {
+      router.push({ name: 'main', query: { tab: 'saved' } })
+    } else {
+      router.push({ name: 'main' })
+    }
   } else {
     error.value = result.message || authError.value || 'Registration failed'
   }

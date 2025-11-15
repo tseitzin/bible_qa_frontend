@@ -124,11 +124,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import logoImage from '../assets/logo_cross.png'
 
 const router = useRouter()
+const route = useRoute()
 const { login, isLoading, error: authError } = useAuth()
 
 const email = ref('')
@@ -142,7 +143,14 @@ const handleLogin = async () => {
   const result = await login(email.value, password.value)
   
   if (result.success) {
-    router.push('/home')
+    const redirectParam = route.query.redirect
+    if (redirectParam === 'pending-save') {
+      router.push({ name: 'main' })
+    } else if (redirectParam === 'saved') {
+      router.push({ name: 'main', query: { tab: 'saved' } })
+    } else {
+      router.push({ name: 'main' })
+    }
   } else {
     error.value = result.message || authError.value || 'Login failed'
   }

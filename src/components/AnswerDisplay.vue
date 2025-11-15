@@ -177,14 +177,12 @@
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import BaseButton from './ui/BaseButton.vue'
 import ScriptureText from './ScriptureText.vue'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { useAuth } from '../composables/useAuth.js'
 
-const emit = defineEmits(['answerSaved', 'followUpQuestion'])
-const router = useRouter()
+const emit = defineEmits(['answerSaved', 'followUpQuestion', 'loginRequired'])
 const { currentUser } = useAuth()
 
 const props = defineProps({
@@ -273,7 +271,11 @@ const saveAnswer = async () => {
   if (!currentUser.value) {
     const shouldLogin = confirm('You need to be logged in to save answers. Would you like to create an account or log in?')
     if (shouldLogin) {
-      router.push('/login')
+      emit('loginRequired', {
+        question: props.question,
+        answer: props.answer,
+        questionId: props.questionId
+      })
     }
     return
   }

@@ -85,7 +85,7 @@ router.beforeEach(async (to, from, next) => {
     const user = await authService.getCurrentUser()
     if (user) {
       // Already authenticated, redirect to home
-      next('/home')
+      next({ name: 'main' })
       return
     }
   }
