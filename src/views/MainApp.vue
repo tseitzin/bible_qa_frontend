@@ -90,6 +90,8 @@
             <QuestionForm
               v-model:question="question"
               :loading="loading"
+              :recent-questions="recentQuestions"
+              :show-recent-questions="Boolean(currentUser)"
               @submit="handleQuestionSubmit"
             />
           </div>
@@ -165,7 +167,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import QuestionForm from '../components/QuestionForm.vue'
 import AnswerDisplay from '../components/AnswerDisplay.vue'
@@ -173,6 +175,7 @@ import ErrorMessage from '../components/ErrorMessage.vue'
 import SavedAnswers from '../components/SavedAnswers.vue'
 import { useBibleQA } from '../composables/useBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
+import { recentQuestionsService, RECENT_QUESTIONS_LIMIT } from '../services/recentQuestionsService.js'
 import { useAuth } from '../composables/useAuth.js'
 import navLogo from '../assets/logo_cross.png'
 
@@ -202,6 +205,7 @@ const currentAnswer = ref('')
 
 // Saved answers count for badge
 const savedCount = ref(0)
+const recentQuestions = ref([])
 
 const updateSavedCount = async () => {
   // Only fetch saved count if user is authenticated
@@ -219,15 +223,69 @@ const updateSavedCount = async () => {
   }
 }
 
-const handleQuestionSubmit = (questionText, answerText) => {
-  // Store the current question and answer
-  currentQuestion.value = questionText
-  currentAnswer.value = answerText
-  
-  askQuestion(questionText)
-  // Auto-switch to ask tab if user submits from saved tab
+const loadRecentQuestions = async () => {
+  if (!currentUser.value) {
+    recentQuestions.value = []
+    return
+  }
+
+  try {
+    const items = await recentQuestionsService.fetch()
+    recentQuestions.value = items
+      .map((item) => (typeof item === 'string' ? item : item?.question || ''))
+      .filter(Boolean)
+  } catch (error) {
+    console.error('Error loading recent questions:', error)
+    recentQuestions.value = []
+  }
+}
+
+const recordRecentQuestion = async (questionText) => {
+  if (!currentUser.value) {
+    return
+  }
+
+  const trimmed = typeof questionText === 'string' ? questionText.trim() : ''
+  if (!trimmed) {
+    return
+  }
+
+  const optimistic = [trimmed, ...recentQuestions.value.filter((item) => item !== trimmed)].slice(0, RECENT_QUESTIONS_LIMIT)
+  recentQuestions.value = optimistic
+
+  try {
+    const items = await recentQuestionsService.fetch()
+    const fetched = items
+      .map((item) => (typeof item === 'string' ? item : item?.question || ''))
+      .filter(Boolean)
+
+    recentQuestions.value = fetched
+  } catch (error) {
+    console.error('Error refreshing recent questions:', error)
+  }
+}
+
+const handleQuestionSubmit = async (questionText) => {
+  const trimmedQuestion = typeof questionText === 'string' ? questionText.trim() : ''
+  if (!trimmedQuestion) {
+    return
+  }
+
+  currentQuestion.value = trimmedQuestion
+  currentAnswer.value = ''
+  question.value = trimmedQuestion
+
   if (activeTab.value !== 'ask') {
     activeTab.value = 'ask'
+    await nextTick()
+  }
+
+  await askQuestion(trimmedQuestion)
+
+  currentAnswer.value = answer.value
+
+  if (currentUser.value && !error.value && answer.value) {
+    recordRecentQuestion(trimmedQuestion)
   }
 }
 
@@ -294,10 +352,24 @@ const handleSavedAnswersUpdated = () => {
 }
 
 const handleFollowUpQuestion = async (followUpText) => {
-  await askFollowUpQuestion(followUpText)
+  const trimmedFollowUp = typeof followUpText === 'string' ? followUpText.trim() : ''
+  if (!trimmedFollowUp) {
+    return
+  }
+
+  await askFollowUpQuestion(trimmedFollowUp)
+
+  if (currentUser.value && !error.value && answer.value) {
+    recordRecentQuestion(trimmedFollowUp)
+  }
 }
 
+watch(currentUser, () => {
+  void loadRecentQuestions()
+}, { immediate: true })
+
 const handleLogout = () => {
+  recentQuestions.value = []
   logout()
   router.push('/login')
 }

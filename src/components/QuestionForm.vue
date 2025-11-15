@@ -86,20 +86,40 @@
     
     <!-- Quick suggestions -->
     <div v-if="!localQuestion.trim() && !loading" class="quick-suggestions">
-      <h3 class="suggestions-title">Popular Questions</h3>
-      <div class="suggestions-grid">
-        <button
-          v-for="suggestion in quickSuggestions"
-          :key="suggestion"
-          @click="selectSuggestion(suggestion)"
-          class="suggestion-button"
-          type="button"
-        >
-          <svg class="suggestion-icon" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-          </svg>
-          {{ suggestion }}
-        </button>
+      <div v-if="showRecentQuestions && recentQuestions.length" class="suggestions-group">
+        <h3 class="suggestions-title">Recently Asked Questions</h3>
+        <div class="suggestions-grid">
+          <button
+            v-for="(recentQuestion, index) in recentQuestions"
+            :key="`${recentQuestion}-${index}`"
+            @click="selectSuggestion(recentQuestion)"
+            class="suggestion-button"
+            type="button"
+          >
+            <svg class="suggestion-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+            {{ recentQuestion }}
+          </button>
+        </div>
+      </div>
+
+      <div class="suggestions-group">
+        <h3 class="suggestions-title">Popular Questions</h3>
+        <div class="suggestions-grid">
+          <button
+            v-for="suggestion in quickSuggestions"
+            :key="suggestion"
+            @click="selectSuggestion(suggestion)"
+            class="suggestion-button"
+            type="button"
+          >
+            <svg class="suggestion-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+            {{ suggestion }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -118,6 +138,14 @@ const props = defineProps({
     default: ''
   },
   loading: {
+    type: Boolean,
+    default: false
+  },
+  recentQuestions: {
+    type: Array,
+    default: () => []
+  },
+  showRecentQuestions: {
     type: Boolean,
     default: false
   }
@@ -417,6 +445,10 @@ const handleSpeechError = (error) => {
   margin-top: var(--spacing-sm);
   padding-top: var(--spacing-sm);
   border-top: 1px solid rgba(22, 54, 92, 0.12);
+}
+
+.suggestions-group + .suggestions-group {
+  margin-top: var(--spacing-md);
 }
 
 .suggestions-title {
