@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import Login from '../../views/Login.vue'
 import { useAuth } from '../../composables/useAuth'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 // Mock the composables and assets
 vi.mock('../../composables/useAuth')
@@ -218,5 +218,218 @@ describe('Login - Password Visibility Toggle', () => {
     // When showPassword is true, the second SVG (eye-off icon) should be visible
     svgs = wrapper.findAll('.password-toggle svg')
     expect(svgs.length).toBe(1)
+  })
+})
+
+describe('Login - Save Operation and Redirects', () => {
+  let wrapper
+  let mockLogin
+  let mockRouterPush
+  let mockRoute
+
+  beforeEach(() => {
+    // Setup mocks
+    mockLogin = vi.fn()
+    mockRouterPush = vi.fn()
+    mockRoute = { query: {} }
+
+    useAuth.mockReturnValue({
+      login: mockLogin,
+      isLoading: { value: false },
+      error: { value: '' }
+    })
+
+    useRouter.mockReturnValue({
+      push: mockRouterPush
+    })
+
+    useRoute.mockReturnValue(mockRoute)
+
+    wrapper = null
+  })
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.unmount()
+    }
+    vi.clearAllMocks()
+  })
+
+  it('should correctly redirect the user after a successful login', async () => {
+    // Mock successful login
+    mockLogin.mockResolvedValue({ success: true })
+
+    wrapper = mount(Login, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set email and password
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleLogin()
+    await flushPromises()
+
+    // Verify that router.push was called
+    expect(mockRouterPush).toHaveBeenCalled()
+  })
+
+  it('should redirect to the correct page after a successful login (main page)', async () => {
+    // Mock successful login with no redirect query param
+    mockLogin.mockResolvedValue({ success: true })
+    mockRoute.query = {}
+
+    wrapper = mount(Login, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set credentials
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleLogin()
+    await flushPromises()
+
+    // Verify redirect to main page
+    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'main' })
+  })
+
+  it('should redirect to the saved tab after successful login when redirect=saved query param is present', async () => {
+    // Mock successful login with redirect=saved query param
+    mockLogin.mockResolvedValue({ success: true })
+    mockRoute.query = { redirect: 'saved' }
+
+    wrapper = mount(Login, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set credentials
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleLogin()
+    await flushPromises()
+
+    // Verify redirect to main page with saved tab
+    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'main', query: { tab: 'saved' } })
+  })
+
+  it('should redirect to pending save page after successful login when redirect=pending-save query param is present', async () => {
+    // Mock successful login with redirect=pending-save query param
+    mockLogin.mockResolvedValue({ success: true })
+    mockRoute.query = { redirect: 'pending-save' }
+
+    wrapper = mount(Login, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set credentials
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleLogin()
+    await flushPromises()
+
+    // Verify redirect to main page with restored=pending query
+    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'main', query: { restored: 'pending' } })
+  })
+
+  it('should not redirect and display an error when login fails due to invalid credentials', async () => {
+    // Mock failed login
+    mockLogin.mockResolvedValue({ 
+      success: false, 
+      message: 'Invalid email or password' 
+    })
+
+    wrapper = mount(Login, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set credentials
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'wrongpassword'
+
+    // Submit the form
+    await wrapper.vm.handleLogin()
+    await flushPromises()
+
+    // Verify that router.push was NOT called
+    expect(mockRouterPush).not.toHaveBeenCalled()
+
+    // Verify error message is displayed
+    expect(wrapper.vm.error).toBe('Invalid email or password')
+    await wrapper.vm.$nextTick()
+    const errorElement = wrapper.find('.error-message')
+    expect(errorElement.exists()).toBe(true)
+    expect(errorElement.text()).toContain('Invalid email or password')
+  })
+
+  it('should display a generic error message when login fails without a specific message', async () => {
+    // Mock failed login without message
+    mockLogin.mockResolvedValue({ success: false })
+
+    wrapper = mount(Login, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set credentials
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleLogin()
+    await flushPromises()
+
+    // Verify that router.push was NOT called
+    expect(mockRouterPush).not.toHaveBeenCalled()
+
+    // Verify error message is set
+    expect(wrapper.vm.error).toBe('Login failed')
   })
 })

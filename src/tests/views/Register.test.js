@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import Register from '../../views/Register.vue'
 import { useAuth } from '../../composables/useAuth'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 // Mock the composables and assets
 vi.mock('../../composables/useAuth')
@@ -218,5 +218,262 @@ describe('Register - Password Visibility Toggle', () => {
     // When showPassword is true, the second SVG (eye-off icon) should be visible
     svgs = wrapper.findAll('.password-toggle svg')
     expect(svgs.length).toBe(1)
+  })
+})
+
+describe('Register - Save Operation and Redirects', () => {
+  let wrapper
+  let mockRegister
+  let mockRouterPush
+  let mockRoute
+
+  beforeEach(() => {
+    // Setup mocks
+    mockRegister = vi.fn()
+    mockRouterPush = vi.fn()
+    mockRoute = { query: {} }
+
+    useAuth.mockReturnValue({
+      register: mockRegister,
+      isLoading: { value: false },
+      error: { value: '' }
+    })
+
+    useRouter.mockReturnValue({
+      push: mockRouterPush
+    })
+
+    useRoute.mockReturnValue(mockRoute)
+
+    wrapper = null
+  })
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.unmount()
+    }
+    vi.clearAllMocks()
+  })
+
+  it('should correctly redirect the user after a successful registration', async () => {
+    // Mock successful registration
+    mockRegister.mockResolvedValue({ success: true })
+
+    wrapper = mount(Register, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set registration data
+    wrapper.vm.username = 'testuser'
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleRegister()
+    await flushPromises()
+
+    // Verify that router.push was called
+    expect(mockRouterPush).toHaveBeenCalled()
+  })
+
+  it('should redirect to the correct page after a successful registration (main page)', async () => {
+    // Mock successful registration with no redirect query param
+    mockRegister.mockResolvedValue({ success: true })
+    mockRoute.query = {}
+
+    wrapper = mount(Register, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set registration data
+    wrapper.vm.username = 'testuser'
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleRegister()
+    await flushPromises()
+
+    // Verify redirect to main page
+    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'main' })
+  })
+
+  it('should redirect to the saved tab after successful registration when redirect=saved query param is present', async () => {
+    // Mock successful registration with redirect=saved query param
+    mockRegister.mockResolvedValue({ success: true })
+    mockRoute.query = { redirect: 'saved' }
+
+    wrapper = mount(Register, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set registration data
+    wrapper.vm.username = 'testuser'
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleRegister()
+    await flushPromises()
+
+    // Verify redirect to main page with saved tab
+    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'main', query: { tab: 'saved' } })
+  })
+
+  it('should redirect to pending save page after successful registration when redirect=pending-save query param is present', async () => {
+    // Mock successful registration with redirect=pending-save query param
+    mockRegister.mockResolvedValue({ success: true })
+    mockRoute.query = { redirect: 'pending-save' }
+
+    wrapper = mount(Register, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set registration data
+    wrapper.vm.username = 'testuser'
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleRegister()
+    await flushPromises()
+
+    // Verify redirect to main page with restored=pending query
+    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'main', query: { restored: 'pending' } })
+  })
+
+  it('should not redirect and display an error when registration fails due to invalid data', async () => {
+    // Mock failed registration
+    mockRegister.mockResolvedValue({ 
+      success: false, 
+      message: 'Email already exists' 
+    })
+
+    wrapper = mount(Register, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set registration data
+    wrapper.vm.username = 'testuser'
+    wrapper.vm.email = 'existing@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleRegister()
+    await flushPromises()
+
+    // Verify that router.push was NOT called
+    expect(mockRouterPush).not.toHaveBeenCalled()
+
+    // Verify error message is displayed
+    expect(wrapper.vm.error).toBe('Email already exists')
+    await wrapper.vm.$nextTick()
+    const errorElement = wrapper.find('.error-message')
+    expect(errorElement.exists()).toBe(true)
+    expect(errorElement.text()).toContain('Email already exists')
+  })
+
+  it('should display a generic error message when registration fails without a specific message', async () => {
+    // Mock failed registration without message
+    mockRegister.mockResolvedValue({ success: false })
+
+    wrapper = mount(Register, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set registration data
+    wrapper.vm.username = 'testuser'
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = 'password123'
+
+    // Submit the form
+    await wrapper.vm.handleRegister()
+    await flushPromises()
+
+    // Verify that router.push was NOT called
+    expect(mockRouterPush).not.toHaveBeenCalled()
+
+    // Verify error message is set
+    expect(wrapper.vm.error).toBe('Registration failed')
+  })
+
+  it('should not redirect when registration fails with weak password error', async () => {
+    // Mock failed registration due to weak password
+    mockRegister.mockResolvedValue({ 
+      success: false, 
+      message: 'Password must be at least 8 characters long' 
+    })
+
+    wrapper = mount(Register, {
+      global: {
+        stubs: {
+          'router-link': true
+        },
+        mocks: {
+          $route: mockRoute
+        }
+      }
+    })
+
+    // Set registration data with weak password
+    wrapper.vm.username = 'testuser'
+    wrapper.vm.email = 'test@example.com'
+    wrapper.vm.password = '123'
+
+    // Submit the form
+    await wrapper.vm.handleRegister()
+    await flushPromises()
+
+    // Verify that router.push was NOT called
+    expect(mockRouterPush).not.toHaveBeenCalled()
+
+    // Verify error message is displayed
+    expect(wrapper.vm.error).toBe('Password must be at least 8 characters long')
+    await wrapper.vm.$nextTick()
+    const errorElement = wrapper.find('.error-message')
+    expect(errorElement.exists()).toBe(true)
+    expect(errorElement.text()).toContain('Password must be at least 8 characters long')
   })
 })
