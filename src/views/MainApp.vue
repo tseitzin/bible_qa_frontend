@@ -420,6 +420,7 @@ const handleFollowUpQuestion = async (followUpText) => {
 }
 
 const handleQuestionCleared = () => {
+  resetQAState()
   question.value = ''
   answer.value = ''
   currentQuestion.value = ''
@@ -451,10 +452,6 @@ const handleRecentQuestionRemove = async (recentQuestion) => {
   } catch (removeError) {
     console.error('Error deleting recent question:', removeError)
   }
-}
-
-const handleQuestionCleared = () => {
-  resetQAState()
 }
 
 const handleLoginRequired = (payload) => {
