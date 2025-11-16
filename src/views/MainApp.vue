@@ -48,7 +48,7 @@
               </div>
             </div>
             <p class="app-subtitle">
-              Discover biblical wisdom through AI-powered Scripture exploration.
+              Discover insights rooted in God’s Word with the help of AI-guided Scripture study.
             </p>
           </div>
         </div>
@@ -94,6 +94,10 @@
               :show-recent-questions="Boolean(currentUser)"
               @submit="handleQuestionSubmit"
               @clear="handleQuestionCleared"
+<<<<<<< HEAD
+=======
+              @remove-recent="handleRecentQuestionRemove"
+>>>>>>> recentQuestions
             />
           </div>
           
@@ -178,7 +182,7 @@ import ErrorMessage from '../components/ErrorMessage.vue'
 import SavedAnswers from '../components/SavedAnswers.vue'
 import { useBibleQA } from '../composables/useBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
-import { recentQuestionsService, RECENT_QUESTIONS_LIMIT } from '../services/recentQuestionsService.js'
+import { recentQuestionsService } from '../services/recentQuestionsService.js'
 import { useAuth } from '../composables/useAuth.js'
 import { PENDING_SAVED_ANSWER_KEY } from '../constants/storageKeys.js'
 import navLogo from '../assets/logo_cross.png'
@@ -215,11 +219,40 @@ const showAnswer = ref(false)
 const savedCount = ref(0)
 const recentQuestions = ref([])
 
+<<<<<<< HEAD
 const resetQAState = () => {
   clearAll()
   currentQuestion.value = ''
   currentAnswer.value = ''
   showAnswer.value = false
+=======
+const normalizeRecentQuestionItems = (items) => {
+  if (!Array.isArray(items)) {
+    return []
+  }
+
+  return items
+    .map((item) => {
+      if (typeof item === 'string') {
+        const text = item.trim()
+        if (!text) {
+          return null
+        }
+        return { id: null, question: text, asked_at: null }
+      }
+
+      if (item && typeof item === 'object') {
+        const text = typeof item.question === 'string' ? item.question.trim() : ''
+        if (!text) {
+          return null
+        }
+        return { ...item, question: text }
+      }
+
+      return null
+    })
+    .filter(Boolean)
+>>>>>>> recentQuestions
 }
 
 const updateSavedCount = async () => {
@@ -246,9 +279,7 @@ const loadRecentQuestions = async () => {
 
   try {
     const items = await recentQuestionsService.fetch()
-    recentQuestions.value = items
-      .map((item) => (typeof item === 'string' ? item : item?.question || ''))
-      .filter(Boolean)
+    recentQuestions.value = normalizeRecentQuestionItems(items)
   } catch (error) {
     console.error('Error loading recent questions:', error)
     recentQuestions.value = []
@@ -265,16 +296,14 @@ const recordRecentQuestion = async (questionText) => {
     return
   }
 
-  const optimistic = [trimmed, ...recentQuestions.value.filter((item) => item !== trimmed)].slice(0, RECENT_QUESTIONS_LIMIT)
-  recentQuestions.value = optimistic
-
   try {
-    const items = await recentQuestionsService.fetch()
-    const fetched = items
-      .map((item) => (typeof item === 'string' ? item : item?.question || ''))
-      .filter(Boolean)
-
-    recentQuestions.value = fetched
+    const items = await recentQuestionsService.add(trimmed)
+    if (Array.isArray(items)) {
+      recentQuestions.value = normalizeRecentQuestionItems(items)
+    } else {
+      const fallback = await recentQuestionsService.fetch()
+      recentQuestions.value = normalizeRecentQuestionItems(fallback)
+    }
   } catch (error) {
     console.error('Error refreshing recent questions:', error)
   }
@@ -306,7 +335,7 @@ const handleQuestionSubmit = async (questionText) => {
   showAnswer.value = Boolean(answer.value)
 
   if (currentUser.value && !error.value && answer.value) {
-    recordRecentQuestion(trimmedQuestion)
+    await recordRecentQuestion(trimmedQuestion)
   }
 }
 
@@ -390,7 +419,41 @@ const handleFollowUpQuestion = async (followUpText) => {
   showAnswer.value = Boolean(answer.value)
 
   if (currentUser.value && !error.value && answer.value) {
-    recordRecentQuestion(trimmedFollowUp)
+    await recordRecentQuestion(trimmedFollowUp)
+  }
+}
+
+const handleQuestionCleared = () => {
+  question.value = ''
+  answer.value = ''
+  currentQuestion.value = ''
+  currentAnswer.value = ''
+  questionId.value = null
+}
+
+const handleRecentQuestionRemove = async (recentQuestion) => {
+  if (!recentQuestion || !recentQuestion.id) {
+    return
+  }
+
+  const prompt = recentQuestion.question
+    ? `Remove "${recentQuestion.question}" from your recent questions?`
+    : 'Remove this recent question from your list?'
+
+  const confirmed = typeof window !== 'undefined' ? window.confirm(prompt) : true
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    const items = await recentQuestionsService.remove(recentQuestion.id)
+    if (Array.isArray(items)) {
+      recentQuestions.value = normalizeRecentQuestionItems(items)
+    } else {
+      recentQuestions.value = recentQuestions.value.filter((item) => item.id !== recentQuestion.id)
+    }
+  } catch (removeError) {
+    console.error('Error deleting recent question:', removeError)
   }
 }
 
@@ -824,7 +887,7 @@ onMounted(async () => {
   color: var(--color-primary-dark);
   margin: 0;
   line-height: var(--line-height-tight);
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
   font-weight: var(--font-weight-semibold);
 }
