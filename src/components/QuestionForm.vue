@@ -169,11 +169,7 @@ const props = defineProps({
   }
 })
 
-<<<<<<< HEAD
-const emit = defineEmits(['update:question', 'submit', 'clear'])
-=======
 const emit = defineEmits(['update:question', 'submit', 'clear', 'remove-recent'])
->>>>>>> recentQuestions
 
 const localQuestion = ref(props.question)
 const formKey = ref(0)
