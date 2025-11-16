@@ -216,13 +216,13 @@ const showAnswer = ref(false)
 const savedCount = ref(0)
 const recentQuestions = ref([])
 
-<<<<<<< HEAD
 const resetQAState = () => {
   clearAll()
   currentQuestion.value = ''
   currentAnswer.value = ''
   showAnswer.value = false
-=======
+}
+
 const normalizeRecentQuestionItems = (items) => {
   if (!Array.isArray(items)) {
     return []
@@ -249,7 +249,6 @@ const normalizeRecentQuestionItems = (items) => {
       return null
     })
     .filter(Boolean)
->>>>>>> recentQuestions
 }
 
 const updateSavedCount = async () => {
