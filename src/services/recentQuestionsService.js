@@ -51,6 +51,27 @@ export const recentQuestionsService = {
       console.error('Failed to record recent question:', error)
       return []
     }
+  },
+
+  /**
+   * Delete a specific recent question for the authenticated user.
+   * @param {number} recentQuestionId - ID of the recent question entry to remove.
+   * @returns {Promise<Array<{ id: number, question: string, asked_at: string }>>}
+   */
+  async remove(recentQuestionId) {
+    if (!recentQuestionId) {
+      return this.fetch()
+    }
+
+    try {
+      const response = await axios.delete(`${BASE_PATH}/${recentQuestionId}`, {
+        headers: getAuthHeaders()
+      })
+      return response?.data?.recent_questions ?? []
+    } catch (error) {
+      console.error('Failed to delete recent question:', error)
+      throw error
+    }
   }
 }
 

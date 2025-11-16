@@ -87,20 +87,38 @@
     <!-- Quick suggestions -->
     <div v-if="!localQuestion.trim() && !loading" class="quick-suggestions">
       <div v-if="showRecentQuestions && recentQuestions.length" class="suggestions-group">
-        <h3 class="suggestions-title">Recently Asked Questions</h3>
+        <h3 class="suggestions-title">Your Recently Asked Questions</h3>
         <div class="suggestions-grid">
-          <button
+          <div
             v-for="(recentQuestion, index) in recentQuestions"
-            :key="`${recentQuestion}-${index}`"
-            @click="selectSuggestion(recentQuestion)"
-            class="suggestion-button"
-            type="button"
+            :key="recentQuestion?.id ?? `${getRecentQuestionText(recentQuestion)}-${index}`"
+            class="suggestion-item"
           >
-            <svg class="suggestion-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-            </svg>
-            {{ recentQuestion }}
-          </button>
+            <button
+              class="suggestion-button"
+              type="button"
+              @click="selectSuggestion(getRecentQuestionText(recentQuestion))"
+            >
+              <svg class="suggestion-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+              </svg>
+              {{ getRecentQuestionText(recentQuestion) }}
+            </button>
+            <button
+              v-if="recentQuestion && typeof recentQuestion === 'object' && recentQuestion.id"
+              class="suggestion-remove"
+              type="button"
+              aria-label="Remove recent question"
+              data-tooltip="Remove"
+              @click.stop="requestRecentRemoval(recentQuestion)"
+              @keydown.enter.prevent.stop="requestRecentRemoval(recentQuestion)"
+              @keydown.space.prevent.stop="requestRecentRemoval(recentQuestion)"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 8.586l3.95-3.95a1 1 0 111.414 1.414L11.414 10l3.95 3.95a1 1 0 01-1.414 1.414L10 11.414l-3.95 3.95a1 1 0 01-1.414-1.414L8.586 10l-3.95-3.95A1 1 0 116.05 4.636L10 8.586z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -151,7 +169,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:question', 'submit'])
+const emit = defineEmits(['update:question', 'submit', 'clear', 'remove-recent'])
 
 const localQuestion = ref(props.question)
 const formKey = ref(0)
@@ -190,6 +208,26 @@ const quickSuggestions = [
   "What is salvation?"
 ]
 
+const getRecentQuestionText = (item) => {
+  if (typeof item === 'string') {
+    return item
+  }
+
+  if (item && typeof item === 'object' && typeof item.question === 'string') {
+    return item.question
+  }
+
+  return ''
+}
+
+const requestRecentRemoval = (recentQuestion) => {
+  if (!recentQuestion || typeof recentQuestion !== 'object' || !recentQuestion.id) {
+    return
+  }
+
+  emit('remove-recent', recentQuestion)
+}
+
 // Watch for speech transcript
 watch(transcript, (newTranscript) => {
   if (newTranscript) {
@@ -222,6 +260,7 @@ const handleSubmit = () => {
 
 const clearQuestion = () => {
   localQuestion.value = ''
+  emit('clear')
 }
 
 const selectSuggestion = (suggestion) => {
@@ -465,11 +504,17 @@ const handleSpeechError = (error) => {
   gap: 0.375rem; /* 6px - custom tighter spacing */
 }
 
+.suggestion-item {
+  position: relative;
+  width: 100%;
+}
+
 .suggestion-button {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
+  width: 100%;
+  padding: var(--spacing-sm) calc(var(--spacing-md) + 1.5rem) var(--spacing-sm) var(--spacing-md);
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(22, 54, 92, 0.16);
   border-radius: var(--border-radius-lg);
@@ -495,6 +540,69 @@ const handleSpeechError = (error) => {
   height: 16px;
   color: var(--question-primary);
   flex-shrink: 0;
+}
+
+.suggestion-remove {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(22, 54, 92, 0.12);
+  color: var(--question-primary-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  z-index: 1;
+}
+
+.suggestion-remove::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 6px);
+  background: rgba(22, 54, 92, 0.92);
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  box-shadow: 0 6px 12px rgba(11, 31, 51, 0.18);
+}
+
+.suggestion-remove:hover::after,
+.suggestion-remove:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 2px);
+}
+
+.suggestion-remove:hover {
+  background: rgba(22, 54, 92, 0.18);
+  color: var(--question-primary);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.suggestion-remove svg {
+  width: 10px;
+  height: 10px;
+}
+
+.suggestion-item:hover .suggestion-remove {
+  transform: translateY(-2px);
+}
+
+.suggestion-remove:focus-visible {
+  outline: 2px solid rgba(22, 54, 92, 0.45);
+  outline-offset: 2px;
 }
 
 :deep(.submit-button.btn--primary) {
