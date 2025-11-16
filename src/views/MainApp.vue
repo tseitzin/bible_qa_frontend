@@ -94,10 +94,7 @@
               :show-recent-questions="Boolean(currentUser)"
               @submit="handleQuestionSubmit"
               @clear="handleQuestionCleared"
-<<<<<<< HEAD
-=======
               @remove-recent="handleRecentQuestionRemove"
->>>>>>> recentQuestions
             />
           </div>
           
