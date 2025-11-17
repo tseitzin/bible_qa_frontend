@@ -6,6 +6,7 @@ export function useBibleQA() {
   const answer = ref('')
   const questionId = ref(null)
   const rootQuestionId = ref(null) // Track the root question ID for conversation threading
+  const isBiblicalAnswer = ref(false)
   const loading = ref(false)
   const error = ref('')
   const conversationHistory = ref([])
@@ -18,6 +19,7 @@ export function useBibleQA() {
 
     loading.value = true
     answer.value = ''
+    isBiblicalAnswer.value = false
     error.value = ''
 
     try {
@@ -25,6 +27,7 @@ export function useBibleQA() {
       answer.value = response.answer
       questionId.value = response.question_id
       rootQuestionId.value = response.question_id // Set root for new conversation
+      isBiblicalAnswer.value = Boolean(response.is_biblical)
       
       // Reset conversation history for a new question
       conversationHistory.value = [
@@ -67,6 +70,7 @@ export function useBibleQA() {
       // Update current answer and question ID (but keep rootQuestionId unchanged)
       answer.value = response.answer
       questionId.value = response.question_id
+      isBiblicalAnswer.value = Boolean(response.is_biblical)
     } catch (err) {
       const message = err?.message === 'Network Error'
         ? 'The follow-up request timed out. Please try again in a moment.'
@@ -83,6 +87,7 @@ export function useBibleQA() {
     answer.value = ''
     questionId.value = null
     rootQuestionId.value = null
+    isBiblicalAnswer.value = false
     error.value = ''
     loading.value = false
     conversationHistory.value = []
@@ -98,6 +103,7 @@ export function useBibleQA() {
     answer,
     questionId,
     rootQuestionId,
+    isBiblicalAnswer,
     loading,
     error,
     conversationHistory,

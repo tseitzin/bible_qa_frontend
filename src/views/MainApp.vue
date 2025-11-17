@@ -192,6 +192,7 @@ const {
   answer,
   questionId,
   rootQuestionId,
+  isBiblicalAnswer,
   conversationHistory,
   loading,
   error,
@@ -330,7 +331,7 @@ const handleQuestionSubmit = async (questionText) => {
   currentAnswer.value = answer.value
   showAnswer.value = Boolean(answer.value)
 
-  if (currentUser.value && !error.value && answer.value) {
+  if (currentUser.value && !error.value && answer.value && isBiblicalAnswer.value) {
     await recordRecentQuestion(trimmedQuestion)
   }
 }
@@ -414,7 +415,7 @@ const handleFollowUpQuestion = async (followUpText) => {
   currentAnswer.value = answer.value
   showAnswer.value = Boolean(answer.value)
 
-  if (currentUser.value && !error.value && answer.value) {
+  if (currentUser.value && !error.value && answer.value && isBiblicalAnswer.value) {
     await recordRecentQuestion(trimmedFollowUp)
   }
 }

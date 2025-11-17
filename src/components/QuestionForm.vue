@@ -374,7 +374,7 @@ const handleSpeechError = (error) => {
 }
 
 :deep(.question-input .char-count) {
-  color: var(--question-muted);
+  color: white;
 }
 
 .speech-error {
