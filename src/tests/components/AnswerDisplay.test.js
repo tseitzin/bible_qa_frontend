@@ -178,8 +178,10 @@ describe('AnswerDisplay', () => {
       await waitForAsync()
 
       expect(window.confirm).toHaveBeenCalled()
-      expect(routerPush).toHaveBeenCalledWith('/login')
       expect(savedAnswersServiceMock.save).not.toHaveBeenCalled()
+      expect(localWrapper.emitted('loginRequired')).toEqual([
+        [{ question: 'What is love?', answer: 'Test biblical answer', questionId: 42 }]
+      ])
       expect(localWrapper.vm.saveSuccess).toBeNull()
     })
 

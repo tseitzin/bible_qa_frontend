@@ -2,15 +2,9 @@
  * Service for retrieving a user's recent questions from the backend.
  */
 import axios from 'axios'
-import authService from './authService'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const BASE_PATH = `${API_URL}/api/users/me/recent-questions`
-
-const getAuthHeaders = () => {
-  const token = authService.getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
 
 export const recentQuestionsService = {
   /**
@@ -20,7 +14,6 @@ export const recentQuestionsService = {
   async fetch() {
     try {
       const response = await axios.get(BASE_PATH, {
-        headers: getAuthHeaders()
       })
       return response?.data?.recent_questions ?? []
     } catch (error) {
@@ -43,8 +36,7 @@ export const recentQuestionsService = {
     try {
       const response = await axios.post(
         BASE_PATH,
-        { question: trimmed },
-        { headers: getAuthHeaders() }
+        { question: trimmed }
       )
       return response?.data?.recent_questions ?? []
     } catch (error) {
@@ -65,7 +57,6 @@ export const recentQuestionsService = {
 
     try {
       const response = await axios.delete(`${BASE_PATH}/${recentQuestionId}`, {
-        headers: getAuthHeaders()
       })
       return response?.data?.recent_questions ?? []
     } catch (error) {

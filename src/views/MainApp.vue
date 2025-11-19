@@ -539,11 +539,11 @@ watch(activeTab, (tab) => {
   }
 })
 
-const handleLogout = () => {
+const handleLogout = async () => {
   resetQAState()
   recentQuestions.value = []
-  logout()
-  router.push('/login')
+  await logout()
+  router.push({ name: 'login' })
 }
 
 // Load saved count on mount and check for tab query parameter

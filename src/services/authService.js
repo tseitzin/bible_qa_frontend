@@ -4,7 +4,6 @@
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const TOKEN_KEY = 'bible_qa_token'
 const USER_KEY = 'bible_qa_user'
 
 const authService = {
@@ -39,23 +38,18 @@ const authService = {
    */
   async login(email, password) {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
-        email,
-        password
-      })
-      
-      const { access_token } = response.data
-      
-      // Store token
-      localStorage.setItem(TOKEN_KEY, access_token)
-      
-      // Fetch and store user data
-      const user = await this.getCurrentUser()
+      const response = await axios.post(
+        `${API_URL}/api/auth/login`,
+        { email, password },
+        { withCredentials: true }
+      )
+
+      const user = response.data || null
       if (user) {
         localStorage.setItem(USER_KEY, JSON.stringify(user))
       }
-      
-      return { success: true, token: access_token, user }
+
+      return { success: true, user }
     } catch (error) {
       return {
         success: false,
@@ -67,9 +61,14 @@ const authService = {
   /**
    * Log out the current user
    */
-  logout() {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+  async logout() {
+    try {
+      await axios.post(`${API_URL}/api/auth/logout`, null, { withCredentials: true })
+    } catch (error) {
+      console.error('Failed to log out:', error)
+    } finally {
+      localStorage.removeItem(USER_KEY)
+    }
   },
 
   /**
@@ -78,28 +77,15 @@ const authService = {
    */
   async getCurrentUser() {
     try {
-      const token = this.getToken()
-      if (!token) return null
-
       const response = await axios.get(`${API_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        withCredentials: true
       })
       return response.data
     } catch (error) {
       // Token is invalid or expired
-      this.logout()
+      this.clearStoredUser()
       return null
     }
-  },
-
-  /**
-   * Get the stored token
-   * @returns {string|null} JWT token or null
-   */
-  getToken() {
-    return localStorage.getItem(TOKEN_KEY)
   },
 
   /**
@@ -116,7 +102,7 @@ const authService = {
    * @returns {boolean} True if user has a token
    */
   isAuthenticated() {
-    return !!this.getToken()
+    return !!this.getStoredUser()
   },
 
   /**
@@ -129,6 +115,10 @@ const authService = {
       localStorage.setItem(USER_KEY, JSON.stringify(user))
     }
     return user
+  },
+
+  clearStoredUser() {
+    localStorage.removeItem(USER_KEY)
   }
 }
 

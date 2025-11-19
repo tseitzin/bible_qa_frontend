@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import MainApp from '../../views/MainApp.vue'
 import { savedAnswersService } from '../../services/savedAnswersService.js'
+import { recentQuestionsService } from '../../services/recentQuestionsService.js'
 
 const mockRouterPush = vi.fn()
 const mockCurrentRoute = ref({ query: {} })
@@ -32,10 +33,14 @@ vi.mock('../../composables/useAuth.js', () => ({
 const mockQuestion = ref('')
 const mockAnswer = ref('')
 const mockQuestionId = ref(null)
+const mockRootQuestionId = ref(null)
+const mockIsBiblicalAnswer = ref(false)
+const mockConversationHistory = ref([])
 const mockLoading = ref(false)
 const mockError = ref(null)
 const mockAskQuestion = vi.fn()
 const mockAskFollowUpQuestion = vi.fn()
+const mockClearAll = vi.fn()
 const mockClearError = vi.fn()
 
 vi.mock('../../composables/useBibleQA.js', () => ({
@@ -43,10 +48,14 @@ vi.mock('../../composables/useBibleQA.js', () => ({
 		question: mockQuestion,
 		answer: mockAnswer,
 		questionId: mockQuestionId,
+		rootQuestionId: mockRootQuestionId,
+		isBiblicalAnswer: mockIsBiblicalAnswer,
 		loading: mockLoading,
 		error: mockError,
+		conversationHistory: mockConversationHistory,
 		askQuestion: mockAskQuestion,
 		askFollowUpQuestion: mockAskFollowUpQuestion,
+		clearAll: mockClearAll,
 		clearError: mockClearError
 	})
 }))
@@ -54,6 +63,14 @@ vi.mock('../../composables/useBibleQA.js', () => ({
 vi.mock('../../services/savedAnswersService.js', () => ({
 	savedAnswersService: {
 		getAll: vi.fn()
+	}
+}))
+
+vi.mock('../../services/recentQuestionsService.js', () => ({
+	recentQuestionsService: {
+		fetch: vi.fn().mockResolvedValue([]),
+		add: vi.fn().mockResolvedValue([]),
+		remove: vi.fn().mockResolvedValue([])
 	}
 }))
 
@@ -135,13 +152,40 @@ beforeEach(() => {
 	mockQuestion.value = ''
 	mockAnswer.value = ''
 	mockQuestionId.value = null
+	mockRootQuestionId.value = null
+	mockIsBiblicalAnswer.value = false
+	mockConversationHistory.value = []
 	mockLoading.value = false
 	mockError.value = null
+	mockClearAll.mockReset()
+	mockAskQuestion.mockReset()
+	mockAskFollowUpQuestion.mockReset()
+	mockClearError.mockReset()
+	mockLogout.mockReset()
 
 	savedAnswersService.getAll.mockResolvedValue([])
+	recentQuestionsService.fetch.mockResolvedValue([])
+	recentQuestionsService.add.mockResolvedValue([])
+	recentQuestionsService.remove.mockResolvedValue([])
 
 	window.scrollTo = vi.fn()
 	window.matchMedia = vi.fn().mockImplementation(createMatchMedia)
+
+	const storage = (() => {
+		let store = {}
+		return {
+			getItem: (key) => store[key] || null,
+			setItem: (key, value) => { store[key] = value.toString() },
+			removeItem: (key) => { delete store[key] },
+			clear: () => { store = {} }
+		}
+	})()
+
+	Object.defineProperty(window, 'sessionStorage', {
+		value: storage,
+		writable: true
+	})
+	sessionStorage.clear()
 })
 
 describe('MainApp.vue', () => {
@@ -150,7 +194,7 @@ describe('MainApp.vue', () => {
 		const tabs = wrapper.findAll('.nav-tab')
 		expect(tabs[0].classes()).toContain('nav-tab--active')
 		expect(wrapper.find('.question-form-stub').exists()).toBe(true)
-		expect(wrapper.find('.answer-display-stub').exists()).toBe(true)
+		expect(wrapper.find('.answer-display-stub').exists()).toBe(false)
 	})
 
 	it('switches to saved tab and shows guest prompt for unauthenticated users', async () => {
@@ -216,6 +260,7 @@ describe('MainApp.vue', () => {
 		await flushPromises()
 
 		const savedComponent = wrapper.findComponent({ name: 'SavedAnswers' })
+		expect(savedComponent.exists()).toBe(true)
 		savedAnswersService.getAll.mockResolvedValueOnce([{ id: '1' }, { id: '2' }])
 		await savedComponent.vm.$emit('update')
 		await flushPromises()
@@ -236,7 +281,10 @@ describe('MainApp.vue', () => {
 	})
 
 	it('handles follow-up question events', async () => {
+		mockAnswer.value = 'Existing answer'
 		const wrapper = await mountMainApp()
+		wrapper.vm.showAnswer = true
+		await nextTick()
 		const answerDisplay = wrapper.findComponent({ name: 'AnswerDisplay' })
 		await answerDisplay.vm.$emit('follow-up-question', 'Tell me more')
 		await flushPromises()
@@ -251,7 +299,7 @@ describe('MainApp.vue', () => {
 		await logoutButton.trigger('click')
 
 		expect(mockLogout).toHaveBeenCalled()
-		expect(mockRouterPush).toHaveBeenCalledWith('/login')
+		expect(mockRouterPush).toHaveBeenCalledWith({ name: 'login' })
 	})
 
 	it('activates saved tab when requested via route query', async () => {

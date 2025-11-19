@@ -2,15 +2,8 @@
  * API service for managing saved Bible Q&A answers
  */
 import axios from 'axios'
-import authService from './authService'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
-// Helper to get auth headers
-const getAuthHeaders = () => {
-  const token = authService.getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
 
 const service = {
   /**
@@ -23,8 +16,7 @@ const service = {
     try {
       const response = await axios.post(
         `${API_URL}/api/saved-answers`,
-        { question_id: questionId, tags },
-        { headers: getAuthHeaders() }
+        { question_id: questionId, tags }
       )
       
       return {
@@ -54,7 +46,6 @@ const service = {
       if (options.limit) params.limit = options.limit
 
       const response = await axios.get(`${API_URL}/api/saved-answers`, {
-        headers: getAuthHeaders(),
         params
       })
       
@@ -82,9 +73,7 @@ const service = {
    */
   async delete(id) {
     try {
-      await axios.delete(`${API_URL}/api/saved-answers/${id}`, {
-        headers: getAuthHeaders()
-      })
+      await axios.delete(`${API_URL}/api/saved-answers/${id}`)
       
       return {
         success: true,
@@ -123,9 +112,7 @@ const service = {
    */
   async getAllTags() {
     try {
-      const response = await axios.get(`${API_URL}/api/saved-answers/tags`, {
-        headers: getAuthHeaders()
-      })
+      const response = await axios.get(`${API_URL}/api/saved-answers/tags`)
       return response.data || []
     } catch (error) {
       console.error('Error getting tags:', error)

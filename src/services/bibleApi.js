@@ -1,5 +1,4 @@
 import axios from 'axios'
-import authService from './authService'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -8,21 +7,8 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
-
-// Request interceptor for adding auth tokens
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = authService.getToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
 
 // Response interceptor for handling errors
 apiClient.interceptors.response.use(

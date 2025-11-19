@@ -71,8 +71,8 @@ export function useAuth() {
   /**
    * Log out the current user
    */
-  const logout = () => {
-    authService.logout()
+  const logout = async () => {
+    await authService.logout()
     currentUser.value = null
     router.push('/login')
   }
@@ -95,16 +95,18 @@ export function useAuth() {
    * Check if user is authenticated and refresh if needed
    */
   const checkAuth = async () => {
-    if (!authService.isAuthenticated()) {
-      currentUser.value = null
-      return false
+    if (currentUser.value) {
+      return true
     }
 
-    if (!currentUser.value) {
-      await refreshUser()
+    const storedUser = authService.getStoredUser()
+    if (storedUser) {
+      currentUser.value = storedUser
+      return true
     }
 
-    return !!currentUser.value
+    const refreshed = await refreshUser()
+    return !!refreshed
   }
 
   return {

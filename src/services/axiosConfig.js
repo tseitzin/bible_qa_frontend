@@ -1,34 +1,20 @@
 /**
- * Axios configuration with JWT token interceptor
+ * Axios configuration for cookie-based authentication
  */
 import axios from 'axios'
 import authService from './authService'
 
-// Add request interceptor to inject JWT tokens
-axios.interceptors.request.use(
-  (config) => {
-    const token = authService.getToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
+axios.defaults.withCredentials = true
 
-// Add response interceptor to handle auth errors
+// Handle authentication errors globally
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Only redirect to login if user had a token (was authenticated)
-      // This prevents guest users from being redirected when accessing auth-only features
-      const hadToken = authService.isAuthenticated()
-      if (hadToken) {
-        // Token expired or invalid - logout user
-        authService.logout()
+      const hadUser = authService.isAuthenticated()
+      authService.clearStoredUser()
+
+      if (hadUser && typeof window !== 'undefined') {
         window.location.href = '/login'
       }
     }

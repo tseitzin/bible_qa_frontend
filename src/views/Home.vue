@@ -107,9 +107,8 @@ import navLogo from '../assets/logo_cross.png'
 const router = useRouter()
 const { currentUser, logout } = useAuth()
 
-const handleLogout = () => {
-  logout()
-  router.push('/login')
+const handleLogout = async () => {
+  await logout()
 }
 
 const showSavedAnswers = () => {
