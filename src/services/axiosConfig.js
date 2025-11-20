@@ -28,6 +28,9 @@ axios.interceptors.request.use(
     const csrfToken = getCsrfTokenFromCookie()
     if (csrfToken && config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
       config.headers['X-CSRF-Token'] = csrfToken
+      console.log(`[CSRF] Adding token to ${config.method.toUpperCase()} ${config.url}: ${csrfToken.substring(0, 8)}...`)
+    } else {
+      console.log(`[CSRF] No token for ${config.method?.toUpperCase()} ${config.url}: token=${csrfToken?.substring(0, 8) || 'null'}`)
     }
     return config
   },
