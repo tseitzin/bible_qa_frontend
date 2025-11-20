@@ -81,10 +81,10 @@ router.beforeEach(async (to, from, next) => {
       return
     }
   } else if (requiresGuest) {
-    // Check if user is authenticated
-    const user = await authService.getCurrentUser()
-    if (user) {
-      // Already authenticated, redirect to home
+    // Check localStorage first to avoid unnecessary API call
+    const storedUser = authService.getStoredUser()
+    if (storedUser) {
+      // User appears to be logged in, redirect to main
       next({ name: 'main' })
       return
     }
