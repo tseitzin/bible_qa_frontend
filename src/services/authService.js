@@ -1,7 +1,7 @@
 /**
  * Authentication service for user registration, login, and token management
  */
-import axios from 'axios'
+import axios from './axiosConfig'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const USER_KEY = 'bible_qa_user'

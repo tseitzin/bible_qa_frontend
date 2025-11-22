@@ -1,7 +1,7 @@
 /**
  * API service for managing saved Bible Q&A answers
  */
-import axios from 'axios'
+import axios from './axiosConfig'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 

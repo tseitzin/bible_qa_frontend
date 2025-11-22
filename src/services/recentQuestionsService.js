@@ -1,7 +1,7 @@
 /**
  * Service for retrieving a user's recent questions from the backend.
  */
-import axios from 'axios'
+import axios from './axiosConfig'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const BASE_PATH = `${API_URL}/api/users/me/recent-questions`
