@@ -101,6 +101,29 @@ export const bibleApi = {
     } catch (error) {
       throw error
     }
+  },
+
+  async getPassage(reference) {
+    if (!reference?.trim()) {
+      throw new Error('Reference cannot be empty')
+    }
+
+    try {
+      const response = await apiClient.get('/api/bible/passage', {
+        params: { reference: reference.trim() }
+      })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async getChapter(book, chapter) {
+    if (!book?.trim() || !chapter) {
+      throw new Error('Book and chapter are required')
+    }
+
+    return this.getPassage(`${book.trim()} ${chapter}`)
   }
 }
 

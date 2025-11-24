@@ -6,47 +6,57 @@
         <span
           v-else
           class="scripture-reference"
+          :class="{ 'scripture-reference--clickable': enableReferenceClick }"
           tabindex="0"
+          :role="enableReferenceClick ? 'button' : undefined"
+          :aria-label="enableReferenceClick ? `Open ${segment.reference || segment.display}` : undefined"
           @mouseenter="handleReferenceEnter(segment, $event)"
           @mouseleave="handleReferenceLeave"
           @focus="handleReferenceEnter(segment, $event)"
           @blur="handleReferenceLeave"
           @keydown.escape.prevent="hideVersePopup(true)"
+          @keydown.enter.prevent="handleReferenceActivate(segment, $event)"
+          @keydown.space.prevent="handleReferenceActivate(segment, $event)"
+          @click="handleReferenceActivate(segment, $event)"
         >
           {{ segment.display }}
         </span>
       </template>
     </div>
 
-    <div
-      v-if="versePopup.visible"
-      ref="popupEl"
-      class="verse-popup"
-      :style="{ top: versePopup.y + 'px', left: versePopup.x + 'px' }"
-      @mouseenter="cancelHideTimeout"
-      @mouseleave="handlePopupLeave"
-    >
-      <strong class="verse-popup__reference">{{ versePopup.reference || versePopup.display }}</strong>
-      <p v-if="versePopup.loading" class="verse-popup__status">Loading...</p>
-      <p v-else-if="versePopup.error" class="verse-popup__status">{{ versePopup.error }}</p>
-      <p v-else class="verse-popup__text">{{ versePopup.text }}</p>
-      <a
-        class="verse-popup__link"
-        :href="fullChapterLink(versePopup.reference || versePopup.display)"
-        target="_blank"
-        rel="noopener noreferrer"
+    <teleport to="body" v-if="teleportReady">
+      <div
+        v-if="versePopup.visible"
+        ref="popupEl"
+        class="verse-popup"
+        :style="{ top: versePopup.y + 'px', left: versePopup.x + 'px' }"
+        @mouseenter="cancelHideTimeout"
+        @mouseleave="handlePopupLeave"
       >
-        {{ readLinkText }}
-      </a>
-    </div>
+        <strong class="verse-popup__reference">{{ versePopup.reference || versePopup.display }}</strong>
+        <p v-if="versePopup.loading" class="verse-popup__status">Loading...</p>
+        <p v-else-if="versePopup.error" class="verse-popup__status">{{ versePopup.error }}</p>
+        <p v-else class="verse-popup__text">{{ versePopup.text }}</p>
+        <p v-if="versePopup.truncated" class="verse-popup__notice">{{ TRUNCATION_NOTICE }}</p>
+        <a
+          class="verse-popup__link"
+          :href="readingViewLink(versePopup.routeReference || versePopup.reference || versePopup.display)"
+          @click.prevent="navigateToReadingView"
+        >
+          {{ readLinkText }}
+        </a>
+      </div>
+    </teleport>
     <slot />
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { bibleApi } from '../services/bibleApi.js'
 import { BIBLE_BOOKS, BIBLE_BOOK_ALIASES } from '../constants/bibleBooks.js'
+import { BOOK_CHAPTER_COUNT } from '../constants/bookChapterCounts.js'
+import { parseReference } from '../utils/referenceParser.js'
 
 const props = defineProps({
   text: {
@@ -63,21 +73,41 @@ const props = defineProps({
   },
   readLinkText: {
     type: String,
-    default: 'Read full chapter →',
+    default: 'Open in Reading View →',
   },
   bibleGatewayVersion: {
     type: String,
     default: 'KJV',
   },
+  enableReferenceClick: {
+    type: Boolean,
+    default: false,
+  },
+  navigationSource: {
+    type: String,
+    default: 'answer',
+  },
+  allowBookOnly: {
+    type: Boolean,
+    default: false,
+  },
 })
+
+const emit = defineEmits(['reference-click', 'reading-view'])
 
 const wrapperEl = ref(null)
 const popupEl = ref(null)
 const popupTarget = ref(null)
+const teleportReady = ref(typeof window !== 'undefined')
+const instance = getCurrentInstance()
+const routerInstance = instance?.proxy?.$router ?? null
 
-const POPUP_MAX_WIDTH = 320
+const POPUP_MAX_WIDTH = 560
 const POPUP_MARGIN = 16
-const DEFAULT_POPUP_HEIGHT = 200
+const DEFAULT_POPUP_HEIGHT = 240
+const POPUP_SNIPPET_CHAR_LIMIT = 420
+const POPUP_SNIPPET_MIN_CHAR_LIMIT = 180
+const TRUNCATION_NOTICE = 'This verse is too long to show here. Please navigate to the Reading View to see the rest.'
 const MAX_CHAPTER_SNIPPETS = 3
 const verseCache = new Map()
 
@@ -86,14 +116,24 @@ const versePopup = ref({
   reference: '',
   display: '',
   text: '',
+  fullText: '',
+  routeReference: '',
   loading: false,
   error: null,
   x: 0,
   y: 0,
+  truncated: false,
 })
 
 const hideTimeoutId = ref(null)
 const activeRequestId = ref(0)
+
+const getBookChapterCount = (book) => {
+  if (!book) {
+    return null
+  }
+  return Number.isInteger(BOOK_CHAPTER_COUNT[book]) ? BOOK_CHAPTER_COUNT[book] : null
+}
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -137,8 +177,13 @@ const bookPattern = Array.from(bookNamesSet)
   .map((book) => escapeRegex(book).replace(/\s+/g, '\\s+'))
   .join('|')
 
-const referenceRegex = new RegExp(
+const referenceRegexStrict = new RegExp(
   `\\b(${bookPattern})\\s+\\d{1,3}(?::\\d{1,3})?(?:[-–—]\\d{1,3}(?::\\d{1,3})?)?`,
+  'gi'
+)
+
+const referenceRegexLoose = new RegExp(
+  `\\b(${bookPattern})(?=\\s|\\d|[:;,.!?-]|$)(?:\\s+\\d{1,3}(?::\\d{1,3})?(?:[-–—]\\d{1,3}(?::\\d{1,3})?)?)?`,
   'gi'
 )
 
@@ -320,13 +365,34 @@ const parseVerseRange = (versePart, startChapter) => {
   }
 }
 
-const buildReferenceSegment = ({ book, chapterPart, versePart, display, fallbackChapter }) => {
+const buildReferenceSegment = ({
+  book,
+  chapterPart,
+  versePart,
+  display,
+  fallbackChapter,
+  allowBookFallback = false,
+}) => {
   const normalizedBook = book.replace(/\s+/g, ' ').trim()
   if (!normalizedBook) {
     return null
   }
 
-  const chapterInfo = parseChapterRange(chapterPart, fallbackChapter)
+  let inferredChapterPart = chapterPart
+  let bookOnlyReference = false
+  let bookOnlyChapterCount = null
+  if ((!inferredChapterPart || !inferredChapterPart.trim()) && allowBookFallback) {
+    bookOnlyReference = true
+    const totalChapters = getBookChapterCount(normalizedBook)
+    bookOnlyChapterCount = totalChapters
+    if (Number.isInteger(totalChapters) && totalChapters > 1) {
+      inferredChapterPart = `1-${totalChapters}`
+    } else {
+      inferredChapterPart = '1'
+    }
+  }
+
+  const chapterInfo = parseChapterRange(inferredChapterPart, fallbackChapter)
   if (!chapterInfo) {
     return null
   }
@@ -406,20 +472,73 @@ const buildReferenceSegment = ({ book, chapterPart, versePart, display, fallback
     totalChapters: chapterInfo.chapters.length,
     rangeNote,
     lastChapter,
+    bookOnlyReference,
   }
 }
 
-const createSegments = (text) => {
+const stripToChapterReference = (value) => {
+  if (!value) {
+    return ''
+  }
+
+  const colonIndex = value.indexOf(':')
+  if (colonIndex === -1) {
+    return value
+  }
+
+  return value.slice(0, colonIndex)
+}
+
+const normalizeReferenceForRoute = (reference) => {
+  const raw = typeof reference === 'string' ? reference.trim() : ''
+  if (!raw) {
+    return ''
+  }
+
+  const parsed = parseReference(raw)
+  return parsed?.reference || raw
+}
+
+const getRouteReference = (segment) => {
+  if (!segment) {
+    return ''
+  }
+
+  const preferred = normalizeReferenceForRoute(segment.reference || segment.display)
+  if (preferred) {
+    return preferred
+  }
+
+  let fallback = ''
+
+  if (segment.chapterReference) {
+    if (Array.isArray(segment.fetchRefs) && segment.fetchRefs.length) {
+      fallback = stripToChapterReference(segment.fetchRefs[0].reference)
+    } else {
+      fallback = stripToChapterReference(segment.reference || segment.display)
+    }
+  } else if (Array.isArray(segment.fetchRefs) && segment.fetchRefs.length) {
+    fallback = segment.fetchRefs[0].reference
+  } else {
+    fallback = segment.reference || segment.display || ''
+  }
+
+  const normalizedFallback = normalizeReferenceForRoute(fallback)
+  return normalizedFallback || fallback || ''
+}
+
+const createSegments = (text, allowBookOnly = false) => {
   if (!text) {
     return []
   }
 
-  referenceRegex.lastIndex = 0
+  const activeRegex = allowBookOnly ? referenceRegexLoose : referenceRegexStrict
+  activeRegex.lastIndex = 0
   const segments = []
   let lastIndex = 0
   let match
 
-  while ((match = referenceRegex.exec(text)) !== null) {
+  while ((match = activeRegex.exec(text)) !== null) {
     const start = match.index
     const matchedText = match[0]
     const matchedBook = match[1]
@@ -429,7 +548,9 @@ const createSegments = (text) => {
       segments.push({ type: 'text', text: text.slice(lastIndex, start) })
     }
 
-    const remaining = matchedText.slice(matchedBook.length).trim()
+    const remainingRaw = matchedText.slice(matchedBook.length)
+    const remaining = remainingRaw.trim()
+    const hasChapterInfo = /\d/.test(remaining)
     const colonIndex = remaining.indexOf(':')
     const chapterPart = colonIndex >= 0 ? remaining.slice(0, colonIndex) : remaining
     const versePartRaw = colonIndex >= 0 ? remaining.slice(colonIndex + 1) : ''
@@ -438,17 +559,18 @@ const createSegments = (text) => {
       chapterPart,
       versePart: versePartRaw,
       display: matchedText,
+      allowBookFallback: allowBookOnly && !hasChapterInfo,
     })
 
     if (!primarySegment) {
       segments.push({ type: 'text', text: matchedText })
-      lastIndex = referenceRegex.lastIndex
+      lastIndex = activeRegex.lastIndex
       continue
     }
 
     segments.push(primarySegment)
 
-    let cursor = referenceRegex.lastIndex
+    let cursor = activeRegex.lastIndex
     let lastSegment = primarySegment
 
     while (cursor < text.length) {
@@ -501,7 +623,7 @@ const createSegments = (text) => {
     }
 
     lastIndex = cursor
-    referenceRegex.lastIndex = cursor
+    activeRegex.lastIndex = cursor
   }
 
   if (lastIndex < text.length) {
@@ -511,36 +633,39 @@ const createSegments = (text) => {
   return segments.length ? segments : [{ type: 'text', text }]
 }
 
-const segments = computed(() => createSegments(props.text))
+const segments = computed(() => createSegments(props.text, props.allowBookOnly))
 
 const positionVersePopup = (target) => {
   if (typeof window === 'undefined') return
   const anchor = target || popupTarget.value
-  const container = wrapperEl.value
-  if (!anchor || !container) return
+  if (!anchor) return
 
   const rect = anchor.getBoundingClientRect()
-  const containerRect = container.getBoundingClientRect()
   const popupNode = popupEl.value
   const popupWidth = popupNode?.offsetWidth ?? POPUP_MAX_WIDTH
   const popupHeight = popupNode?.offsetHeight ?? DEFAULT_POPUP_HEIGHT
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
 
-  const containerWidth = containerRect.width
-  const containerHeight = containerRect.height
+  let x = rect.left + rect.width / 2 - popupWidth / 2
+  let y = rect.top - popupHeight - 12
 
-  let x = rect.right - containerRect.left + 12
-  let y = rect.top - containerRect.top + rect.height / 2 - popupHeight / 2
-
-  if (x + popupWidth + POPUP_MARGIN > containerWidth) {
-    x = rect.left - containerRect.left - popupWidth - 12
+  if (y < POPUP_MARGIN) {
+    y = rect.bottom + 12
   }
 
-  x = Math.min(x, containerWidth - popupWidth - POPUP_MARGIN)
-  x = Math.max(POPUP_MARGIN, x)
-
-  if (y + popupHeight + POPUP_MARGIN > containerHeight) {
-    y = containerHeight - popupHeight - POPUP_MARGIN
+  if (x + popupWidth + POPUP_MARGIN > viewportWidth) {
+    x = viewportWidth - popupWidth - POPUP_MARGIN
   }
+
+  if (x < POPUP_MARGIN) {
+    x = POPUP_MARGIN
+  }
+
+  if (y + popupHeight + POPUP_MARGIN > viewportHeight) {
+    y = viewportHeight - popupHeight - POPUP_MARGIN
+  }
+
   if (y < POPUP_MARGIN) {
     y = POPUP_MARGIN
   }
@@ -548,6 +673,67 @@ const positionVersePopup = (target) => {
   popupTarget.value = anchor
   versePopup.value.x = Math.round(x)
   versePopup.value.y = Math.round(y)
+}
+
+const buildTruncatedSnippet = (text, charLimit = POPUP_SNIPPET_CHAR_LIMIT) => {
+  if (!text) return ''
+  if (!Number.isFinite(charLimit) || charLimit <= 0) {
+    return text
+  }
+
+  if (text.length <= charLimit) {
+    return text
+  }
+
+  const slice = text.slice(0, charLimit)
+  const lastWhitespace = slice.lastIndexOf(' ')
+  const safeSlice = lastWhitespace > charLimit * 0.3 ? slice.slice(0, lastWhitespace) : slice
+  return `${safeSlice.trim()}…`
+}
+
+const ensurePopupFitsViewport = async (target) => {
+  if (typeof window === 'undefined') return
+
+  await nextTick()
+  positionVersePopup(target)
+
+  const popupNode = popupEl.value
+  if (!popupNode) return
+
+  const viewportHeight = window.innerHeight
+  const availableHeight = viewportHeight - POPUP_MARGIN * 2
+
+  if (popupNode.scrollHeight <= availableHeight) {
+    versePopup.value.truncated = false
+    versePopup.value.text = versePopup.value.fullText
+    return
+  }
+
+  let charLimit = POPUP_SNIPPET_CHAR_LIMIT
+  let fits = false
+  const fullText = versePopup.value.fullText || versePopup.value.text || ''
+
+  while (charLimit >= POPUP_SNIPPET_MIN_CHAR_LIMIT) {
+    versePopup.value.text = buildTruncatedSnippet(fullText, charLimit)
+    versePopup.value.truncated = true
+    await nextTick()
+    positionVersePopup(target)
+
+    const currentNode = popupEl.value
+    if (currentNode?.scrollHeight && currentNode.scrollHeight <= availableHeight) {
+      fits = true
+      break
+    }
+
+    charLimit = Math.floor(charLimit * 0.85)
+  }
+
+  if (!fits) {
+    versePopup.value.text = buildTruncatedSnippet(fullText, POPUP_SNIPPET_MIN_CHAR_LIMIT)
+    versePopup.value.truncated = true
+    await nextTick()
+    positionVersePopup(target)
+  }
 }
 
 const cancelHideTimeout = () => {
@@ -563,6 +749,10 @@ const hideVersePopup = (immediate = false) => {
     versePopup.value.visible = false
     versePopup.value.loading = false
     versePopup.value.error = null
+    versePopup.value.text = ''
+    versePopup.value.fullText = ''
+    versePopup.value.truncated = false
+    versePopup.value.routeReference = ''
     popupTarget.value = null
     activeRequestId.value += 1
     return
@@ -573,6 +763,10 @@ const hideVersePopup = (immediate = false) => {
     versePopup.value.visible = false
     versePopup.value.loading = false
     versePopup.value.error = null
+    versePopup.value.text = ''
+    versePopup.value.fullText = ''
+    versePopup.value.truncated = false
+    versePopup.value.routeReference = ''
     popupTarget.value = null
     activeRequestId.value += 1
   }, 120)
@@ -588,9 +782,12 @@ const handleReferenceEnter = async (segment, event) => {
   versePopup.value.visible = true
   versePopup.value.display = segment.display
   versePopup.value.reference = segment.reference
+  versePopup.value.routeReference = getRouteReference(segment)
   versePopup.value.loading = true
   versePopup.value.error = null
   versePopup.value.text = ''
+  versePopup.value.fullText = ''
+  versePopup.value.truncated = false
 
   await nextTick()
   positionVersePopup(targetEl)
@@ -600,9 +797,10 @@ const handleReferenceEnter = async (segment, event) => {
   if (cached) {
     versePopup.value.loading = false
     versePopup.value.reference = cached.reference
-    versePopup.value.text = cached.text
-    await nextTick()
-    positionVersePopup(targetEl)
+    versePopup.value.fullText = cached.fullText ?? cached.text ?? ''
+    versePopup.value.text = versePopup.value.fullText
+    versePopup.value.truncated = false
+    await ensurePopupFitsViewport(targetEl)
     return
   }
 
@@ -649,16 +847,22 @@ const handleReferenceEnter = async (segment, event) => {
       const hiddenChapterCount = Math.max(0, segment.totalChapters - shownChapterCount)
       const noteParts = []
 
-      if (hiddenChapterCount > 0) {
-        noteParts.push(`Showing opening verse for the first ${shownChapterCount} chapter${shownChapterCount > 1 ? 's' : ''}.`)
-        noteParts.push(`${hiddenChapterCount} more chapter${hiddenChapterCount > 1 ? 's' : ''} referenced.`)
-      } else if (segment.totalChapters > 1) {
-        noteParts.push('Showing the opening verse for each referenced chapter.')
+      if (segment.bookOnlyReference) {
+        noteParts.push(`Showing the opening verses from ${segment.book}.`)
+        noteParts.push('Use the link below to explore the rest of the book.')
       } else {
-        noteParts.push('Showing the opening verse for this chapter reference.')
+        if (hiddenChapterCount > 0) {
+          noteParts.push(`Showing opening verse for the first ${shownChapterCount} chapter${shownChapterCount > 1 ? 's' : ''}.`)
+          noteParts.push(`${hiddenChapterCount} more chapter${hiddenChapterCount > 1 ? 's' : ''} referenced.`)
+        } else if (segment.totalChapters > 1) {
+          noteParts.push('Showing the opening verse for each referenced chapter.')
+        } else {
+          noteParts.push('Showing the opening verse for this chapter reference.')
+        }
+
+        noteParts.push('Use the link below to explore the full chapter.')
       }
 
-      noteParts.push('Use the link below to explore the full chapter.')
       combinedText = `${combinedText}\n\n(${noteParts.join(' ')})`
     }
 
@@ -668,20 +872,22 @@ const handleReferenceEnter = async (segment, event) => {
 
     const payload = {
       reference: displayReference,
-      text: combinedText,
+      fullText: combinedText,
     }
 
     verseCache.set(cacheKey, payload)
 
     versePopup.value.loading = false
     versePopup.value.reference = payload.reference
-    versePopup.value.text = payload.text
-    await nextTick()
-    positionVersePopup(targetEl)
+    versePopup.value.fullText = payload.fullText
+    versePopup.value.text = payload.fullText
+    versePopup.value.truncated = false
+    await ensurePopupFitsViewport(targetEl)
   } catch (error) {
     if (requestId === activeRequestId.value) {
       versePopup.value.loading = false
       versePopup.value.error = error.message || 'Error fetching verse.'
+      versePopup.value.truncated = false
       await nextTick()
       positionVersePopup(targetEl)
     }
@@ -696,15 +902,75 @@ const handlePopupLeave = () => {
   hideVersePopup()
 }
 
-const fullChapterLink = (reference) => {
-  if (!reference) return '#'
-  return `https://www.biblegateway.com/passage/?search=${encodeURIComponent(reference)}&version=${encodeURIComponent(props.bibleGatewayVersion)}`
+const navigateToReadingView = (event) => {
+  const targetReference = versePopup.value.routeReference || versePopup.value.reference || versePopup.value.display
+  const reference = normalizeReferenceForRoute(targetReference)
+  if (!reference) {
+    return
+  }
+
+  if (event?.preventDefault) {
+    event.preventDefault()
+  }
+
+  const source = typeof props.navigationSource === 'string' && props.navigationSource.trim()
+    ? props.navigationSource.trim()
+    : null
+
+  emit('reading-view', { reference, source })
+
+  const query = source ? { ref: reference, source } : { ref: reference }
+
+  if (routerInstance) {
+    routerInstance.push({ name: 'reading', query })
+  } else if (typeof window !== 'undefined') {
+    const url = new URL(window.location.origin + '/reading')
+    url.searchParams.set('ref', reference)
+    if (source) {
+      url.searchParams.set('source', source)
+    }
+    window.location.href = url.toString()
+  }
+}
+
+const readingViewLink = (reference) => {
+  const normalized = normalizeReferenceForRoute(reference)
+  if (!normalized) {
+    return '#'
+  }
+
+  const params = new URLSearchParams({ ref: normalized })
+  if (props.navigationSource) {
+    params.set('source', props.navigationSource)
+  }
+  return `/reading?${params.toString()}`
+}
+
+const handleReferenceActivate = (segment, event) => {
+  if (!props.enableReferenceClick || !segment) {
+    return
+  }
+
+  if (event?.preventDefault) {
+    event.preventDefault()
+  }
+
+  const reference = getRouteReference(segment)
+  if (!reference) {
+    return
+  }
+
+  emit('reference-click', reference)
 }
 
 watch(() => props.text, (newValue) => {
   if (!newValue) {
     hideVersePopup(true)
   }
+})
+
+onMounted(() => {
+  teleportReady.value = true
 })
 
 onBeforeUnmount(() => {
@@ -733,6 +999,10 @@ onBeforeUnmount(() => {
   outline: none;
 }
 
+.scripture-reference--clickable {
+  font-weight: var(--font-weight-semibold, 600);
+}
+
 .scripture-reference:hover,
 .scripture-reference:focus {
   color: var(--color-primary, #2f4a7e);
@@ -740,9 +1010,10 @@ onBeforeUnmount(() => {
 }
 
 .verse-popup {
-  position: absolute;
+  position: fixed;
   z-index: 1000;
-  max-width: 280px;
+  max-width: 560px;
+  min-width: 360px;
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: var(--border-radius-lg, 12px);
@@ -774,6 +1045,13 @@ onBeforeUnmount(() => {
   color: #1a202c;
   font-weight: var(--font-weight-medium, 500);
   white-space: pre-line;
+}
+
+.verse-popup__notice {
+  margin: 0 0 var(--spacing-sm, 0.5rem) 0;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: #6b7280;
+  line-height: var(--line-height-tight, 1.3);
 }
 
 .verse-popup__link {

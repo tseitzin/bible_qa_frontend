@@ -29,7 +29,12 @@
             <span class="question-prompt__label">You asked:</span>
             <p class="question-prompt__text">{{ latestQuestion }}</p>
           </div>
-          <ScriptureText :text="answer" text-class="answer-text" />
+          <ScriptureText
+            :text="answer"
+            text-class="answer-text"
+            navigation-source="answer"
+            @reading-view="handleReadingViewNavigate"
+          />
 
           <div class="reading-info">
             <svg class="reading-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -182,7 +187,7 @@ import ScriptureText from './ScriptureText.vue'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { useAuth } from '../composables/useAuth.js'
 
-const emit = defineEmits(['answerSaved', 'followUpQuestion', 'loginRequired'])
+const emit = defineEmits(['answerSaved', 'followUpQuestion', 'loginRequired', 'readingView'])
 const { currentUser } = useAuth()
 
 const props = defineProps({
@@ -319,6 +324,10 @@ const saveAnswer = async () => {
 const provideFeedback = (type) => {
   // Placeholder for future feedback handling
   console.log(`Feedback provided: ${type}`)
+}
+
+const handleReadingViewNavigate = (payload) => {
+  emit('readingView', payload)
 }
 
 const submitFollowUp = () => {

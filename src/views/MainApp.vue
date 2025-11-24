@@ -67,7 +67,7 @@
             <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
             </svg>
-            Ask Question
+            Ask Questions
           </button>
 
           <!-- Saved Answers Button -->
@@ -80,6 +80,17 @@
             </svg>
             Saved Answers
             <span v-if="savedCount > 0" class="saved-badge">{{ savedCount }}</span>
+          </button>
+
+          <!-- Study Tools Button -->
+          <button
+            @click="handleStudyTabClick"
+            :class="['nav-tab', { 'nav-tab--active': activeTab === 'study' }]"
+          >
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3zm0 2.18L5 8.25v7.5L12 18.8l7-3.05v-7.5L12 5.18zm-.75 3.57h1.5v7.5h-1.5v-7.5zm0 0"/>
+            </svg>
+            Bible Study Helps
           </button>
 
         </div>
@@ -98,17 +109,18 @@
             />
           </div>
           
-          <AnswerDisplay 
-            v-if="showAnswer"
-            :answer="answer" 
-            :question="question"
-            :question-id="questionId"
-            :loading="loading"
-            class="answer-section"
-            @answer-saved="handleAnswerSaved"
-            @follow-up-question="handleFollowUpQuestion"
-            @login-required="handleLoginRequired"
-          />
+          <div v-if="showAnswer" ref="answerSectionRef" class="answer-section">
+            <AnswerDisplay 
+              :answer="answer" 
+              :question="question"
+              :question-id="questionId"
+              :loading="loading"
+              @answer-saved="handleAnswerSaved"
+              @follow-up-question="handleFollowUpQuestion"
+              @login-required="handleLoginRequired"
+              @reading-view="handleReadingViewNavigation"
+            />
+          </div>
           
           <ErrorMessage 
             :error="error" 
@@ -135,11 +147,24 @@
           </div>
           
           <!-- Show saved answers for authenticated users -->
-          <SavedAnswers 
-            v-else
-            ref="savedAnswersRef" 
-            @update="handleSavedAnswersUpdated"
-          />
+          <template v-else>
+            <!-- <p class="saved-meta-copy">
+              Saved answers now surface MCP-provided metadata such as verse citations and topical tags, so every response stays tied to Scripture.
+            </p> -->
+            <SavedAnswers 
+              ref="savedAnswersRef" 
+              @update="handleSavedAnswersUpdated"
+            />
+          </template>
+        </div>
+
+        <!-- Study Resources Tab -->
+        <div
+          v-else-if="activeTab === 'study'"
+          ref="studySectionRef"
+          class="study-content animate-fade-in"
+        >
+          <StudyResources />
         </div>
       </main>
       
@@ -177,14 +202,16 @@ import QuestionForm from '../components/QuestionForm.vue'
 import AnswerDisplay from '../components/AnswerDisplay.vue'
 import ErrorMessage from '../components/ErrorMessage.vue'
 import SavedAnswers from '../components/SavedAnswers.vue'
+import StudyResources from '../components/StudyResources.vue'
 import { useBibleQA } from '../composables/useBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { recentQuestionsService } from '../services/recentQuestionsService.js'
 import { useAuth } from '../composables/useAuth.js'
-import { PENDING_SAVED_ANSWER_KEY } from '../constants/storageKeys.js'
+import { PENDING_SAVED_ANSWER_KEY, RETURN_TO_ANSWER_STATE_KEY } from '../constants/storageKeys.js'
 import navLogo from '../assets/logo_cross.png'
 
 const router = useRouter()
+const route = router.currentRoute
 const { currentUser, logout } = useAuth()
 
 const {
@@ -206,7 +233,9 @@ const {
 const activeTab = ref('ask')
 const savedAnswersRef = ref(null)
 const questionSectionRef = ref(null)
+const answerSectionRef = ref(null)
 const savedSectionRef = ref(null)
+const studySectionRef = ref(null)
 
 // Store current question and answer for accessibility by tests
 const currentQuestion = ref('')
@@ -216,6 +245,51 @@ const showAnswer = ref(false)
 // Saved answers count for badge
 const savedCount = ref(0)
 const recentQuestions = ref([])
+const pendingAnswerRestore = ref(false)
+const pendingAnswerScroll = ref(false)
+
+const resolveElement = (value) => {
+  if (!value) {
+    return null
+  }
+
+  if (typeof Element !== 'undefined' && value instanceof Element) {
+    return value
+  }
+
+  if (typeof Element !== 'undefined' && value.$el instanceof Element) {
+    return value.$el
+  }
+
+  return null
+}
+
+const persistAnswerForReturn = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const questionText = typeof question.value === 'string' ? question.value.trim() : ''
+  const answerText = typeof answer.value === 'string' ? answer.value.trim() : ''
+  if (!questionText || !answerText) {
+    return
+  }
+
+  try {
+    const payload = {
+      question: question.value,
+      answer: answer.value,
+      questionId: questionId.value,
+      rootQuestionId: rootQuestionId.value,
+      conversationHistory: Array.isArray(conversationHistory.value)
+        ? JSON.parse(JSON.stringify(conversationHistory.value))
+        : []
+    }
+    sessionStorage.setItem(RETURN_TO_ANSWER_STATE_KEY, JSON.stringify(payload))
+  } catch (error) {
+    console.error('Failed to persist answer before Reading View:', error)
+  }
+}
 
 const resetQAState = () => {
   clearAll()
@@ -354,6 +428,34 @@ const scrollToQuestionForm = () => {
   })
 }
 
+const scrollToAnswerSection = (attempt = 0) => {
+  if (typeof window === 'undefined') return
+  const sectionEl = resolveElement(answerSectionRef.value)
+  if (!sectionEl) {
+    if (attempt < 6) {
+      requestAnimationFrame(() => scrollToAnswerSection(attempt + 1))
+    }
+    return
+  }
+
+  const top = sectionEl.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  window.scrollTo({
+    top: Math.max(top, 0),
+    behavior: prefersReducedMotion ? 'auto' : 'smooth'
+  })
+}
+
+const scheduleAnswerScroll = () => {
+  if (typeof window === 'undefined') return
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      scrollToAnswerSection()
+    })
+  })
+}
+
 const handleAskTabClick = async () => {
   if (activeTab.value !== 'ask') {
     activeTab.value = 'ask'
@@ -376,6 +478,20 @@ const scrollToSavedSection = () => {
   })
 }
 
+const scrollToStudySection = () => {
+  if (typeof window === 'undefined') return
+  const sectionEl = studySectionRef.value
+  if (!sectionEl) return
+
+  const top = sectionEl.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  window.scrollTo({
+    top: Math.max(top, 0),
+    behavior: prefersReducedMotion ? 'auto' : 'smooth'
+  })
+}
+
 const handleSavedTabClick = async () => {
   if (activeTab.value !== 'saved') {
     resetQAState()
@@ -387,6 +503,19 @@ const handleSavedTabClick = async () => {
     await nextTick()
   }
   scrollToSavedSection()
+}
+
+const handleStudyTabClick = async () => {
+  if (activeTab.value !== 'study') {
+    resetQAState()
+  }
+  if (activeTab.value !== 'study') {
+    activeTab.value = 'study'
+    await nextTick()
+  } else {
+    await nextTick()
+  }
+  scrollToStudySection()
 }
 
 const handleAnswerSaved = async () => {
@@ -415,6 +544,10 @@ const handleFollowUpQuestion = async (followUpText) => {
   currentAnswer.value = answer.value
   showAnswer.value = Boolean(answer.value)
 
+}
+
+const handleReadingViewNavigation = () => {
+  persistAnswerForReturn()
 }
 
 const handleQuestionCleared = () => {
@@ -526,6 +659,53 @@ const restorePendingAnswer = async () => {
   }
 }
 
+const restoreAnswerFromReadingView = async () => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const stored = sessionStorage.getItem(RETURN_TO_ANSWER_STATE_KEY)
+  if (!stored) {
+    return false
+  }
+
+  try {
+    const payload = JSON.parse(stored)
+    if (!payload?.question || !payload?.answer) {
+      return false
+    }
+
+    question.value = payload.question
+    answer.value = payload.answer
+    questionId.value = payload.questionId ?? null
+    rootQuestionId.value = payload.rootQuestionId ?? null
+
+    if (Array.isArray(payload.conversationHistory) && payload.conversationHistory.length > 0) {
+      conversationHistory.value = payload.conversationHistory
+    } else {
+      conversationHistory.value = [
+        { role: 'user', content: payload.question },
+        { role: 'assistant', content: payload.answer }
+      ]
+    }
+
+    currentQuestion.value = payload.question
+    currentAnswer.value = payload.answer
+    activeTab.value = 'ask'
+    showAnswer.value = true
+
+    await nextTick()
+    scheduleAnswerScroll()
+
+    return true
+  } catch (error) {
+    console.error('Failed to restore answer after Reading View:', error)
+    return false
+  } finally {
+    sessionStorage.removeItem(RETURN_TO_ANSWER_STATE_KEY)
+  }
+}
+
 watch(currentUser, () => {
   void loadRecentQuestions()
 }, { immediate: true })
@@ -545,16 +725,16 @@ const handleLogout = async () => {
 
 // Load saved count on mount and check for tab query parameter
 onMounted(async () => {
-  if (typeof window !== 'undefined') {
+  const initialRoute = router.currentRoute.value
+
+  if (typeof window !== 'undefined' && initialRoute.query.restore !== 'answer') {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }
 
   await updateSavedCount()
-
-  const route = router.currentRoute.value
   
   // Check if we're restoring a pending answer
-  if (route.query.restored === 'pending') {
+  if (initialRoute.query.restored === 'pending') {
     const restoredPending = await restorePendingAnswer()
     
     if (restoredPending) {
@@ -564,9 +744,23 @@ onMounted(async () => {
     }
   }
 
+  if (initialRoute.query.restore === 'answer') {
+    const restoredAnswer = await restoreAnswerFromReadingView()
+    if (restoredAnswer) {
+      const nextQuery = { ...initialRoute.query }
+      delete nextQuery.restore
+      if (!nextQuery.tab) {
+        nextQuery.tab = 'ask'
+      }
+
+      router.replace({ name: 'main', query: nextQuery })
+      return
+    }
+  }
+
   // Check if we should open saved tab from query parameter
-  if (route.query.tab === 'saved') {
-    activeTab.value = 'saved'
+  if (initialRoute.query.tab === 'saved' || initialRoute.query.tab === 'study') {
+    activeTab.value = initialRoute.query.tab
   }
 })
 </script>
@@ -999,6 +1193,14 @@ onMounted(async () => {
   color: #ffffff;
   font-size: 0.75rem;
   font-weight: bold;
+.saved-meta-copy {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  background: rgba(47, 74, 126, 0.08);
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-medium);
+}
   padding: 0.1rem 0.4rem;
   border-radius: 9999px;
   margin-left: 0.25rem;
@@ -1014,6 +1216,10 @@ onMounted(async () => {
 }
 
 .saved-content {
+  flex: 1;
+}
+
+.study-content {
   flex: 1;
 }
 

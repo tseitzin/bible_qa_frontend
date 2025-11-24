@@ -4,6 +4,8 @@ import KidsApp from '../views/KidsApp.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
+import ReadingView from '../views/ReadingView.vue'
+import ReadingPlanView from '../views/ReadingPlanView.vue'
 import authService from '../services/authService'
 
 const routes = [
@@ -40,6 +42,24 @@ const routes = [
     component: MainApp,
     meta: {
       title: 'Bible Q&A',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/reading',
+    name: 'reading',
+    component: ReadingView,
+    meta: {
+      title: 'Reading View - Bible Q&A',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/reading-plans/:slug?',
+    name: 'reading-plan',
+    component: ReadingPlanView,
+    meta: {
+      title: 'Reading Plan - Bible Q&A',
       requiresAuth: false
     }
   },
