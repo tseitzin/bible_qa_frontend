@@ -12,12 +12,13 @@ vi.mock('../../services/bibleApi.js', () => ({
 
 import ScriptureText from '../../components/ScriptureText.vue'
 
-const mountScriptureText = async (text) => {
+const mountScriptureText = async (text, extraProps = {}) => {
   const wrapper = mount(ScriptureText, {
     props: {
       text,
       wrapperClass: 'scripture-text-wrapper',
       textClass: 'scripture-text',
+      ...extraProps,
     },
     attachTo: document.body,
   })
@@ -108,6 +109,28 @@ describe('ScriptureText', () => {
     expect(segments).toHaveLength(1)
     expect(segments[0].type).toBe('text')
     expect(segments[0].text).toBe('This is just plain text with no Bible references.')
+
+    wrapper.unmount()
+  })
+
+  it('emits reference-click when enabled and the reference is activated', async () => {
+    const wrapper = await mountScriptureText('John 3:16', { enableReferenceClick: true })
+
+    const referenceEl = wrapper.find('.scripture-reference')
+    await referenceEl.trigger('click')
+
+    expect(wrapper.emitted()['reference-click']).toEqual([['John 3:16']])
+
+    wrapper.unmount()
+  })
+
+  it('does not emit reference-click when clicking without enableReferenceClick', async () => {
+    const wrapper = await mountScriptureText('John 3:16')
+
+    const referenceEl = wrapper.find('.scripture-reference')
+    await referenceEl.trigger('click')
+
+    expect(wrapper.emitted()['reference-click']).toBeUndefined()
 
     wrapper.unmount()
   })

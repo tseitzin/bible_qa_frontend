@@ -5,6 +5,9 @@
         <h2>Saved Answers</h2>
         <span v-if="savedAnswers.length > 0" class="saved-count">{{ savedAnswers.length }} saved</span>
       </div>
+      <!-- <p class="header-subtitle">
+        MCP metadata such as verse citations and topical tags appears beneath each saved answer so you can reference Scripture quickly.
+      </p> -->
       
       <div class="header-actions">
         <div class="search-container">
@@ -150,6 +153,7 @@
             </div>
 
             <div v-if="savedAnswer.tags && savedAnswer.tags.length > 0" class="answer-tags">
+              <span class="answer-tags-label">Metadata</span>
               <span
                 v-for="tag in savedAnswer.tags"
                 :key="tag"
