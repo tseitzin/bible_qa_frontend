@@ -17,20 +17,17 @@
       <div class="plan-hero__content">
         <span v-if="planCategoryLabel" class="plan-pill">{{ planCategoryLabel }}</span>
         <h1>{{ planState.detail.plan.name }}</h1>
-        <p>{{ planState.detail.plan.description }}</p>
-        <ul class="plan-meta">
+        <p>{{ planState.detail.plan.description }} This plan is <strong>{{ planState.detail.plan.duration_days }} days.</strong></p>
+        <!-- <ul class="plan-meta">
           <li>
             <strong>{{ planState.detail.plan.duration_days }}</strong>
             <span>days</span>
           </li>
-          <li>
-            <strong>{{ planState.detail.plan.steps?.length || 0 }}</strong>
-            <span>sections</span>
+          <li v-if="planSectionsCount">
+            <strong>{{ planSectionsCount }}</strong>
+            <span>readings</span>
           </li>
-        </ul>
-      </div>
-      <div class="plan-hero__actions">
-        <button type="button" class="btn-secondary" @click="navigateBack">Return to Study Tools</button>
+        </ul> -->
       </div>
     </section>
 
@@ -43,12 +40,136 @@
     </section>
 
     <section v-if="planState.detail" class="plan-controls">
-      <div class="control-form">
+      <div class="control-form" :class="{ 'control-form--disabled': Boolean(selectedUserPlanDetail) }">
         <label>
-          <span>Start Date</span>
-          <input v-model="planState.startDate" type="date" @change="handleStartDateChange" />
+          <span>Preview Start Date</span>
+          <input
+            v-model="planState.startDate"
+            type="date"
+            @change="handleStartDateChange"
+            :disabled="Boolean(selectedUserPlanDetail)"
+          />
         </label>
-        <p class="control-hint">We’ll schedule each day starting from your chosen date.</p>
+        <p class="control-hint" v-if="selectedUserPlanDetail">
+          Start date follows your tracked plan
+          <span v-if="selectedTrackedPlanSummary?.start_date">
+            ({{ formatFriendlyDate(selectedTrackedPlanSummary.start_date) || selectedTrackedPlanSummary.start_date }})
+          </span>.
+          <button type="button" class="link-button link-button--inline" @click="resetTrackingSelection">
+            Preview without tracking
+          </button>
+        </p>
+        <p class="control-hint" v-else>We’ll schedule each day starting from your chosen date.</p>
+        <div class="tracking-instructions">
+          <p>How tracking works:</p>
+          <ul>
+            <li>Select a start date to preview the full schedule.</li>
+            <li>Use the panel on the right to save the plan to your account.</li>
+            <li>Once saved, mark days complete directly in the schedule.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="tracking-panel tracking-panel--compact">
+        <div class="tracking-panel__header">
+          <div>
+            <p class="tracking-eyebrow">Tracking</p>
+            <h3>Stay on track</h3>
+          </div>
+          <p class="tracking-subtitle">Save progress without leaving the schedule.</p>
+        </div>
+        <template v-if="!isAuthenticated">
+          <p class="tracking-cta-text">
+            Create a free account to save this reading plan and mark days complete.
+          </p>
+          <div class="tracking-cta-actions">
+            <router-link class="btn-primary" :to="registerLink">Create Account</router-link>
+            <router-link class="btn-secondary" :to="loginLink">Log In</router-link>
+          </div>
+        </template>
+        <template v-else>
+          <div v-if="trackingState.loading" class="tracking-status">Loading your plans…</div>
+          <div v-else class="tracking-panel__compact-body">
+            <p v-if="trackingState.error" class="error-text">{{ trackingState.error }}</p>
+            <div
+              v-if="selectedTrackedPlanSummary"
+              class="tracking-summary-row"
+            >
+              <div>
+                <span class="tracking-label">Progress</span>
+                <strong>
+                  {{ selectedTrackedPlanSummary.completed_days }} / {{ selectedTrackedPlanSummary.total_days }}
+                </strong>
+              </div>
+              <div>
+                <span class="tracking-label">Percent</span>
+                <strong>{{ selectedTrackedPlanSummary.percent_complete }}%</strong>
+              </div>
+              <div v-if="selectedTrackedPlanSummary.start_date">
+                <span class="tracking-label">Started</span>
+                <span>
+                  {{ formatFriendlyDate(selectedTrackedPlanSummary.start_date) || selectedTrackedPlanSummary.start_date }}
+                </span>
+              </div>
+              <div v-if="selectedTrackedPlanSummary.completed_at">
+                <span class="tracking-label">Finished</span>
+                <span>{{ formatFriendlyDate(selectedTrackedPlanSummary.completed_at) }}</span>
+              </div>
+            </div>
+
+            <div class="tracking-compact-grid">
+              <div class="tracking-card tracking-card--select">
+                <template v-if="userPlansForSlug.length">
+                  <label>
+                    <span>Your tracked plans</span>
+                    <select v-model.number="trackingState.selectedPlanId" @change="handleTrackedPlanSelection">
+                      <option
+                        v-for="plan in userPlansForSlug"
+                        :key="plan.id"
+                        :value="plan.id"
+                      >
+                        {{ plan.nickname || 'Plan #' + plan.id }} · Started
+                        {{ formatFriendlyDate(plan.start_date) || plan.start_date || 'N/A' }}
+                      </option>
+                    </select>
+                  </label>
+                  <div class="tracking-card__actions" v-if="trackingState.selectedPlanId">
+                    <button
+                      type="button"
+                      class="link-button link-button--danger"
+                      :disabled="deletingPlanId === trackingState.selectedPlanId"
+                      @click="handleDeleteTrackedPlan"
+                    >
+                      {{ deletingPlanId === trackingState.selectedPlanId ? 'Deleting…' : 'Delete this saved plan' }}
+                    </button>
+                  </div>
+                </template>
+                <p v-else class="tracking-empty">No saved plans yet.</p>
+              </div>
+
+              <form class="tracking-card tracking-card--create" @submit.prevent="handleCreateTrackedPlan">
+                <div class="tracking-mini-fields">
+                  <label>
+                    <span>Start Date</span>
+                    <input type="date" v-model="trackingState.createStartDate" required />
+                  </label>
+                  <label>
+                    <span>Nickname</span>
+                    <input
+                      type="text"
+                      v-model="trackingState.createNickname"
+                      maxlength="100"
+                      placeholder="Optional"
+                    />
+                  </label>
+                </div>
+                <button class="btn-primary" type="submit" :disabled="trackingState.actionLoading">
+                  {{ userPlansForSlug.length ? 'Start another plan' : 'Start tracking this plan' }}
+                </button>
+              </form>
+            </div>
+          </div>
+        </template>
       </div>
     </section>
 
@@ -60,7 +181,7 @@
         </div>
         <div v-if="totalPages > 1" class="schedule-pagination">
           <button type="button" class="btn-secondary" @click="goToPrevPage" :disabled="planState.page === 1">
-            ‹ Prev
+            {{ paginationLabels.prev }}
           </button>
           <span>{{ pageLabel }} · Page {{ planState.page }} of {{ totalPages }}</span>
           <button
@@ -69,7 +190,7 @@
             @click="goToNextPage"
             :disabled="planState.page === totalPages"
           >
-            Next ›
+            {{ paginationLabels.next }}
           </button>
         </div>
       </header>
@@ -92,6 +213,20 @@
             </div>
           </div>
           <div class="schedule-meta">
+            <div v-if="showCompletionToggles" class="completion-toggle">
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="isDayComplete(item.day_number)"
+                  :disabled="completionMutationDay === item.day_number"
+                  @change="handleCompletionToggle(item.day_number, $event.target.checked)"
+                />
+                <span>{{ isDayComplete(item.day_number) ? 'Completed' : 'Mark complete' }}</span>
+              </label>
+              <small v-if="dayCompletedAt(item.day_number)">
+                Finished {{ dayCompletedAt(item.day_number) }}
+              </small>
+            </div>
             <span v-if="item.scheduled_date">{{ item.scheduled_date }}</span>
           </div>
         </li>
@@ -104,8 +239,14 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { studyResourcesService } from '../services/studyResourcesService.js'
-import { parseReference } from '../utils/referenceParser.js'
+import userReadingPlanService from '../services/userReadingPlanService.js'
+import { useAuth } from '../composables/useAuth.js'
+import { parseReference, isChapterOnlyReference } from '../utils/referenceParser.js'
 import ScriptureText from '../components/ScriptureText.vue'
+
+const { isAuthenticated } = useAuth()
+
+const ANNUAL_PAGE_SIZE = 30
 
 const router = useRouter()
 const route = useRoute()
@@ -114,6 +255,18 @@ const selectedPlanSlug = ref(typeof route.params.slug === 'string' ? route.param
 const selectedPlanMeta = computed(() =>
   readingPlans.value.find((plan) => plan.slug === selectedPlanSlug.value) || null
 )
+const buildAuthLink = (routeName) => {
+  const link = { name: routeName }
+  if (selectedPlanSlug.value) {
+    link.query = {
+      redirect: 'reading-plan',
+      planSlug: selectedPlanSlug.value,
+    }
+  }
+  return link
+}
+const loginLink = computed(() => buildAuthLink('login'))
+const registerLink = computed(() => buildAuthLink('register'))
 const planState = reactive({
   loading: false,
   error: '',
@@ -121,6 +274,41 @@ const planState = reactive({
   startDate: '',
   page: 1
 })
+
+const todayIso = () => new Date().toISOString().slice(0, 10)
+const formatFriendlyDate = (value) => {
+  if (!value) return ''
+  const dateValue = typeof value === 'string' ? new Date(value) : value
+  if (Number.isNaN(dateValue?.getTime?.())) {
+    return value
+  }
+  return dateValue.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+const trackingState = reactive({
+  loading: false,
+  error: '',
+  plans: [],
+  selectedPlanId: null,
+  detail: null,
+  createNickname: '',
+  createStartDate: todayIso(),
+  actionLoading: false,
+})
+const completionMutationDay = ref(null)
+const deletingPlanId = ref(null)
+
+const userPlansForSlug = computed(() =>
+  trackingState.plans.filter((plan) => plan.plan.slug === selectedPlanSlug.value)
+)
+const selectedTrackedPlanSummary = computed(() =>
+  userPlansForSlug.value.find((plan) => plan.id === trackingState.selectedPlanId) || null
+)
+const selectedUserPlanDetail = computed(() =>
+  trackingState.detail && trackingState.detail.id === trackingState.selectedPlanId
+    ? trackingState.detail
+    : null
+)
 
 const loadReadingPlans = async () => {
   try {
@@ -170,6 +358,55 @@ const fetchPlanDetail = async (slug) => {
   }
 }
 
+const resetTrackingSelection = () => {
+  trackingState.selectedPlanId = null
+  trackingState.detail = null
+}
+
+const loadUserPlans = async () => {
+  if (!isAuthenticated.value || !selectedPlanSlug.value) {
+    trackingState.plans = []
+    resetTrackingSelection()
+    return
+  }
+  trackingState.loading = true
+  trackingState.error = ''
+  try {
+    trackingState.plans = await userReadingPlanService.listPlans()
+    await syncTrackedPlanSelection()
+  } catch (error) {
+    trackingState.error = error?.response?.data?.detail || 'Unable to load your reading plans'
+  } finally {
+    trackingState.loading = false
+  }
+}
+
+const fetchTrackedPlanDetail = async (userPlanId) => {
+  if (!userPlanId) {
+    trackingState.detail = null
+    return
+  }
+  try {
+    trackingState.detail = await userReadingPlanService.getPlanDetail(userPlanId)
+  } catch (error) {
+    console.error('Unable to fetch tracked plan detail', error)
+  }
+}
+
+const syncTrackedPlanSelection = async () => {
+  const matches = userPlansForSlug.value
+  if (!matches.length) {
+    resetTrackingSelection()
+    return
+  }
+  if (!matches.some((plan) => plan.id === trackingState.selectedPlanId)) {
+    trackingState.selectedPlanId = matches[0].id
+  }
+  if (trackingState.selectedPlanId) {
+    await fetchTrackedPlanDetail(trackingState.selectedPlanId)
+  }
+}
+
 const retryLoad = async () => {
   planState.error = ''
   await fetchPlanDetail(selectedPlanSlug.value)
@@ -179,7 +416,17 @@ const handlePlanChange = () => {
   if (!selectedPlanSlug.value) return
   planState.startDate = ''
   planState.page = 1
+  trackingState.createStartDate = todayIso()
+  resetTrackingSelection()
   router.push({ name: 'reading-plan', params: { slug: selectedPlanSlug.value } })
+}
+
+const handleTrackedPlanSelection = async () => {
+  if (!trackingState.selectedPlanId) {
+    trackingState.detail = null
+    return
+  }
+  await fetchTrackedPlanDetail(trackingState.selectedPlanId)
 }
 
 const handleStartDateChange = () => {
@@ -188,47 +435,145 @@ const handleStartDateChange = () => {
   void fetchPlanDetail(selectedPlanSlug.value)
 }
 
-const planCategoryLabel = computed(() => {
-  const category = planState.detail?.plan?.metadata?.category
-  if (category === 'annual') {
-    return 'Annual Journey'
+const handleCreateTrackedPlan = async () => {
+  if (!selectedPlanSlug.value) return
+  trackingState.actionLoading = true
+  trackingState.error = ''
+  try {
+    await userReadingPlanService.startPlan({
+      planSlug: selectedPlanSlug.value,
+      startDate: trackingState.createStartDate,
+      nickname: trackingState.createNickname?.trim() || undefined,
+    })
+    trackingState.createNickname = ''
+    trackingState.createStartDate = todayIso()
+    await loadUserPlans()
+  } catch (error) {
+    trackingState.error = error?.response?.data?.detail || 'Unable to start this plan'
+  } finally {
+    trackingState.actionLoading = false
   }
-  return null
+}
+
+const handleCompletionToggle = async (dayNumber, isComplete) => {
+  if (!trackingState.selectedPlanId || completionMutationDay.value === dayNumber) {
+    return
+  }
+  completionMutationDay.value = dayNumber
+  try {
+    const result = await userReadingPlanService.updateDayCompletion(
+      trackingState.selectedPlanId,
+      dayNumber,
+      isComplete
+    )
+    if (trackingState.detail?.schedule) {
+      const target = trackingState.detail.schedule.find((step) => step.day_number === dayNumber)
+      if (target) {
+        target.is_complete = result.is_complete
+        target.completed_at = result.completed_at
+      }
+      trackingState.detail.completed_days = result.completed_days
+      trackingState.detail.percent_complete = result.percent_complete
+      trackingState.detail.total_days = result.total_days
+      trackingState.detail.completed_at = result.plan_completed_at
+    }
+    trackingState.plans = trackingState.plans.map((plan) =>
+      plan.id === trackingState.selectedPlanId
+        ? {
+            ...plan,
+            completed_days: result.completed_days,
+            percent_complete: result.percent_complete,
+            completed_at: result.plan_completed_at,
+          }
+        : plan
+    )
+  } catch (error) {
+    console.error('Unable to update completion', error)
+  } finally {
+    completionMutationDay.value = null
+  }
+}
+
+const handleDeleteTrackedPlan = async () => {
+  if (!trackingState.selectedPlanId || deletingPlanId.value) {
+    return
+  }
+  const confirmed = window.confirm('Delete this saved plan? Your completion history for it will be removed.')
+  if (!confirmed) {
+    return
+  }
+  deletingPlanId.value = trackingState.selectedPlanId
+  trackingState.error = ''
+  try {
+    await userReadingPlanService.deletePlan(trackingState.selectedPlanId)
+    await loadUserPlans()
+  } catch (error) {
+    trackingState.error = error?.response?.data?.detail || 'Unable to delete this plan'
+  } finally {
+    deletingPlanId.value = null
+  }
+}
+
+const isAnnualPlan = computed(() => planState.detail?.plan?.metadata?.category === 'annual')
+
+const planCategoryLabel = computed(() => (isAnnualPlan.value ? 'Annual Journey' : null))
+
+const activeSchedule = computed(() => selectedUserPlanDetail.value?.schedule || planState.detail?.schedule || [])
+
+const planSectionsCount = computed(() => {
+  if (activeSchedule.value.length) {
+    return activeSchedule.value.length
+  }
+  const stepsCount = planState.detail?.plan?.steps?.length
+  if (stepsCount) {
+    return stepsCount
+  }
+  const scheduleCount = planState.detail?.schedule?.length
+  return scheduleCount || null
 })
 
 const schedulePageSize = computed(() => {
   const totalDays = planState.detail?.plan?.duration_days || selectedPlanMeta.value?.duration_days || 30
-  if (planState.detail?.plan?.metadata?.category === 'annual') {
-    return Math.max(1, Math.ceil(totalDays / 12))
+  if (isAnnualPlan.value) {
+    return ANNUAL_PAGE_SIZE
   }
   return Math.max(1, Math.min(30, totalDays))
 })
 
 const totalPages = computed(() => {
-  const totalItems = planState.detail?.schedule?.length || 0
+  const totalItems = activeSchedule.value.length
   if (!totalItems) {
     return 1
   }
   return Math.max(1, Math.ceil(totalItems / schedulePageSize.value))
 })
 
+const paginationLabels = computed(() => {
+  if (isAnnualPlan.value) {
+    return {
+      prev: '‹ Previous Month',
+      next: 'Next Month ›',
+    }
+  }
+  return {
+    prev: '‹ Prev',
+    next: 'Next ›',
+  }
+})
+
 const pagedSchedule = computed(() => {
-  const schedule = planState.detail?.schedule || []
-  if (!schedule.length) {
+  if (!activeSchedule.value.length) {
     return []
   }
   const start = (planState.page - 1) * schedulePageSize.value
-  return schedule.slice(start, start + schedulePageSize.value)
+  return activeSchedule.value.slice(start, start + schedulePageSize.value)
 })
 
 const pageLabel = computed(() => {
   const startDay = (planState.page - 1) * schedulePageSize.value + 1
-  const endDay = Math.min(
-    planState.page * schedulePageSize.value,
-    planState.detail?.schedule?.length || 0
-  )
-  if (planState.detail?.plan?.metadata?.category === 'annual') {
-    return `Month ${planState.page}`
+  const endDay = Math.min(planState.page * schedulePageSize.value, activeSchedule.value.length || 0)
+  if (isAnnualPlan.value) {
+    return `Month ${planState.page} (Days ${startDay}–${endDay})`
   }
   return `Days ${startDay}–${endDay}`
 })
@@ -260,7 +605,23 @@ const handleReferenceClick = (passage, source = 'reading-plan') => {
   if (selectedPlanSlug.value) {
     query.plan = selectedPlanSlug.value
   }
+  if (isChapterOnlyReference(reference)) {
+    query.fullChapter = '1'
+  }
   router.push({ name: 'reading', query })
+}
+
+const showCompletionToggles = computed(() => isAuthenticated.value && !!selectedUserPlanDetail.value)
+
+const isDayComplete = (dayNumber) => {
+  if (!selectedUserPlanDetail.value?.schedule) return false
+  return Boolean(selectedUserPlanDetail.value.schedule.find((item) => item.day_number === dayNumber)?.is_complete)
+}
+
+const dayCompletedAt = (dayNumber) => {
+  if (!selectedUserPlanDetail.value?.schedule) return null
+  const entry = selectedUserPlanDetail.value.schedule.find((item) => item.day_number === dayNumber)
+  return entry?.completed_at ? formatFriendlyDate(entry.completed_at) : null
 }
 
 watch(
@@ -270,6 +631,8 @@ watch(
     selectedPlanSlug.value = normalized
     planState.startDate = ''
     planState.page = 1
+    trackingState.createStartDate = todayIso()
+    resetTrackingSelection()
     if (normalized) {
       void fetchPlanDetail(normalized)
     }
@@ -278,7 +641,7 @@ watch(
 )
 
 watch(
-  () => planState.detail?.schedule?.length,
+  () => activeSchedule.value.length,
   () => {
     planState.page = 1
   }
@@ -290,6 +653,18 @@ watch(totalPages, (newTotal) => {
   }
 })
 
+watch(
+  () => ({ authed: isAuthenticated.value, slug: selectedPlanSlug.value }),
+  ({ authed, slug }) => {
+    if (authed && slug) {
+      void loadUserPlans()
+    } else {
+      trackingState.plans = []
+      resetTrackingSelection()
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(async () => {
   await loadReadingPlans()
@@ -299,7 +674,7 @@ onMounted(async () => {
 <style scoped>
 .reading-plan-view {
   min-height: 100vh;
-  padding: var(--spacing-2xl) var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-lg);
   background: linear-gradient(160deg, rgba(247, 248, 252, 0.9), rgba(226, 234, 247, 0.9));
 }
 
@@ -341,13 +716,14 @@ onMounted(async () => {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--spacing-md);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
 }
 
 .plan-switcher {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  color: black;
   font-weight: var(--font-weight-semibold);
 }
 
@@ -359,50 +735,50 @@ onMounted(async () => {
 
 .plan-hero {
   background: #fff;
-  border-radius: var(--border-radius-2xl);
-  padding: var(--spacing-xl);
-  box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
+  box-shadow: 0 18px 36px rgba(31, 50, 86, 0.15);
   border: 1px solid rgba(47, 74, 126, 0.12);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-sm);
+
+  margin-bottom: var(--spacing-sm);
 }
+
 
 .plan-hero__content h1 {
   margin: 0;
   color: black;
+  font-size: 1.75rem;
+  line-height: 1.2;
 }
 
 .plan-hero__content p {
-  margin-top: var(--spacing-sm);
-  max-width: 720px;
+  margin-top: var(--spacing-xs);
+  max-width: 600px;
   color: black;
-}
-
-.plan-hero__actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  font-size: 0.95rem;
 }
 
 .plan-meta {
   list-style: none;
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-sm);
   padding: 0;
-  margin: var(--spacing-md) 0 0;
+  margin: var(--spacing-sm) 0 0;
 }
 
 .plan-meta li {
   display: flex;
   flex-direction: column;
   color: var(--color-primary-dark);
+  font-size: 0.85rem;
 }
 
 .plan-meta strong {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .plan-status {
@@ -410,7 +786,7 @@ onMounted(async () => {
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-xl);
   text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
 }
 
 .plan-controls {
@@ -419,13 +795,30 @@ onMounted(async () => {
   padding: var(--spacing-lg);
   box-shadow: 0 20px 40px rgba(31, 50, 86, 0.12);
   border: 1px solid rgba(47, 74, 126, 0.12);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 1024px) {
+  .plan-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: flex-start;
+  }
 }
 
 .control-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+}
+
+.control-form--disabled {
+  opacity: 0.7;
+}
+
+.control-form--disabled input {
+  pointer-events: none;
 }
 
 .control-form label {
@@ -447,8 +840,27 @@ onMounted(async () => {
 
 .control-hint {
   margin: 0;
-  color: var(--color-text-muted);
+  color: black;
   font-size: 0.9rem;
+}
+
+.control-hint span {
+  color: black;
+}
+
+.link-button--inline {
+  display: inline;
+  font-size: 0.85rem;
+  margin-left: 0.35rem;
+}
+
+.link-button--danger {
+  color: var(--color-danger, #b42318);
+}
+
+.link-button--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .plan-schedule {
@@ -466,6 +878,15 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing-md);
+}
+
+.plan-schedule__header h2 {
+  margin: 0;
+  color: black;
+}
+
+.plan-schedule__header p {
+  color: black;
 }
 
 .plan-pill {
@@ -494,12 +915,14 @@ onMounted(async () => {
   gap: var(--spacing-md);
 }
 
-.schedule-list li {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--spacing-lg);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid rgba(47, 74, 126, 0.12);
+.tracking-panel p {
+  color: black !important;
+}
+
+.tracking-cta-text {
+  color: black !important;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-semibold);
 }
 
 .schedule-secondary {
@@ -511,12 +934,17 @@ onMounted(async () => {
 
 .schedule-details {
   flex: 1;
+  color: black;
 }
 
 .schedule-meta {
   min-width: 140px;
   text-align: right;
   color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
 }
 
 .schedule-pagination {
@@ -524,6 +952,202 @@ onMounted(async () => {
   align-items: center;
   gap: var(--spacing-sm);
   font-weight: var(--font-weight-semibold);
+}
+
+.tracking-instructions,
+.tracking-instructions p {
+  margin-top: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+  font-size: 0.9rem;
+  color: black;
+}
+
+
+.tracking-panel {
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-xl);
+  background: rgba(47, 74, 126, 0.05);
+  border: 1px solid rgba(47, 74, 126, 0.12);
+  display: flex;
+  color: black;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.tracking-panel--compact {
+  padding: var(--spacing-md);
+}
+
+.tracking-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  row-gap: var(--spacing-xs);
+}
+
+.tracking-panel__header h3 {
+  margin: 0;
+  color: black;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.tracking-panel__header p {
+  margin: 0;
+  color: black;
+  font-size: 0.9rem;
+  max-width: 320px;
+}
+
+.tracking-eyebrow {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.tracking-subtitle {
+  margin: 0;
+  color: black;
+  font-size: 0.85rem;
+}
+
+.tracking-subtitle p {
+  margin: 0;
+  color: black;
+} 
+
+.tracking-panel__compact-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.tracking-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid rgba(47, 74, 126, 0.12);
+}
+
+.tracking-summary-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  color: black;
+}
+
+.tracking-summary-row strong {
+  font-size: 1rem;
+}
+
+.tracking-label {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: black;
+}
+
+.tracking-compact-grid {
+  display: grid;
+  gap: var(--spacing-sm);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.tracking-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid rgba(47, 74, 126, 0.12);
+  display: flex;
+  color: black;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.tracking-card select,
+.tracking-card input {
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.tracking-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-xs);
+  border-top: 1px dashed rgba(47, 74, 126, 0.15);
+}
+
+.tracking-card--create {
+  gap: var(--spacing-sm);
+}
+
+.tracking-mini-fields {
+  display: grid;
+  gap: var(--spacing-xs);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.tracking-mini-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.tracking-mini-fields input,
+.tracking-card select {
+  border-radius: var(--border-radius-lg);
+  border: 1px solid rgba(47, 74, 126, 0.2);
+  padding: 0.55rem 0.7rem;
+}
+
+.tracking-card button {
+  align-self: flex-start;
+}
+
+.tracking-cta-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.tracking-panel__header + .tracking-panel__compact-body,
+.tracking-panel__header + .tracking-status {
+  margin-top: var(--spacing-xs);
+  color: black;
+}
+
+.tracking-status,
+.tracking-empty {
+  color: black;
+  font-style: italic;
+}
+
+.completion-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  color: var(--color-primary-dark);
+}
+
+.completion-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.completion-toggle input {
+  width: 16px;
+  height: 16px;
 }
 
 @media (max-width: 768px) {
@@ -546,6 +1170,7 @@ onMounted(async () => {
 
   .schedule-meta {
     text-align: left;
+    align-items: flex-start;
   }
 }
 </style>

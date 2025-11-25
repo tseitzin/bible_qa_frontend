@@ -45,19 +45,15 @@
             Pick a theme from the dropdown, then click any reference to jump straight into Reading View for the full context.
           </p>
         </div>
-        <button type="button" class="link-button" @click="refreshTopics">Refresh</button>
       </header>
-      <form class="form-inline" @submit.prevent="handleTopicSelect">
+      <div class="form-inline">
         <select v-model="selectedTopic" required>
           <option value="" disabled>Select a topic</option>
           <option v-for="topic in availableTopics" :key="topic.topic" :value="topic.topic">
             {{ topic.topic }}
           </option>
         </select>
-        <button class="btn-secondary" type="submit" :disabled="topicState.loading || !selectedTopic">
-          {{ topicState.loading ? 'Loading…' : 'View Topic' }}
-        </button>
-      </form>
+      </div>
       <p v-if="topicState.error" class="error-text">{{ topicState.error }}</p>
       <p v-else-if="!topicState.results.length" class="muted-text">Select a topic to view its summary and references.</p>
       <div v-else class="topic-grid">
@@ -251,7 +247,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { studyResourcesService } from '../services/studyResourcesService.js'
-import { parseReference } from '../utils/referenceParser.js'
+import { parseReference, isChapterOnlyReference } from '../utils/referenceParser.js'
 import ScriptureText from './ScriptureText.vue'
 
 const router = useRouter()
@@ -406,6 +402,9 @@ const handleReferenceClick = (passage, source = 'study') => {
   if (source) {
     query.source = source
   }
+  if (isChapterOnlyReference(reference)) {
+    query.fullChapter = '1'
+  }
 
   router.push({ name: 'reading', query })
 }
@@ -434,14 +433,6 @@ const loadTopics = async () => {
   } finally {
     topicState.loading = false
   }
-}
-
-const refreshTopics = async () => {
-  await loadTopics()
-}
-
-const handleTopicSelect = () => {
-  applySelectedTopic()
 }
 
 watch(selectedTopic, () => {

@@ -156,10 +156,14 @@ const handleRegister = async () => {
   
   if (result.success) {
     const redirectParam = route.query.redirect
+    const planSlug = typeof route.query.planSlug === 'string' ? route.query.planSlug : ''
     if (redirectParam === 'pending-save') {
       router.push({ name: 'main', query: { restored: 'pending' } })
     } else if (redirectParam === 'saved') {
       router.push({ name: 'main', query: { tab: 'saved' } })
+    } else if (redirectParam === 'reading-plan') {
+      const params = planSlug ? { slug: planSlug } : {}
+      router.push({ name: 'reading-plan', params })
     } else {
       router.push({ name: 'main' })
     }

@@ -30,3 +30,14 @@ export function parseReference(reference) {
     endVerse: startVerse == null ? null : endVerse,
   }
 }
+
+export function isChapterOnlyReference(reference) {
+  if (typeof reference !== 'string') {
+    return false
+  }
+  const parsed = parseReference(reference)
+  if (!parsed) {
+    return false
+  }
+  return parsed.startVerse == null && parsed.endVerse == null
+}

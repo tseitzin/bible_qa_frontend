@@ -20,7 +20,7 @@
             type="button"
             class="btn-secondary"
             :disabled="chapterState.loading || !canLoadChapter"
-            v-if="!chapterState.expanded"
+            v-if="!chapterState.expanded && !isCurrentChapterFullyDisplayed"
             @click="loadFullChapter"
           >
             {{ chapterState.loading ? 'Loading…' : 'View full chapter' }}
@@ -28,7 +28,7 @@
           <button
             type="button"
             class="btn-link"
-            v-else
+            v-else-if="chapterState.expanded"
             @click="collapseChapter"
           >
             Hide chapter
@@ -76,7 +76,7 @@
           Next Chapter ›
         </button>
       </div>
-      <p v-else class="muted-text">Pick any topic reference to start reading.</p>
+      <p v-else-if="!passageState.data" class="muted-text">Pick any topic reference to start reading.</p>
     </section>
 
     <section v-if="chapterState.expanded" class="reading-card">
@@ -127,6 +127,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { bibleApi } from '../services/bibleApi.js'
+import { isChapterOnlyReference } from '../utils/referenceParser.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -146,6 +147,16 @@ const currentReference = ref(typeof route.query.ref === 'string' ? route.query.r
 const planSlug = computed(() => (typeof route.query.plan === 'string' ? route.query.plan : ''))
 
 const passageDisplay = computed(() => passageState.data?.reference || currentReference.value || '')
+const routeReferenceIsChapterOnly = computed(() => {
+  if (route.query.fullChapter === '1') {
+    return true
+  }
+  const raw = currentReference.value?.trim()
+  if (!raw) {
+    return false
+  }
+  return isChapterOnlyReference(raw)
+})
 const groupedPassageVerses = computed(() => {
   const verses = passageState.data?.verses
   if (!verses?.length) {
@@ -243,6 +254,44 @@ const canFocusNextChapter = computed(() => {
 })
 
 const shouldShowFocusedHeading = computed(() => hasMultipleChapters.value || showPassageChapterNavigator.value)
+const isCurrentChapterFullyDisplayed = computed(() => {
+  if (!passageState.data || !Number.isInteger(visibleChapterNumber.value)) {
+    return false
+  }
+
+  if (routeReferenceIsChapterOnly.value) {
+    return true
+  }
+
+  const data = passageState.data
+  const focusChapter = visibleChapterNumber.value
+  const startChapter = Number.isInteger(data.chapter) ? data.chapter : null
+  const endChapter = Number.isInteger(data.end_chapter) ? data.end_chapter : startChapter
+  const startVerse = data.start_verse
+  const endVerse = data.end_verse
+
+  if (!Number.isInteger(startChapter)) {
+    return false
+  }
+
+  if (endChapter === startChapter) {
+    return startVerse == null && endVerse == null
+  }
+
+  if (focusChapter === startChapter) {
+    return startVerse == null || startVerse <= 1
+  }
+
+  if (focusChapter === endChapter) {
+    return endVerse == null
+  }
+
+  if (Number.isInteger(endChapter) && focusChapter > startChapter && focusChapter < endChapter) {
+    return true
+  }
+
+  return false
+})
 
 const showChapterNavigator = computed(() => {
   if (!chapterState.expanded) {

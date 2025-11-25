@@ -56,7 +56,7 @@ import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref
 import { bibleApi } from '../services/bibleApi.js'
 import { BIBLE_BOOKS, BIBLE_BOOK_ALIASES } from '../constants/bibleBooks.js'
 import { BOOK_CHAPTER_COUNT } from '../constants/bookChapterCounts.js'
-import { parseReference } from '../utils/referenceParser.js'
+import { parseReference, isChapterOnlyReference } from '../utils/referenceParser.js'
 
 const props = defineProps({
   text: {
@@ -920,6 +920,9 @@ const navigateToReadingView = (event) => {
   emit('reading-view', { reference, source })
 
   const query = source ? { ref: reference, source } : { ref: reference }
+  if (isChapterOnlyReference(reference)) {
+    query.fullChapter = '1'
+  }
 
   if (routerInstance) {
     routerInstance.push({ name: 'reading', query })
@@ -942,6 +945,9 @@ const readingViewLink = (reference) => {
   const params = new URLSearchParams({ ref: normalized })
   if (props.navigationSource) {
     params.set('source', props.navigationSource)
+  }
+  if (isChapterOnlyReference(normalized)) {
+    params.set('fullChapter', '1')
   }
   return `/reading?${params.toString()}`
 }
