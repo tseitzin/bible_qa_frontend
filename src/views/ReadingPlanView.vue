@@ -119,17 +119,16 @@
 
             <div class="tracking-compact-grid">
               <div class="tracking-card tracking-card--select">
-                <template v-if="userPlansForSlug.length">
+                <template v-if="sortedTrackedPlans.length">
                   <label>
                     <span>Your tracked plans</span>
                     <select v-model.number="trackingState.selectedPlanId" @change="handleTrackedPlanSelection">
                       <option
-                        v-for="plan in userPlansForSlug"
+                        v-for="plan in sortedTrackedPlans"
                         :key="plan.id"
                         :value="plan.id"
                       >
-                        {{ plan.nickname || 'Plan #' + plan.id }} · Started
-                        {{ formatFriendlyDate(plan.start_date) || plan.start_date || 'N/A' }}
+                        {{ trackedPlanOptionLabel(plan) }}
                       </option>
                     </select>
                   </label>
@@ -164,7 +163,7 @@
                   </label>
                 </div>
                 <button class="btn-primary" type="submit" :disabled="trackingState.actionLoading">
-                  {{ userPlansForSlug.length ? 'Start another plan' : 'Start tracking this plan' }}
+                  {{ plansMatchingCurrentSlug.length ? 'Start another plan' : 'Start tracking this plan' }}
                 </button>
               </form>
             </div>
@@ -285,6 +284,17 @@ const formatFriendlyDate = (value) => {
   return dateValue.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const trackedPlanOptionLabel = (plan) => {
+  if (!plan) {
+    return 'Saved plan'
+  }
+  const nickname = plan.nickname?.trim()
+  const planName = nickname || plan.plan?.name || `Plan #${plan.id}`
+  const categoryLabel = plan.plan?.metadata?.category === 'annual' ? 'Annual' : 'Featured'
+  const started = formatFriendlyDate(plan.start_date) || plan.start_date || 'N/A'
+  return `${planName} · ${categoryLabel} · Started ${started}`
+}
+
 const trackingState = reactive({
   loading: false,
   error: '',
@@ -295,14 +305,30 @@ const trackingState = reactive({
   createStartDate: todayIso(),
   actionLoading: false,
 })
+const pendingSelectedPlanId = ref(null)
 const completionMutationDay = ref(null)
 const deletingPlanId = ref(null)
 
-const userPlansForSlug = computed(() =>
+const plansMatchingCurrentSlug = computed(() =>
   trackingState.plans.filter((plan) => plan.plan.slug === selectedPlanSlug.value)
 )
+const sortedTrackedPlans = computed(() => {
+  if (!trackingState.plans.length) {
+    return []
+  }
+  return [...trackingState.plans].sort((a, b) => {
+    const dateA = a.start_date ? new Date(a.start_date).getTime() : 0
+    const dateB = b.start_date ? new Date(b.start_date).getTime() : 0
+    if (dateA !== dateB) {
+      return dateB - dateA
+    }
+    const nameA = (a.nickname || a.plan?.name || '').toLowerCase()
+    const nameB = (b.nickname || b.plan?.name || '').toLowerCase()
+    return nameA.localeCompare(nameB)
+  })
+})
 const selectedTrackedPlanSummary = computed(() =>
-  userPlansForSlug.value.find((plan) => plan.id === trackingState.selectedPlanId) || null
+  trackingState.plans.find((plan) => plan.id === trackingState.selectedPlanId) || null
 )
 const selectedUserPlanDetail = computed(() =>
   trackingState.detail && trackingState.detail.id === trackingState.selectedPlanId
@@ -358,9 +384,12 @@ const fetchPlanDetail = async (slug) => {
   }
 }
 
-const resetTrackingSelection = () => {
+const resetTrackingSelection = (options = {}) => {
   trackingState.selectedPlanId = null
   trackingState.detail = null
+  if (!options.keepPending) {
+    pendingSelectedPlanId.value = null
+  }
 }
 
 const loadUserPlans = async () => {
@@ -394,14 +423,35 @@ const fetchTrackedPlanDetail = async (userPlanId) => {
 }
 
 const syncTrackedPlanSelection = async () => {
-  const matches = userPlansForSlug.value
-  if (!matches.length) {
+  if (!trackingState.plans.length) {
     resetTrackingSelection()
     return
   }
+
+  if (pendingSelectedPlanId.value) {
+    const pendingExists = trackingState.plans.some((plan) => plan.id === pendingSelectedPlanId.value)
+    if (pendingExists) {
+      trackingState.selectedPlanId = pendingSelectedPlanId.value
+      pendingSelectedPlanId.value = null
+      await fetchTrackedPlanDetail(trackingState.selectedPlanId)
+      return
+    }
+    pendingSelectedPlanId.value = null
+  }
+
+  const matches = plansMatchingCurrentSlug.value
+
+  if (!matches.length) {
+    if (trackingState.selectedPlanId && !trackingState.plans.some((plan) => plan.id === trackingState.selectedPlanId)) {
+      resetTrackingSelection()
+    }
+    return
+  }
+
   if (!matches.some((plan) => plan.id === trackingState.selectedPlanId)) {
     trackingState.selectedPlanId = matches[0].id
   }
+
   if (trackingState.selectedPlanId) {
     await fetchTrackedPlanDetail(trackingState.selectedPlanId)
   }
@@ -427,6 +477,14 @@ const handleTrackedPlanSelection = async () => {
     return
   }
   await fetchTrackedPlanDetail(trackingState.selectedPlanId)
+  const summary = selectedTrackedPlanSummary.value
+  const targetSlug = summary?.plan?.slug
+  if (targetSlug && targetSlug !== selectedPlanSlug.value) {
+    pendingSelectedPlanId.value = trackingState.selectedPlanId
+    router.push({ name: 'reading-plan', params: { slug: targetSlug } })
+  } else {
+    pendingSelectedPlanId.value = null
+  }
 }
 
 const handleStartDateChange = () => {
@@ -589,7 +647,11 @@ const goToNextPage = () => {
 }
 
 const navigateBack = () => {
-  router.push({ name: 'main', query: { tab: 'study' } })
+  const query = { tab: 'study' }
+  if (selectedPlanSlug.value) {
+    query.plan = selectedPlanSlug.value
+  }
+  router.push({ name: 'main', query })
 }
 
 const handleReferenceClick = (passage, source = 'reading-plan') => {
@@ -632,7 +694,7 @@ watch(
     planState.startDate = ''
     planState.page = 1
     trackingState.createStartDate = todayIso()
-    resetTrackingSelection()
+    resetTrackingSelection({ keepPending: Boolean(pendingSelectedPlanId.value) })
     if (normalized) {
       void fetchPlanDetail(normalized)
     }

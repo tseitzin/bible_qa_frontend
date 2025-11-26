@@ -81,7 +81,7 @@
       </div>
     </section>
 
-    <section class="study-card">
+    <section class="study-card" ref="readingPlanSection">
       <header class="study-card__header">
         <div>
           <h3>Reading Plans</h3>
@@ -112,7 +112,8 @@
               <article
                 v-for="plan in featuredVisiblePlans"
                 :key="plan.slug"
-                class="plan-card plan-card--accent"
+                :class="['plan-card', 'plan-card--accent', { 'plan-card--active': plan.slug === highlightedPlanSlug, 'plan-card--tracked': isTrackedPlan(plan) }]"
+                :ref="(el) => registerPlanCardRef(el, plan.slug)"
                 @click="openReadingPlan(plan.slug)"
               >
                 <div class="plan-card__header">
@@ -121,6 +122,7 @@
                 </div>
                 <p>{{ plan.description }}</p>
                 <span class="plan-pill">{{ planBadgeLabel(plan) }}</span>
+                <span v-if="isTrackedPlan(plan)" class="plan-progress"><br>Tracked: {{ getTrackedPercent(plan) }}% complete</span>
               </article>
             </div>
             <button
@@ -155,7 +157,8 @@
               <article
                 v-for="plan in annualVisiblePlans"
                 :key="plan.slug"
-                class="plan-card plan-card--accent"
+                :class="['plan-card', 'plan-card--accent', { 'plan-card--active': plan.slug === highlightedPlanSlug, 'plan-card--tracked': isTrackedPlan(plan) }]"
+                :ref="(el) => registerPlanCardRef(el, plan.slug)"
                 @click="openReadingPlan(plan.slug)"
               >
                 <div class="plan-card__header">
@@ -164,6 +167,7 @@
                 </div>
                 <p>{{ plan.description }}</p>
                 <span class="plan-pill">{{ planBadgeLabel(plan) }}</span>
+                <span v-if="isTrackedPlan(plan)" class="plan-progress"><br>Tracked: {{ getTrackedPercent(plan) }}% complete</span>
               </article>
             </div>
             <button
@@ -244,13 +248,20 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, computed, nextTick, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { studyResourcesService } from '../services/studyResourcesService.js'
+import { userReadingPlanService } from '../services/userReadingPlanService.js'
 import { parseReference, isChapterOnlyReference } from '../utils/referenceParser.js'
 import ScriptureText from './ScriptureText.vue'
+import authService from '../services/authService.js'
 
 const router = useRouter()
+const route = useRoute()
+const highlightedPlanSlug = ref(typeof route.query.plan === 'string' ? route.query.plan : '')
+const readingPlanSection = ref(null)
+const readingPlanCards = ref([])
+const scrollPendingPlanSlug = ref(Boolean(highlightedPlanSlug.value))
 
 const crossForm = reactive({ book: 'John', chapter: 3, verse: 16 })
 const crossState = reactive({ loading: false, error: '', data: null })
@@ -260,6 +271,7 @@ const selectedTopic = ref('')
 const topicState = reactive({ loading: false, error: '', results: [] })
 
 const readingPlans = ref([])
+const trackedPlans = ref([])
 const VISIBLE_PLAN_COUNT = 3
 const planState = reactive({
   loading: false,
@@ -274,6 +286,26 @@ const featuredPlans = computed(() =>
 const annualPlans = computed(() =>
   readingPlans.value.filter((plan) => plan?.metadata?.category === 'annual')
 )
+
+// Map: { [plan_slug]: { percentComplete, userPlanId } }
+const trackedPlanInfo = computed(() => {
+  const info = {}
+  trackedPlans.value.forEach((userPlan) => {
+    const slug = userPlan.plan?.slug
+    const total = userPlan.total_days ?? 0
+    const completed = userPlan.completed_days ?? 0
+    if (slug && total > 0) {
+      const percent = Math.round((completed / total) * 100)
+      info[slug] = {
+        percentComplete: percent,
+        userPlanId: userPlan.id
+      }
+    }
+  })
+  return info
+})
+const isTrackedPlan = (plan) => !!trackedPlanInfo.value[plan.slug]
+const getTrackedPercent = (plan) => trackedPlanInfo.value[plan.slug]?.percentComplete ?? null
 
 const planBadgeLabel = (plan) => {
   if (plan?.metadata?.category === 'annual') {
@@ -346,6 +378,55 @@ const openReadingPlan = (slug) => {
   if (!slug) return
   router.push({ name: 'reading-plan', params: { slug } })
 }
+
+const registerPlanCardRef = (element, slug) => {
+  if (!slug) {
+    return
+  }
+  if (element) {
+    readingPlanCards.value.push({ slug, element })
+  } else {
+    readingPlanCards.value = readingPlanCards.value.filter((entry) => entry.slug !== slug)
+  }
+}
+
+const scrollToReadingPlanSection = async () => {
+  await nextTick()
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const targetSlug = highlightedPlanSlug.value
+  const targetEntry = readingPlanCards.value.find((entry) => entry.slug === targetSlug)
+  const targetElement = targetEntry?.element ?? readingPlanSection.value
+  if (!targetElement) {
+    return
+  }
+
+  const top = targetElement.offsetTop - 48
+  window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' })
+}
+
+watch(
+  () => route.query.plan,
+  (newSlug) => {
+    highlightedPlanSlug.value = typeof newSlug === 'string' ? newSlug : ''
+    if (highlightedPlanSlug.value) {
+      scrollPendingPlanSlug.value = true
+    }
+  }
+)
+
+watch(
+  () => ({ slug: highlightedPlanSlug.value, loading: planState.loading }),
+  async ({ slug, loading }) => {
+    if (!slug || loading || !scrollPendingPlanSlug.value) {
+      return
+    }
+    scrollPendingPlanSlug.value = false
+    await scrollToReadingPlanSection()
+  }
+)
 
 const templates = ref([])
 const devotionalForm = reactive({
@@ -496,6 +577,23 @@ const resetDevotional = () => {
 
 onMounted(async () => {
   await Promise.all([loadReadingPlans(), loadTemplates(), loadTopics()])
+  // Load tracked plans for logged-in user
+  let user = null
+  try {
+    user = await authService.getCurrentUser()
+  } catch (e) {
+    user = null
+  }
+  if (user) {
+    try {
+      trackedPlans.value = await userReadingPlanService.listPlans()
+    } catch (e) {
+      trackedPlans.value = []
+    }
+  } else {
+    trackedPlans.value = []
+  }
+  // ...existing code...
 })
 </script>
 
@@ -684,6 +782,7 @@ textarea {
   border-radius: 999px;
   padding: 0.2rem 0.8rem;
   font-size: 0.85rem;
+  font-weight: var(--font-weight-semibold);
 }
 
 
@@ -758,6 +857,11 @@ textarea {
   border-color: rgba(47, 74, 126, 0.18);
 }
 
+.plan-card--tracked {
+  border-color: var(--color-success, #22c55e);
+  box-shadow: 0 0 0 2px rgba(34,197,94,0.15);
+}
+
 .plan-track .plan-card {
   flex: 0 0 calc((100% - (var(--spacing-md) * 2)) / 3);
   min-width: calc((100% - (var(--spacing-md) * 2)) / 3);
@@ -768,6 +872,11 @@ textarea {
   box-shadow: 0 16px 30px rgba(47, 74, 126, 0.12);
 }
 
+
+.plan-card--active {
+  border-color: var(--color-primary);
+  box-shadow: 0 30px 45px rgba(15, 23, 42, 0.15);
+}
 .plan-card--active {
   border-color: var(--color-primary);
   box-shadow: 0 18px 34px rgba(47, 74, 126, 0.2);
@@ -802,6 +911,13 @@ textarea {
   background: rgba(47, 74, 126, 0.12);
   color: var(--color-primary-dark);
   font-size: 0.75rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.plan-progress {
+  color: black;
+  font-size: 0.85rem;
+  margin-top: var(--spacing-xs);
   font-weight: var(--font-weight-semibold);
 }
 
