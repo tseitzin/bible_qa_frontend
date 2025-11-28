@@ -57,6 +57,23 @@
       
       <!-- Main Content -->
       <main class="app-main">
+        <!-- Tracked Reading Plans Section -->
+        <section v-if="currentUser && trackedPlans.length" class="study-card tracked-plans-card">
+          <header class="study-card__header">
+            <div>
+              <h3>Your Tracked Bible Reading Plans</h3>
+              <p>Continue your progress or start a new day in any plan below.</p>
+            </div>
+          </header>
+          <ul class="tracked-plans-list">
+            <li v-for="plan in trackedPlans" :key="plan.id" class="tracked-plan-item">
+                          <button class="tracked-plan-info tracked-plan-link" @click="goToReadingPlan(plan.plan.id, plan.plan.slug)">
+                            <strong>{{ plan.plan.name }}</strong>
+                            <span class="tracked-plan-progress">{{ Math.round((plan.completed_days / plan.total_days) * 100) }}% complete</span>
+                          </button>
+            </li>
+          </ul>
+        </section>
         <!-- Navigation Tabs -->
         <div class="nav-tabs">
           <!-- Ask Question Button -->
@@ -196,8 +213,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+// Navigation for tracked reading plans
+const goToReadingPlan = (planId, planSlug) => {
+  if (planSlug) {
+    router.push({ name: 'reading-plan', params: { slug: planSlug } })
+  }
+}
 import QuestionForm from '../components/QuestionForm.vue'
 import AnswerDisplay from '../components/AnswerDisplay.vue'
 import ErrorMessage from '../components/ErrorMessage.vue'
@@ -206,6 +229,7 @@ import StudyResources from '../components/StudyResources.vue'
 import { useBibleQA } from '../composables/useBibleQA.js'
 import { savedAnswersService } from '../services/savedAnswersService.js'
 import { recentQuestionsService } from '../services/recentQuestionsService.js'
+import { userReadingPlanService } from '../services/userReadingPlanService.js'
 import { useAuth } from '../composables/useAuth.js'
 import { PENDING_SAVED_ANSWER_KEY, RETURN_TO_ANSWER_STATE_KEY } from '../constants/storageKeys.js'
 import navLogo from '../assets/logo_cross.png'
@@ -213,6 +237,22 @@ import navLogo from '../assets/logo_cross.png'
 const router = useRouter()
 const route = router.currentRoute
 const { currentUser, logout } = useAuth()
+
+const trackedPlans = ref([])
+
+const loadTrackedPlans = async () => {
+  if (currentUser.value) {
+    try {
+      trackedPlans.value = await userReadingPlanService.listPlans()
+    } catch (e) {
+      console.error('Failed to load tracked plans:', e)
+      trackedPlans.value = []
+    }
+  } else {
+    trackedPlans.value = []
+  }
+}
+
 
 const {
   question,
@@ -708,6 +748,7 @@ const restoreAnswerFromReadingView = async () => {
 
 watch(currentUser, () => {
   void loadRecentQuestions()
+  void loadTrackedPlans()
 }, { immediate: true })
 
 watch(activeTab, (tab) => {
@@ -732,6 +773,7 @@ onMounted(async () => {
   }
 
   await updateSavedCount()
+  await loadTrackedPlans()
   
   // Check if we're restoring a pending answer
   if (initialRoute.query.restored === 'pending') {
@@ -1211,7 +1253,7 @@ onMounted(async () => {
 .content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-xs);
   flex: 1;
 }
 
@@ -1383,6 +1425,83 @@ onMounted(async () => {
 }
 
 /* Responsive Design */
+/* Tracked Reading Plans Card Styles */
+.tracked-plans-card {
+  margin-bottom: var(--spacing-lg);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-xl);
+  color: rgb(31, 50, 86);
+  padding: var(--spacing-md);
+  box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
+  border: 1px solid rgba(47, 74, 126, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.tracked-plans-list {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.tracked-plans-card h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-xs);
+  font-weight: semibold;
+  font-size: var(--font-size-lg);
+  color: rgb(31, 50, 86);
+  border-bottom: 1px solid rgba(31, 50, 86, 0.803);
+}
+
+.tracked-plans-card p {
+  margin: 0 0 var(--spacing-md) 0;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: rgba(31, 50, 86, 0.861);
+  font-weight: var(--font-weight-medium);
+}
+
+.tracked-plan-item {
+  padding: var(--spacing-xs) 0;
+  background-color: rgba(233, 235, 238, 0.993);
+  color: rgb(68, 68, 68);
+  border-bottom: 1px solid rgba(47, 74, 126, 0.08);
+  padding-left: 1rem;
+}
+
+.tracked-plan-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.tracked-plan-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  box-shadow: none;
+  transition: background 0.15s;
+}
+.tracked-plan-link:hover {
+  background: rgba(47, 74, 126, 0.08);
+}
+
+
+.tracked-plan-progress {
+  color: #108f3c;
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+}
 @media (max-width: 768px) {
   .nav-container {
     height: auto;

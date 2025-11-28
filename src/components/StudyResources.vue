@@ -859,6 +859,7 @@ textarea {
 
 .plan-card--tracked {
   border-color: var(--color-success, #22c55e);
+  background-color: #65f59a27;
   box-shadow: 0 0 0 2px rgba(34,197,94,0.15);
 }
 

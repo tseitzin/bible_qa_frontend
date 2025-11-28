@@ -19,7 +19,7 @@
       <BaseTextarea
         v-model="localQuestion"
         label="Your Bible Question"
-        placeholder="Ask anything about the Bible... What does love mean in 1 Corinthians 13? Who was Moses? What is the meaning of faith? etc."
+        placeholder="Ask anything about the Bible... (e.g., What does the Bible say about forgiveness?)"
         :rows="5"
         :disabled="loading"
         :max-length="500"
@@ -28,7 +28,7 @@
         :auto-resize="true"
         :speech-supported="speechSupported"
         :is-listening="isListening"
-        help-text="💡 Ask clear, specific questions for the most accurate and helpful biblical answers"
+        help-text="Ask clear, specific questions for the most accurate and helpful biblical answers"
         class="question-input"
       />
       
@@ -371,6 +371,11 @@ const handleSpeechError = (error) => {
   box-shadow: 0 22px 40px rgba(47, 74, 126, 0.22);
   transform: translateY(-1px);
   background: rgba(31, 50, 86, 0.97);
+}
+
+:deep(.question-input textarea:focus::placeholder) {
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 :deep(.question-input .char-count) {

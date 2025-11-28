@@ -37,14 +37,14 @@
           />
 
           <div class="reading-info">
-            <svg class="reading-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <!-- <svg class="reading-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path
                 fill-rule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
                 clip-rule="evenodd"
               />
             </svg>
-            <span>{{ readingTime }} min read</span>
+            <span>{{ readingTime }} min read</span> -->
           </div>
         </div>
 
@@ -157,7 +157,7 @@
         </div>
       </section>
 
-      <section class="feedback-section">
+      <!-- <section class="feedback-section">
         <div class="feedback-header">
           <span class="feedback-title">Was this answer helpful?</span>
         </div>
@@ -175,7 +175,7 @@
             Not helpful
           </button>
         </div>
-      </section>
+      </section> -->
     </section>
   </Transition>
 </template>
@@ -380,7 +380,7 @@ watch(
   border: 1px solid rgba(47, 74, 126, 0.12);
   box-shadow: 0 28px 52px rgba(31, 50, 86, 0.18);
   overflow: hidden;
-  margin-top: var(--spacing-xl);
+  margin-top: var(--spacing-xs);
   position: relative;
 }
 
@@ -459,11 +459,11 @@ watch(
 }
 
 .answer-content {
-  padding: var(--spacing-2xl) var(--spacing-2xl) var(--spacing-xl);
+  padding: var(--spacing-sm) var(--spacing-2xl) var(--spacing-xs);
 }
 
 .answer-text-wrapper {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-xs);
   position: relative;
 }
 
@@ -499,7 +499,7 @@ watch(
   line-height: var(--line-height-relaxed);
   color: var(--answer-primary-dark);
   white-space: pre-wrap;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-xs);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -523,7 +523,7 @@ watch(
   padding-top: var(--spacing-md);
   border-top: 1px solid rgba(47, 74, 126, 0.1);
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -615,7 +615,7 @@ watch(
 }
 
 .followup-section {
-  padding: 0 var(--spacing-2xl) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-2xl) var(--spacing-md);
   border-top: 1px solid rgba(47, 74, 126, 0.1);
   background: rgba(255, 255, 255, 0.14);
 }
@@ -643,7 +643,7 @@ watch(
 
 .followup-description {
   margin: 0 0 var(--spacing-md) 0;
-  color: var(--answer-muted);
+  color: var(--answer-primary-dark);
 }
 
 .followup-input-group {
@@ -666,6 +666,11 @@ watch(
   outline: none;
   border-color: var(--answer-primary);
   box-shadow: 0 0 0 3px rgba(47, 74, 126, 0.16);
+}
+
+.followup-input:focus::placeholder {
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .followup-button {

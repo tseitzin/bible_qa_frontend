@@ -194,9 +194,9 @@
         </div>
       </header>
       <ul class="schedule-list">
-        <li v-for="item in pagedSchedule" :key="item.day_number">
+        <li v-for="item in pagedSchedule" :key="item.day_number" :class="{ 'schedule-completed': isDayComplete(item.day_number) }">
           <div class="schedule-details">
-            <strong>Day {{ item.day_number }} – {{ item.title }}</strong>
+<strong>Day {{ item.day_number }} – {{ item.title }}</strong>
             <div class="schedule-secondary">
               <ScriptureText
                 :text="item.passage"
@@ -975,6 +975,20 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+}
+
+.schedule-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(47, 74, 126, 0.12);
+  transition: background 0.2s ease;
+}
+
+.schedule-completed {
+  background: #e6fbe6 !important;
 }
 
 .tracking-panel p {
