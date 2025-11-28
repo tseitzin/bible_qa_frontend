@@ -25,9 +25,15 @@ export const recentQuestionsService = {
   /**
    * Explicitly record a recent question (optional helper).
    * @param {string} question - Question text to record.
+   * @param {boolean} isAuthenticated - Whether the user is authenticated.
    * @returns {Promise<Array<{ id: number, question: string, asked_at: string }>>}
    */
-  async add(question) {
+  async add(question, isAuthenticated = false) {
+    // Silently return empty array for guest users to avoid unnecessary API calls
+    if (!isAuthenticated) {
+      return []
+    }
+
     const trimmed = typeof question === 'string' ? question.trim() : ''
     if (!trimmed) {
       return this.fetch()

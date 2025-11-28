@@ -408,7 +408,7 @@ const recordRecentQuestion = async (questionText) => {
   }
 
   try {
-    const items = await recentQuestionsService.add(trimmed)
+    const items = await recentQuestionsService.add(trimmed, !!currentUser.value)
     if (Array.isArray(items)) {
       recentQuestions.value = normalizeRecentQuestionItems(items)
     } else {
