@@ -132,6 +132,8 @@
               :question="question"
               :question-id="questionId"
               :loading="loading"
+              :stream-status="streamStatus"
+              :is-streaming="isStreaming"
               @answer-saved="handleAnswerSaved"
               @follow-up-question="handleFollowUpQuestion"
               @login-required="handleLoginRequired"
@@ -263,6 +265,8 @@ const {
   conversationHistory,
   loading,
   error,
+  streamStatus,
+  isStreaming,
   askQuestion,
   askFollowUpQuestion,
   clearAll,
@@ -440,10 +444,13 @@ const handleQuestionSubmit = async (questionText) => {
     await nextTick()
   }
 
+  // Show answer section immediately for streaming
+  showAnswer.value = true
+  await nextTick()
+
   await askQuestion(trimmedQuestion)
 
   currentAnswer.value = answer.value
-  showAnswer.value = Boolean(answer.value)
 
   if (currentUser.value && !error.value && answer.value && isBiblicalAnswer.value) {
     await recordRecentQuestion(trimmedQuestion)
@@ -578,11 +585,13 @@ const handleFollowUpQuestion = async (followUpText) => {
 
   currentAnswer.value = ''
   answer.value = ''
-  showAnswer.value = false
+  // Keep answer section visible during streaming
+  showAnswer.value = true
+  await nextTick()
+  
   await askFollowUpQuestion(trimmedFollowUp)
 
   currentAnswer.value = answer.value
-  showAnswer.value = Boolean(answer.value)
 
 }
 

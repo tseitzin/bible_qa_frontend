@@ -124,6 +124,77 @@ export const bibleApi = {
     }
 
     return this.getPassage(`${book.trim()} ${chapter}`)
+  },
+
+  /**
+   * Stream a question answer with real-time updates
+   * @param {string} question - The question to ask
+   * @param {Function} onChunk - Callback for each chunk: (event) => void
+   *   event types:
+   *     - { type: 'cached', answer, question_id, is_biblical }
+   *     - { type: 'status', message }
+   *     - { type: 'content', text }
+   *     - { type: 'done', question_id, is_biblical }
+   *     - { type: 'error', message }
+   * @param {number} userId - User ID (default: 1)
+   */
+  async streamQuestion(question, onChunk, userId = 1) {
+    if (!question?.trim()) {
+      throw new Error('Question cannot be empty')
+    }
+
+    const csrfToken = getCsrfTokenFromCookie()
+    const headers = {
+      'Content-Type': 'application/json',
+    }
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ask/stream`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          question: question.trim(),
+          user_id: userId,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        // Process complete SSE messages
+        const lines = buffer.split('\n\n')
+        buffer = lines.pop() || '' // Keep incomplete message in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6))
+              onChunk(data)
+            } catch (parseError) {
+              console.error('Error parsing SSE data:', parseError)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      throw new Error(error.message || 'Streaming request failed')
+    }
   }
 }
 

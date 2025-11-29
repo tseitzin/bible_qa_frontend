@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { bibleApi } from '../services/bibleApi.js'
 
 export function useBibleQA() {
@@ -10,8 +10,10 @@ export function useBibleQA() {
   const loading = ref(false)
   const error = ref('')
   const conversationHistory = ref([])
+  const streamStatus = ref('') // Status message during streaming
+  const isStreaming = ref(false) // Whether currently streaming
 
-  const askQuestion = async (questionText = question.value) => {
+  const askQuestion = async (questionText = question.value, useStreaming = true) => {
     if (!questionText?.trim()) {
       error.value = 'Please enter a question'
       return
@@ -21,19 +23,75 @@ export function useBibleQA() {
     answer.value = ''
     isBiblicalAnswer.value = false
     error.value = ''
+    streamStatus.value = ''
+    isStreaming.value = useStreaming
 
     try {
-      const response = await bibleApi.askQuestion(questionText)
-      answer.value = response.answer
-      questionId.value = response.question_id
-      rootQuestionId.value = response.question_id // Set root for new conversation
-      isBiblicalAnswer.value = Boolean(response.is_biblical)
-      
-      // Reset conversation history for a new question
-      conversationHistory.value = [
-        { role: 'user', content: questionText },
-        { role: 'assistant', content: response.answer }
-      ]
+      if (useStreaming) {
+        // Use streaming API
+        await bibleApi.streamQuestion(questionText, async (event) => {
+          switch (event.type) {
+            case 'cached':
+              // Cached response - instant complete answer
+              answer.value = event.answer
+              questionId.value = event.question_id
+              rootQuestionId.value = event.question_id
+              isBiblicalAnswer.value = Boolean(event.is_biblical)
+              streamStatus.value = ''
+              
+              // Set conversation history
+              conversationHistory.value = [
+                { role: 'user', content: questionText },
+                { role: 'assistant', content: event.answer }
+              ]
+              break
+              
+            case 'status':
+              // Progress update
+              streamStatus.value = event.message
+              break
+              
+            case 'content':
+              // Streaming text chunk
+              answer.value += event.text
+              // Force immediate DOM update for typewriter effect
+              await nextTick()
+              break
+              
+            case 'done':
+              // Streaming complete
+              questionId.value = event.question_id
+              rootQuestionId.value = event.question_id
+              isBiblicalAnswer.value = Boolean(event.is_biblical)
+              streamStatus.value = ''
+              
+              // Set conversation history
+              conversationHistory.value = [
+                { role: 'user', content: questionText },
+                { role: 'assistant', content: answer.value }
+              ]
+              break
+              
+            case 'error':
+              error.value = event.message
+              streamStatus.value = ''
+              break
+          }
+        })
+      } else {
+        // Use non-streaming API (fallback)
+        const response = await bibleApi.askQuestion(questionText)
+        answer.value = response.answer
+        questionId.value = response.question_id
+        rootQuestionId.value = response.question_id
+        isBiblicalAnswer.value = Boolean(response.is_biblical)
+        
+        // Reset conversation history for a new question
+        conversationHistory.value = [
+          { role: 'user', content: questionText },
+          { role: 'assistant', content: response.answer }
+        ]
+      }
     } catch (err) {
       const message = err?.message === 'Network Error'
         ? 'The request took too long. Please try again.'
@@ -42,6 +100,8 @@ export function useBibleQA() {
       console.error('Bible Q&A Error:', err)
     } finally {
       loading.value = false
+      isStreaming.value = false
+      streamStatus.value = ''
     }
   }
 
@@ -107,6 +167,8 @@ export function useBibleQA() {
     loading,
     error,
     conversationHistory,
+    streamStatus,
+    isStreaming,
     
     // Actions
     askQuestion,

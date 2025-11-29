@@ -24,6 +24,16 @@
       </header>
 
       <div class="answer-content">
+        <!-- Streaming Status -->
+        <Transition name="status-fade">
+          <div v-if="streamStatus" class="stream-status">
+            <svg class="stream-status-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+            </svg>
+            <span>{{ streamStatus }}</span>
+          </div>
+        </Transition>
+
         <div class="answer-text-wrapper">
           <div v-if="latestQuestion" class="question-prompt">
             <span class="question-prompt__label">You asked:</span>
@@ -207,6 +217,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  streamStatus: {
+    type: String,
+    default: '',
+  },
+  isStreaming: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const copySuccess = ref(false)
@@ -340,20 +358,29 @@ const submitFollowUp = () => {
   followUpQuestion.value = ''
 }
 
+// Track if we've already scrolled once for this answer
+const hasScrolled = ref(false)
+
 watch(
   () => props.answer,
-  async (newAnswer) => {
+  async (newAnswer, oldAnswer) => {
     if (!newAnswer) {
+      hasScrolled.value = false
       return
     }
 
-    await nextTick()
-    setTimeout(() => {
-      const element = document.querySelector('.answer-display')
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }, 100)
+    // Only scroll once when answer first appears (was empty, now has content)
+    // Don't scroll during streaming updates
+    if (!oldAnswer && newAnswer && !hasScrolled.value) {
+      hasScrolled.value = true
+      await nextTick()
+      setTimeout(() => {
+        const element = document.querySelector('.answer-display')
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
   },
 )
 
@@ -460,6 +487,47 @@ watch(
 
 .answer-content {
   padding: var(--spacing-sm) var(--spacing-2xl) var(--spacing-xs);
+}
+
+.stream-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+  border-left: 3px solid #3b82f6;
+  border-radius: var(--border-radius-lg);
+  color: #1e40af;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.stream-status-icon {
+  width: 18px;
+  height: 18px;
+  color: #3b82f6;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-fade-enter-active,
+.status-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.status-fade-enter-from,
+.status-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .answer-text-wrapper {
