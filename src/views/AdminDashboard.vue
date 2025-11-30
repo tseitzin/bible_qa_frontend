@@ -2,7 +2,7 @@
   <div class="admin-dashboard">
     <div class="dashboard-header">
       <h1>Admin Dashboard</h1>
-      <button @click="$router.push('/main')" class="back-button">← Back to App</button>
+      <button @click="$router.push('/')" class="back-button">← Back to App</button>
     </div>
 
     <!-- Navigation Tabs -->
@@ -30,6 +30,12 @@
         @click="switchToOpenAITab"
       >
         OpenAI Usage
+      </button>
+      <button 
+        :class="{ active: activeTab === 'users' }" 
+        @click="switchToUsersTab"
+      >
+        Users
       </button>
       <button 
         :class="{ active: activeTab === 'moderation' }" 
@@ -275,6 +281,171 @@
       </div>
     </div>
 
+    <!-- Users Tab -->
+    <div v-if="activeTab === 'users'" class="tab-content">
+      <h2>User Management</h2>
+      
+      <!-- User Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Users</h3>
+          <div class="stat-value">{{ userStats.total_users || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Active Users</h3>
+          <div class="stat-value success">{{ userStats.active_users || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Admin Users</h3>
+          <div class="stat-value">{{ userStats.admin_users || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Users with Questions</h3>
+          <div class="stat-value">{{ userStats.users_with_questions || 0 }}</div>
+        </div>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="filters" style="margin-top: 2rem;">
+        <input 
+          v-model="userSearch" 
+          placeholder="Search by email or username"
+          @input="debouncedLoadUsers"
+        />
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="activeUsersOnly" @change="loadUsers" />
+          Active users only
+        </label>
+        <button @click="resetUserFilters" class="btn-secondary">Reset</button>
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Username</th>
+              <th>Status</th>
+              <th>Questions</th>
+              <th>Saved Answers</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in users" :key="user.id">
+              <td>{{ user.id }}</td>
+              <td>{{ user.email || 'N/A' }}</td>
+              <td>{{ user.username || 'N/A' }}</td>
+              <td>
+                <span class="status-badge" :class="user.is_active ? 'success' : 'inactive'">
+                  {{ user.is_active ? 'Active' : 'Inactive' }}
+                </span>
+                <span v-if="user.is_admin" class="admin-badge">Admin</span>
+              </td>
+              <td>{{ user.question_count }}</td>
+              <td>{{ user.saved_answer_count }}</td>
+              <td>{{ formatDate(user.created_at) }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button @click="viewUserDetail(user.id)" class="btn-small" title="View Details">
+                    👁️
+                  </button>
+                  <button @click="toggleUserActive(user.id)" class="btn-small" title="Toggle Active">
+                    {{ user.is_active ? '🚫' : '✅' }}
+                  </button>
+                  <button @click="confirmResetAccount(user)" class="btn-small btn-warning" title="Reset Account">
+                    🔄
+                  </button>
+                  <button @click="confirmDeleteUser(user)" class="btn-small btn-danger" title="Delete User">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="users.length === 0" class="empty-state">
+          No users found
+        </div>
+      </div>
+
+      <div class="pagination">
+        <button 
+          @click="previousUserPage" 
+          :disabled="userCurrentPage === 1"
+          class="btn-secondary"
+        >
+          Previous
+        </button>
+        <span class="page-info">Page {{ userCurrentPage }}</span>
+        <button 
+          @click="nextUserPage" 
+          :disabled="users.length < userPageSize"
+          class="btn-secondary"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div v-if="showUserDetail" class="modal-overlay" @click="closeUserDetail">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h2>User Details</h2>
+          <button @click="closeUserDetail" class="close-button">×</button>
+        </div>
+        <div v-if="selectedUser" class="modal-body">
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>ID:</strong> {{ selectedUser.id }}
+            </div>
+            <div class="detail-item">
+              <strong>Email:</strong> {{ selectedUser.email || 'N/A' }}
+            </div>
+            <div class="detail-item">
+              <strong>Username:</strong> {{ selectedUser.username || 'N/A' }}
+            </div>
+            <div class="detail-item">
+              <strong>Status:</strong> 
+              <span :class="selectedUser.is_active ? 'text-success' : 'text-inactive'">
+                {{ selectedUser.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <strong>Admin:</strong> {{ selectedUser.is_admin ? 'Yes' : 'No' }}
+            </div>
+            <div class="detail-item">
+              <strong>Created:</strong> {{ formatDate(selectedUser.created_at) }}
+            </div>
+            <div class="detail-item">
+              <strong>Last Activity:</strong> {{ formatDate(selectedUser.last_activity) || 'Never' }}
+            </div>
+            <div class="detail-item">
+              <strong>Total Questions:</strong> {{ selectedUser.question_count }}
+            </div>
+            <div class="detail-item">
+              <strong>Saved Answers:</strong> {{ selectedUser.saved_answer_count }}
+            </div>
+            <div class="detail-item">
+              <strong>Recent Questions:</strong> {{ selectedUser.recent_question_count }}
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button @click="clearUserSavedAnswers(selectedUser.id)" class="btn-secondary">
+              Clear Saved Answers
+            </button>
+            <button @click="confirmResetAccount(selectedUser)" class="btn-warning">
+              Reset Account
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Moderation Tab -->
     <div v-if="activeTab === 'moderation'" class="tab-content">
       <div class="moderation-section">
@@ -304,6 +475,15 @@ const openaiCalls = ref([])
 const openaiUserUsage = ref([])
 const currentPage = ref(1)
 const pageSize = ref(50)
+// User management state
+const userStats = ref({})
+const users = ref([])
+const userSearch = ref('')
+const activeUsersOnly = ref(false)
+const userCurrentPage = ref(1)
+const userPageSize = ref(50)
+const showUserDetail = ref(false)
+const selectedUser = ref(null)
 const filters = ref({
   endpoint: '',
   status_code: '',
@@ -469,6 +649,163 @@ const estimateCost = (tokens) => {
 const truncate = (text, length) => {
   if (!text) return 'N/A'
   return text.length > length ? text.substring(0, length) + '...' : text
+}
+
+// User Management Functions
+const loadUserStats = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getUserStats()
+    userStats.value = data
+  } catch (e) {
+    error.value = 'Failed to load user stats: ' + e.message
+  }
+}
+
+const loadUsers = async () => {
+  try {
+    error.value = ''
+    const params = {
+      limit: userPageSize.value,
+      offset: (userCurrentPage.value - 1) * userPageSize.value,
+    }
+    
+    if (userSearch.value) {
+      params.search = userSearch.value
+    }
+    if (activeUsersOnly.value) {
+      params.active_only = true
+    }
+    
+    const data = await bibleApi.listUsers(params)
+    users.value = data || []
+  } catch (e) {
+    error.value = 'Failed to load users: ' + e.message
+  }
+}
+
+const debouncedLoadUsers = () => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    userCurrentPage.value = 1
+    loadUsers()
+  }, 300)
+}
+
+const resetUserFilters = () => {
+  userSearch.value = ''
+  activeUsersOnly.value = false
+  userCurrentPage.value = 1
+  loadUsers()
+}
+
+const previousUserPage = () => {
+  if (userCurrentPage.value > 1) {
+    userCurrentPage.value--
+    loadUsers()
+  }
+}
+
+const nextUserPage = () => {
+  userCurrentPage.value++
+  loadUsers()
+}
+
+const viewUserDetail = async (userId) => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getUserDetail(userId)
+    selectedUser.value = data
+    showUserDetail.value = true
+  } catch (e) {
+    error.value = 'Failed to load user details: ' + e.message
+  }
+}
+
+const closeUserDetail = () => {
+  showUserDetail.value = false
+  selectedUser.value = null
+}
+
+const toggleUserActive = async (userId) => {
+  if (!confirm('Are you sure you want to toggle this user\'s active status?')) {
+    return
+  }
+  
+  try {
+    error.value = ''
+    await bibleApi.toggleUserActive(userId)
+    await loadUsers()
+    await loadUserStats()
+  } catch (e) {
+    error.value = 'Failed to toggle user active status: ' + e.message
+  }
+}
+
+const clearUserSavedAnswers = async (userId) => {
+  if (!confirm('Are you sure you want to clear all saved answers for this user?')) {
+    return
+  }
+  
+  try {
+    error.value = ''
+    const result = await bibleApi.clearUserSavedAnswers(userId)
+    alert(result.message)
+    if (showUserDetail.value && selectedUser.value?.id === userId) {
+      await viewUserDetail(userId) // Refresh details
+    }
+    await loadUsers()
+  } catch (e) {
+    error.value = 'Failed to clear saved answers: ' + e.message
+  }
+}
+
+const confirmResetAccount = async (user) => {
+  const confirmation = prompt(
+    `This will delete ALL data for user ${user.email || user.username} (${user.question_count} questions, ${user.saved_answer_count} saved answers).\n\nType "RESET" to confirm:`
+  )
+  
+  if (confirmation !== 'RESET') {
+    return
+  }
+  
+  try {
+    error.value = ''
+    const result = await bibleApi.resetUserAccount(user.id)
+    alert('Account reset successfully')
+    closeUserDetail()
+    await loadUsers()
+    await loadUserStats()
+  } catch (e) {
+    error.value = 'Failed to reset account: ' + e.message
+  }
+}
+
+const confirmDeleteUser = async (user) => {
+  const confirmation = prompt(
+    `This will PERMANENTLY DELETE user ${user.email || user.username} and all their data.\n\nThis action CANNOT be undone.\n\nType "DELETE" to confirm:`
+  )
+  
+  if (confirmation !== 'DELETE') {
+    return
+  }
+  
+  try {
+    error.value = ''
+    await bibleApi.deleteUser(user.id)
+    alert('User permanently deleted')
+    closeUserDetail()
+    await loadUsers()
+    await loadUserStats()
+  } catch (e) {
+    error.value = 'Failed to delete user: ' + e.message
+  }
+}
+
+const switchToUsersTab = () => {
+  activeTab.value = 'users'
+  loadUserStats()
+  loadUsers()
 }
 
 onMounted(() => {
@@ -898,5 +1235,174 @@ tbody tr:hover {
   th, td {
     padding: 0.6rem;
   }
+}
+
+/* User Management Styles */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.btn-small {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  background: #6c757d;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-small:hover {
+  background: #5a6268;
+  transform: scale(1.05);
+}
+
+.btn-small.btn-warning {
+  background: #ffc107;
+  color: #000;
+}
+
+.btn-small.btn-warning:hover {
+  background: #e0a800;
+}
+
+.btn-small.btn-danger {
+  background: #dc3545;
+}
+
+.btn-small.btn-danger:hover {
+  background: #c82333;
+}
+
+.status-badge.inactive {
+  background: #6c757d;
+}
+
+.admin-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: #007bff;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #2f4a7e;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #6c757d;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+}
+
+.close-button:hover {
+  color: #000;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-item {
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.detail-item strong {
+  display: block;
+  color: #2f4a7e;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.text-success {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.text-inactive {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #000;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
 }
 </style>

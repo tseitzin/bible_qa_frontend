@@ -368,6 +368,100 @@ export const bibleApi = {
     } catch (error) {
       throw error
     }
+  },
+
+  /**
+   * Admin: Get user statistics
+   */
+  async getUserStats() {
+    try {
+      const response = await apiClient.get('/api/admin/users/stats')
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: List users
+   * @param {Object} params - Query parameters
+   * @param {string} params.search - Search by email or username
+   * @param {boolean} params.active_only - Show only active users
+   * @param {number} params.limit - Maximum number of users
+   * @param {number} params.offset - Offset for pagination
+   */
+  async listUsers(params = {}) {
+    try {
+      const response = await apiClient.get('/api/admin/users/', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get user detail
+   * @param {number} userId - User ID
+   */
+  async getUserDetail(userId) {
+    try {
+      const response = await apiClient.get(`/api/admin/users/${userId}`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Reset user account
+   * @param {number} userId - User ID
+   */
+  async resetUserAccount(userId) {
+    try {
+      const response = await apiClient.post(`/api/admin/users/${userId}/reset-account`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Clear user's saved answers
+   * @param {number} userId - User ID
+   */
+  async clearUserSavedAnswers(userId) {
+    try {
+      const response = await apiClient.post(`/api/admin/users/${userId}/clear-saved-answers`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Toggle user active status
+   * @param {number} userId - User ID
+   */
+  async toggleUserActive(userId) {
+    try {
+      const response = await apiClient.post(`/api/admin/users/${userId}/toggle-active`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Delete user permanently
+   * @param {number} userId - User ID
+   */
+  async deleteUser(userId) {
+    try {
+      const response = await apiClient.delete(`/api/admin/users/${userId}`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
 
