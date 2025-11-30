@@ -6,7 +6,6 @@ import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
 import ReadingView from '../views/ReadingView.vue'
 import ReadingPlanView from '../views/ReadingPlanView.vue'
-import AdminPanel from '../views/AdminPanel.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import authService from '../services/authService'
 
@@ -76,16 +75,6 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'admin',
-    component: AdminPanel,
-    meta: {
-      title: 'Admin Panel - Bible Q&A',
-      requiresAuth: true,
-      requiresAdmin: true
-    }
-  },
-  {
-    path: '/admin/dashboard',
     name: 'admin-dashboard',
     component: AdminDashboard,
     meta: {

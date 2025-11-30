@@ -37,12 +37,6 @@
       >
         Users
       </button>
-      <button 
-        :class="{ active: activeTab === 'moderation' }" 
-        @click="activeTab = 'moderation'"
-      >
-        Moderation
-      </button>
     </div>
 
     <!-- Error Display -->
@@ -451,18 +445,6 @@
       </div>
     </div>
 
-    <!-- Moderation Tab -->
-    <div v-if="activeTab === 'moderation'" class="tab-content">
-      <div class="moderation-section">
-        <h2>Content Moderation</h2>
-        <p class="info-text">
-          This section allows you to moderate user-generated content such as questions and saved answers.
-        </p>
-        <button @click="$router.push('/admin')" class="btn-primary">
-          Go to Moderation Panel
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -1000,6 +982,7 @@ onMounted(() => {
 .table-container {
   background: white;
   border-radius: 12px;
+  font-size: 0.95rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   overflow-x: auto;
   color: black;
@@ -1021,7 +1004,7 @@ th {
   text-align: left;
   font-weight: 600;
   color: #2f4a7e;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1029,7 +1012,7 @@ th {
 td {
   padding: 1rem;
   border-bottom: 1px solid #f0f0f0;
-  font-size: 0.95rem;
+  font-size: 0.75rem;
 }
 
 tbody tr:hover {
