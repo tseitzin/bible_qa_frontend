@@ -15,7 +15,17 @@ export default defineConfig({
       '**/.{idea,git,cache,output,temp}/**',
       '**/tests/e2e/**', // Exclude Playwright e2e tests
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*'
-    ]
+    ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/**/*.{js,vue}'],
+      exclude: [
+        'src/tests/**',
+        'src/main.js',
+        '**/*.config.js'
+      ]
+    }
   },
   resolve: {
     alias: {
