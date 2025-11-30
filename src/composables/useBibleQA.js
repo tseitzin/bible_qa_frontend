@@ -105,7 +105,7 @@ export function useBibleQA() {
     }
   }
 
-  const askFollowUpQuestion = async (followUpText) => {
+  const askFollowUpQuestion = async (followUpText, useStreaming = true) => {
     if (!followUpText?.trim()) {
       error.value = 'Please enter a follow-up question'
       return
@@ -113,24 +113,88 @@ export function useBibleQA() {
 
     loading.value = true
     error.value = ''
+    streamStatus.value = ''
+    isStreaming.value = useStreaming
+    
+    // Clear current answer to prepare for new one
+    answer.value = ''
 
     try {
-      const response = await bibleApi.askFollowUpQuestion({
-        question: followUpText,
-        conversation_history: conversationHistory.value,
-        parent_question_id: rootQuestionId.value // Pass the root question ID
-      })
-      
-      // Update conversation history
-      conversationHistory.value.push(
-        { role: 'user', content: followUpText },
-        { role: 'assistant', content: response.answer }
-      )
-      
-      // Update current answer and question ID (but keep rootQuestionId unchanged)
-      answer.value = response.answer
-      questionId.value = response.question_id
-      isBiblicalAnswer.value = Boolean(response.is_biblical)
+      if (useStreaming) {
+        // Use streaming API for follow-up
+        await bibleApi.streamFollowUpQuestion(
+          {
+            question: followUpText,
+            conversation_history: conversationHistory.value,
+            parent_question_id: rootQuestionId.value
+          },
+          async (event) => {
+            switch (event.type) {
+              case 'cached':
+                // Cached response - instant complete answer
+                answer.value = event.answer
+                questionId.value = event.question_id
+                isBiblicalAnswer.value = Boolean(event.is_biblical)
+                streamStatus.value = ''
+                
+                // Update conversation history
+                conversationHistory.value.push(
+                  { role: 'user', content: followUpText },
+                  { role: 'assistant', content: event.answer }
+                )
+                break
+                
+              case 'status':
+                // Progress update
+                streamStatus.value = event.message
+                break
+                
+              case 'content':
+                // Streaming text chunk
+                answer.value += event.text
+                // Force immediate DOM update for typewriter effect
+                await nextTick()
+                break
+                
+              case 'done':
+                // Streaming complete
+                questionId.value = event.question_id
+                isBiblicalAnswer.value = Boolean(event.is_biblical)
+                streamStatus.value = ''
+                
+                // Update conversation history
+                conversationHistory.value.push(
+                  { role: 'user', content: followUpText },
+                  { role: 'assistant', content: answer.value }
+                )
+                break
+                
+              case 'error':
+                error.value = event.message
+                streamStatus.value = ''
+                break
+            }
+          }
+        )
+      } else {
+        // Use non-streaming API (fallback)
+        const response = await bibleApi.askFollowUpQuestion({
+          question: followUpText,
+          conversation_history: conversationHistory.value,
+          parent_question_id: rootQuestionId.value
+        })
+        
+        // Update conversation history
+        conversationHistory.value.push(
+          { role: 'user', content: followUpText },
+          { role: 'assistant', content: response.answer }
+        )
+        
+        // Update current answer and question ID (but keep rootQuestionId unchanged)
+        answer.value = response.answer
+        questionId.value = response.question_id
+        isBiblicalAnswer.value = Boolean(response.is_biblical)
+      }
     } catch (err) {
       const message = err?.message === 'Network Error'
         ? 'The follow-up request timed out. Please try again in a moment.'
@@ -139,6 +203,8 @@ export function useBibleQA() {
       console.error('Follow-up Question Error:', err)
     } finally {
       loading.value = false
+      isStreaming.value = false
+      streamStatus.value = ''
     }
   }
 

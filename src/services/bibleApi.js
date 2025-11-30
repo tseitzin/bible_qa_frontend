@@ -195,6 +195,78 @@ export const bibleApi = {
     } catch (error) {
       throw new Error(error.message || 'Streaming request failed')
     }
+  },
+
+  /**
+   * Stream a follow-up question answer with real-time updates
+   * @param {Object} data - Follow-up question data
+   * @param {string} data.question - The follow-up question
+   * @param {Array} data.conversation_history - Conversation context
+   * @param {number} data.parent_question_id - Root question ID
+   * @param {Function} onChunk - Callback for each chunk (same format as streamQuestion)
+   * @param {number} userId - User ID (default: 1)
+   */
+  async streamFollowUpQuestion(data, onChunk, userId = 1) {
+    const { question, conversation_history, parent_question_id } = data
+    
+    if (!question?.trim()) {
+      throw new Error('Question cannot be empty')
+    }
+
+    const csrfToken = getCsrfTokenFromCookie()
+    const headers = {
+      'Content-Type': 'application/json',
+    }
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ask/followup/stream`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          question: question.trim(),
+          conversation_history: conversation_history || [],
+          parent_question_id,
+          user_id: userId,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        // Process complete SSE messages
+        const lines = buffer.split('\n\n')
+        buffer = lines.pop() || '' // Keep incomplete message in buffer
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6))
+              onChunk(data)
+            } catch (parseError) {
+              console.error('Error parsing SSE data:', parseError)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      throw new Error(error.message || 'Follow-up streaming request failed')
+    }
   }
 }
 
