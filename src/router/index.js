@@ -77,6 +77,7 @@ const routes = [
     path: '/admin',
     name: 'admin-dashboard',
     component: AdminDashboard,
+    alias: '/admin/dashboard',
     meta: {
       title: 'Admin Dashboard - Bible Q&A',
       requiresAuth: true,
