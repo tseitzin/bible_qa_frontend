@@ -294,6 +294,10 @@
           <div class="stat-value">{{ userStats.admin_users || 0 }}</div>
         </div>
         <div class="stat-card">
+          <h3>Guest Users</h3>
+          <div class="stat-value">{{ userStats.guest_users || 0 }}</div>
+        </div>
+        <div class="stat-card">
           <h3>Users with Questions</h3>
           <div class="stat-value">{{ userStats.users_with_questions || 0 }}</div>
         </div>
@@ -325,6 +329,7 @@
               <th>Email</th>
               <th>Username</th>
               <th>Status</th>
+              <th>IP Address</th>
               <th>Questions</th>
               <th>Saved Answers</th>
               <th>Last Activity</th>
@@ -336,13 +341,17 @@
             <tr v-for="user in users" :key="user.id">
               <td>{{ user.id }}</td>
               <td>{{ user.email || 'N/A' }}</td>
-              <td>{{ user.username || 'N/A' }}</td>
+              <td>
+                {{ user.username || 'N/A' }}
+                <span v-if="user.is_guest" class="guest-badge" title="Guest User">👤</span>
+              </td>
               <td>
                 <span class="status-badge" :class="user.is_active ? 'success' : 'inactive'">
                   {{ user.is_active ? 'Active' : 'Inactive' }}
                 </span>
                 <span v-if="user.is_admin" class="admin-badge">Admin</span>
               </td>
+              <td>{{ user.last_ip_address || 'N/A' }}</td>
               <td>{{ user.question_count }}</td>
               <td>{{ user.saved_answer_count }}</td>
               <td>{{ formatDate(user.last_activity) || 'Never' }}</td>
@@ -416,6 +425,12 @@
             </div>
             <div class="detail-item">
               <strong>Admin:</strong> {{ selectedUser.is_admin ? 'Yes' : 'No' }}
+            </div>
+            <div class="detail-item">
+              <strong>Guest:</strong> {{ selectedUser.is_guest ? 'Yes' : 'No' }}
+            </div>
+            <div class="detail-item">
+              <strong>IP Address:</strong> {{ selectedUser.last_ip_address || 'N/A' }}
             </div>
             <div class="detail-item">
               <strong>Created:</strong> {{ formatDate(selectedUser.created_at) }}
@@ -1312,6 +1327,13 @@ tbody tr:hover {
   border-radius: 4px;
   font-size: 0.75rem;
   margin-left: 0.5rem;
+}
+
+.guest-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.7;
 }
 
 /* Modal Styles */
