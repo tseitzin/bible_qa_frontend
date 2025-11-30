@@ -508,6 +508,8 @@ const handleAskTabClick = async () => {
     activeTab.value = 'ask'
     await nextTick()
   }
+  // Clear query params when switching to ask tab
+  router.replace({ name: 'main', query: { tab: 'ask' } })
   scrollToQuestionForm()
 }
 
@@ -549,6 +551,8 @@ const handleSavedTabClick = async () => {
   } else {
     await nextTick()
   }
+  // Clear query params when switching to saved tab
+  router.replace({ name: 'main', query: { tab: 'saved' } })
   scrollToSavedSection()
 }
 
@@ -562,6 +566,8 @@ const handleStudyTabClick = async () => {
   } else {
     await nextTick()
   }
+  // Clear query params when switching to study tab
+  router.replace({ name: 'main', query: { tab: 'study' } })
   scrollToStudySection()
 }
 
