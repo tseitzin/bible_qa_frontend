@@ -333,6 +333,7 @@
               <th>Status</th>
               <th>Questions</th>
               <th>Saved Answers</th>
+              <th>Last Activity</th>
               <th>Created At</th>
               <th>Actions</th>
             </tr>
@@ -350,6 +351,7 @@
               </td>
               <td>{{ user.question_count }}</td>
               <td>{{ user.saved_answer_count }}</td>
+              <td>{{ formatDate(user.last_activity) || 'Never' }}</td>
               <td>{{ formatDate(user.created_at) }}</td>
               <td>
                 <div class="action-buttons">
@@ -910,6 +912,14 @@ onMounted(() => {
 
 .tab-content {
   animation: fadeIn 0.3s;
+  color: black;
+}
+
+.tab-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2f4a7e;
+  margin-bottom: 1rem;
 }
 
 @keyframes fadeIn {
