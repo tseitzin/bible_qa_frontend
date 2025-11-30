@@ -267,6 +267,57 @@ export const bibleApi = {
     } catch (error) {
       throw new Error(error.message || 'Follow-up streaming request failed')
     }
+  },
+
+  /**
+   * Admin: Get API request logs
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Maximum number of logs
+   * @param {number} params.offset - Number of logs to skip
+   * @param {number} params.user_id - Filter by user ID
+   * @param {string} params.endpoint - Filter by endpoint
+   * @param {number} params.status_code - Filter by status code
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getApiLogs(params = {}) {
+    try {
+      const response = await apiClient.get('/api/admin/logs/', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get API usage statistics
+   * @param {Object} params - Query parameters
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getApiStats(params = {}) {
+    try {
+      const response = await apiClient.get('/api/admin/logs/stats', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get per-endpoint statistics
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Maximum number of endpoints
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getEndpointStats(params = {}) {
+    try {
+      const response = await apiClient.get('/api/admin/logs/endpoints', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
 

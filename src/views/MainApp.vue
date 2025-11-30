@@ -9,6 +9,13 @@
         <div class="nav-links">
           <router-link to="/" class="nav-link nav-link--active">Adults</router-link>
           <router-link to="/kids" class="nav-link">Kids</router-link>
+          <router-link 
+            v-if="currentUser?.is_admin" 
+            to="/admin/dashboard" 
+            class="nav-link admin-link"
+          >
+            Admin
+          </router-link>
           <button
             v-if="currentUser"
             type="button"
@@ -897,6 +904,20 @@ onMounted(async () => {
   color: #ffffff;
   border-color: rgba(47, 74, 126, 0.32);
   box-shadow: 0 16px 30px rgba(47, 74, 126, 0.28);
+}
+
+.admin-link {
+  background: rgba(126, 74, 255, 0.16);
+  border-color: rgba(126, 74, 255, 0.32);
+  color: rgba(75, 0, 130, 0.88);
+  box-shadow: 0 12px 24px rgba(126, 74, 255, 0.18);
+}
+
+.admin-link:hover {
+  background: rgba(126, 74, 255, 0.24);
+  border-color: rgba(126, 74, 255, 0.42);
+  color: rgba(75, 0, 130, 1);
+  box-shadow: 0 18px 30px rgba(126, 74, 255, 0.24);
 }
 
 .logout-button {

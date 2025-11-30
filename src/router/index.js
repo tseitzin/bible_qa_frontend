@@ -6,6 +6,8 @@ import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
 import ReadingView from '../views/ReadingView.vue'
 import ReadingPlanView from '../views/ReadingPlanView.vue'
+import AdminPanel from '../views/AdminPanel.vue'
+import AdminDashboard from '../views/AdminDashboard.vue'
 import authService from '../services/authService'
 
 const routes = [
@@ -71,6 +73,26 @@ const routes = [
       title: 'Kids Bible Q&A',
       requiresAuth: false
     }
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: AdminPanel,
+    meta: {
+      title: 'Admin Panel - Bible Q&A',
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
+  {
+    path: '/admin/dashboard',
+    name: 'admin-dashboard',
+    component: AdminDashboard,
+    meta: {
+      title: 'Admin Dashboard - Bible Q&A',
+      requiresAuth: true,
+      requiresAdmin: true
+    }
   }
 ]
 
@@ -88,28 +110,26 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   document.title = to.meta.title || 'Bible Q&A'
-  
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
   const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
-  
   if (requiresAuth) {
-    // Validate token by checking with backend
     const user = await authService.getCurrentUser()
     if (!user) {
-      // Token invalid or expired, redirect to login
       next('/login')
       return
     }
+    if (requiresAdmin && !user.is_admin) {
+      next('/home')
+      return
+    }
   } else if (requiresGuest) {
-    // Check localStorage first to avoid unnecessary API call
     const storedUser = authService.getStoredUser()
     if (storedUser) {
-      // User appears to be logged in, redirect to main
       next({ name: 'main' })
       return
     }
   }
-  
   next()
 })
 
