@@ -462,6 +462,18 @@ export const bibleApi = {
     } catch (error) {
       throw error
     }
+  },
+
+  /**
+   * Admin: Cleanup invalid guest users
+   */
+  async cleanupGuestUsers() {
+    try {
+      const response = await apiClient.post('/api/admin/users/cleanup-guest-users')
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
 

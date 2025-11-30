@@ -317,6 +317,9 @@
           Active users only
         </label>
         <button @click="resetUserFilters" class="btn-secondary">Reset</button>
+        <button @click="cleanupGuestUsers" class="btn-warning" title="Remove invalid guest user accounts">
+          🧹 Cleanup Guests
+        </button>
       </div>
 
       <!-- Users Table -->
@@ -806,6 +809,22 @@ const switchToUsersTab = () => {
   activeTab.value = 'users'
   loadUserStats()
   loadUsers()
+}
+
+const cleanupGuestUsers = async () => {
+  if (!confirm('This will permanently delete all guest user accounts except user_id=1.\n\nThis includes users without email addresses that may have been created by mistake.\n\nContinue?')) {
+    return
+  }
+  
+  try {
+    error.value = ''
+    const result = await bibleApi.cleanupGuestUsers()
+    alert(`${result.message}\n\nDeleted: ${result.deleted_count} user(s)`)
+    await loadUsers()
+    await loadUserStats()
+  } catch (e) {
+    error.value = 'Failed to cleanup guest users: ' + e.message
+  }
 }
 
 onMounted(() => {
