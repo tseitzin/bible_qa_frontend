@@ -26,6 +26,12 @@
         Endpoints
       </button>
       <button 
+        :class="{ active: activeTab === 'openai' }" 
+        @click="switchToOpenAITab"
+      >
+        OpenAI Usage
+      </button>
+      <button 
         :class="{ active: activeTab === 'moderation' }" 
         @click="activeTab = 'moderation'"
       >
@@ -175,6 +181,100 @@
       </div>
     </div>
 
+    <!-- OpenAI Usage Tab -->
+    <div v-if="activeTab === 'openai'" class="tab-content">
+      <h2>OpenAI API Usage</h2>
+      
+      <!-- OpenAI Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total API Calls</h3>
+          <div class="stat-value">{{ openaiStats.total_calls || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Tokens Used</h3>
+          <div class="stat-value">{{ formatNumber(openaiStats.total_tokens_used || 0) }}</div>
+          <div class="stat-percentage">~${{ estimateCost(openaiStats.total_tokens_used) }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Avg Tokens/Call</h3>
+          <div class="stat-value">{{ Math.round(openaiStats.avg_tokens_per_call || 0) }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Avg Response Time</h3>
+          <div class="stat-value">{{ Math.round(openaiStats.avg_response_time_ms || 0) }}ms</div>
+        </div>
+        <div class="stat-card">
+          <h3>Success Rate</h3>
+          <div class="stat-value success">{{ getOpenAISuccessRate() }}%</div>
+        </div>
+      </div>
+
+      <!-- Top Users by Token Usage -->
+      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Top Users by Token Usage</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Total Calls</th>
+              <th>Total Tokens</th>
+              <th>Avg Tokens/Call</th>
+              <th>Est. Cost</th>
+              <th>Last Call</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in openaiUserUsage" :key="user.user_id">
+              <td>{{ user.user_id }}</td>
+              <td>{{ user.call_count }}</td>
+              <td>{{ formatNumber(user.total_tokens) }}</td>
+              <td>{{ Math.round(user.avg_tokens_per_call) }}</td>
+              <td>${{ estimateCost(user.total_tokens) }}</td>
+              <td>{{ formatDate(user.last_call) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="openaiUserUsage.length === 0" class="empty-state">
+          No user data available
+        </div>
+      </div>
+
+      <!-- Recent OpenAI Calls -->
+      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Recent OpenAI API Calls</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User ID</th>
+              <th>Question</th>
+              <th>Total Tokens</th>
+              <th>Response Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="call in openaiCalls" :key="call.id">
+              <td>{{ formatDate(call.timestamp) }}</td>
+              <td>{{ call.user_id || 'Guest' }}</td>
+              <td class="question-cell">{{ truncate(call.question, 50) }}</td>
+              <td>{{ call.total_tokens }}</td>
+              <td>{{ call.response_time_ms }}ms</td>
+              <td>
+                <span class="status-badge" :class="call.status">
+                  {{ call.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="openaiCalls.length === 0" class="empty-state">
+          No OpenAI calls logged yet
+        </div>
+      </div>
+    </div>
+
     <!-- Moderation Tab -->
     <div v-if="activeTab === 'moderation'" class="tab-content">
       <div class="moderation-section">
@@ -192,13 +292,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { bibleApi } from '@/services/bibleApi'
+import { bibleApi } from '../services/bibleApi.js'
 
 const activeTab = ref('stats')
 const error = ref('')
 const stats = ref({})
 const logs = ref([])
 const endpointStats = ref([])
+const openaiStats = ref({})
+const openaiCalls = ref([])
+const openaiUserUsage = ref([])
 const currentPage = ref(1)
 const pageSize = ref(50)
 const filters = ref({
@@ -307,6 +410,65 @@ const getStatusClass = (statusCode) => {
 const getSuccessRate = () => {
   if (!stats.value.total_requests) return 0
   return ((stats.value.successful_requests / stats.value.total_requests) * 100).toFixed(1)
+}
+
+const loadOpenAIStats = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getOpenAIStats()
+    openaiStats.value = data
+  } catch (e) {
+    error.value = 'Failed to load OpenAI stats: ' + e.message
+  }
+}
+
+const loadOpenAICalls = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getOpenAICalls({ limit: 50 })
+    openaiCalls.value = data.calls || []
+  } catch (e) {
+    error.value = 'Failed to load OpenAI calls: ' + e.message
+  }
+}
+
+const loadOpenAIUserUsage = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getOpenAIUserUsage({ limit: 10 })
+    openaiUserUsage.value = data.users || []
+  } catch (e) {
+    error.value = 'Failed to load OpenAI user usage: ' + e.message
+  }
+}
+
+const switchToOpenAITab = () => {
+  activeTab.value = 'openai'
+  loadOpenAIStats()
+  loadOpenAICalls()
+  loadOpenAIUserUsage()
+}
+
+const getOpenAISuccessRate = () => {
+  if (!openaiStats.value.total_calls) return 0
+  return ((openaiStats.value.successful_calls / openaiStats.value.total_calls) * 100).toFixed(1)
+}
+
+const formatNumber = (num) => {
+  return new Intl.NumberFormat().format(num)
+}
+
+const estimateCost = (tokens) => {
+  // GPT-4o pricing: $2.50 per 1M input tokens, $10 per 1M output tokens
+  // Simplified estimate: average $5 per 1M tokens
+  const costPer1M = 5
+  const cost = (tokens / 1000000) * costPer1M
+  return cost.toFixed(2)
+}
+
+const truncate = (text, length) => {
+  if (!text) return 'N/A'
+  return text.length > length ? text.substring(0, length) + '...' : text
 }
 
 onMounted(() => {
@@ -474,6 +636,7 @@ onMounted(() => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   overflow-x: auto;
+  color: black;
   margin-bottom: 1.5rem;
 }
 
@@ -511,6 +674,28 @@ tbody tr:hover {
   font-family: 'Monaco', 'Courier New', monospace;
   color: #2f4a7e;
   font-size: 0.85rem;
+}
+
+.question-cell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-badge.success {
+  background: #e7f7ec;
+  color: #28a745;
+}
+
+.status-badge.error {
+  background: #fee;
+  color: #dc3545;
+}
+
+.status-badge.rate_limit {
+  background: #fff3e0;
+  color: #ff9800;
 }
 
 .method-badge {

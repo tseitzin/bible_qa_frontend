@@ -318,6 +318,56 @@ export const bibleApi = {
     } catch (error) {
       throw error
     }
+  },
+
+  /**
+   * Admin: Get OpenAI API usage statistics
+   * @param {Object} params - Query parameters
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getOpenAIStats(params = {}) {
+    try {
+      const response = await apiClient.get('/api/admin/logs/openai/stats', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get OpenAI API call logs
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Maximum number of logs
+   * @param {number} params.offset - Offset for pagination
+   * @param {number} params.user_id - Filter by user ID
+   * @param {string} params.status - Filter by status
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getOpenAICalls(params = {}) {
+    try {
+      const response = await apiClient.get('/api/admin/logs/openai', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get per-user OpenAI usage statistics
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Maximum number of users
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getOpenAIUserUsage(params = {}) {
+    try {
+      const response = await apiClient.get('/api/admin/logs/openai/users', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
 
