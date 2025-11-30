@@ -5,7 +5,8 @@ import { bibleApi } from '../../services/bibleApi.js'
 // Mock the API
 vi.mock('../../services/bibleApi.js', () => ({
   bibleApi: {
-    askQuestion: vi.fn()
+    askQuestion: vi.fn(),
+    streamQuestion: vi.fn()
   }
 }))
 
@@ -24,15 +25,23 @@ describe('useBibleQA', () => {
   })
 
   it('handles successful question submission', async () => {
-    const mockResponse = { answer: 'God is love.' }
-    bibleApi.askQuestion.mockResolvedValue(mockResponse)
+    // Mock streaming API call
+    bibleApi.streamQuestion.mockImplementation(async (questionText, callback) => {
+      await callback({ type: 'status', message: 'Processing...' })
+      await callback({ type: 'content', text: 'God is love.' })
+      await callback({ 
+        type: 'done', 
+        question_id: 1, 
+        is_biblical: true 
+      })
+    })
 
     const { question, answer, loading, error, askQuestion } = useBibleQA()
 
     question.value = 'What is God?'
     await askQuestion()
 
-    expect(bibleApi.askQuestion).toHaveBeenCalledWith('What is God?')
+    expect(bibleApi.streamQuestion).toHaveBeenCalledWith('What is God?', expect.any(Function))
     expect(answer.value).toBe('God is love.')
     expect(error.value).toBe('')
     expect(loading.value).toBe(false)
@@ -40,7 +49,7 @@ describe('useBibleQA', () => {
 
   it('handles API errors', async () => {
     const mockError = new Error('Network error')
-    bibleApi.askQuestion.mockRejectedValue(mockError)
+    bibleApi.streamQuestion.mockRejectedValue(mockError)
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const { question, answer, loading, error, askQuestion } = useBibleQA()
@@ -61,7 +70,7 @@ describe('useBibleQA', () => {
 
     await askQuestion('')
     expect(error.value).toBe('Please enter a question')
-    expect(bibleApi.askQuestion).not.toHaveBeenCalled()
+    expect(bibleApi.streamQuestion).not.toHaveBeenCalled()
 
     await askQuestion('   ')
     expect(error.value).toBe('Please enter a question')
@@ -102,14 +111,14 @@ describe('useBibleQA', () => {
     const promise = new Promise(resolve => {
       resolvePromise = resolve
     })
-    bibleApi.askQuestion.mockReturnValue(promise)
+    bibleApi.streamQuestion.mockReturnValue(promise)
 
     const { loading, askQuestion } = useBibleQA()
 
     const questionPromise = askQuestion('Test question')
     expect(loading.value).toBe(true)
 
-    resolvePromise({ answer: 'Test answer' })
+    resolvePromise()
     await questionPromise
 
     expect(loading.value).toBe(false)

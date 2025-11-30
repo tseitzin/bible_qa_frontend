@@ -109,7 +109,7 @@ describe('QuestionForm', () => {
 
     const textarea = wrapper.findComponent(BaseTextarea)
     expect(textarea.props('label')).toBe('Your Bible Question')
-    expect(textarea.props('helpText')).toBe('💡 Ask clear, specific questions for the most accurate and helpful biblical answers')
+    expect(textarea.props('helpText')).toBe('Ask clear, specific questions for the most accurate and helpful biblical answers')
     expect(textarea.props('maxLength')).toBe(500)
     expect(textarea.props('showCharCount')).toBe(true)
   })
