@@ -10,7 +10,29 @@
           <span>Kids Bible Q&A</span>
         </div>
         <div class="nav-links">
-          <router-link to="/" class="nav-link">Adults</router-link>
+          <router-link to="/" class="nav-link">Home</router-link>
+
+          <router-link to="/adults" class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            </svg>
+            Ask Questions
+          </router-link>
+
+          <router-link to="/adults?tab=saved" class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+            </svg>
+            Saved Answers
+          </router-link>
+
+          <router-link to="/adults?tab=study" class="nav-tab">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3zm0 2.18L5 8.25v7.5L12 18.8l7-3.05v-7.5L12 5.18zm-.75 3.57h1.5v7.5h-1.5v-7.5zm0 0"/>
+            </svg>
+            Bible Study
+          </router-link>
+
           <router-link to="/kids" class="nav-link nav-link--active">Kids</router-link>
         </div>
       </div>
@@ -282,6 +304,37 @@ onMounted(() => {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.3);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  justify-content: center;
+}
+
+.nav-tab:hover {
+  background-color: rgba(255, 255, 255, 0.35);
+  color: white;
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.nav-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
 }
 
 .nav-link--active {
@@ -766,24 +819,37 @@ onMounted(() => {
 /* Responsive Design */
 @media (max-width: 768px) {
   .nav-container {
-    padding: var(--spacing-sm) var(--spacing-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    flex-wrap: wrap;
   }
-  
+
   .nav-logo {
+    width: 100%;
+    justify-content: center;
     font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-xs);
   }
-  
+
   .kids-logo-icon {
     font-size: 24px;
   }
-  
+
   .nav-links {
-    gap: var(--spacing-md);
+    width: 100%;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    justify-content: center;
   }
-  
-  .nav-link {
-    padding: var(--spacing-xs) var(--spacing-md);
-    font-size: var(--font-size-sm);
+
+  .nav-link,
+  .nav-tab {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .nav-icon {
+    width: 1rem;
+    height: 1rem;
   }
   
   .kids-container {

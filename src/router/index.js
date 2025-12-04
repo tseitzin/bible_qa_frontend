@@ -15,7 +15,7 @@ const routes = [
     name: 'login',
     component: Login,
     meta: {
-      title: 'Login - Bible Q&A',
+      title: 'Login',
       requiresGuest: true
     }
   },
@@ -24,25 +24,25 @@ const routes = [
     name: 'register',
     component: Register,
     meta: {
-      title: 'Register - Bible Q&A',
+      title: 'Register',
       requiresGuest: true
     }
   },
   {
-    path: '/home',
+    path: '/',
     name: 'home',
     component: Home,
     meta: {
-      title: 'Home - Bible Q&A',
-      requiresAuth: true
+      title: 'Home',
+      requiresAuth: false
     }
   },
   {
-    path: '/',
+    path: '/adults',
     name: 'main',
     component: MainApp,
     meta: {
-      title: 'Bible Q&A',
+      title: 'Word of Life Answers',
       requiresAuth: false
     }
   },
@@ -51,7 +51,7 @@ const routes = [
     name: 'reading',
     component: ReadingView,
     meta: {
-      title: 'Reading View - Bible Q&A',
+      title: 'Word of Life Answers',
       requiresAuth: false
     }
   },
@@ -60,7 +60,7 @@ const routes = [
     name: 'reading-plan',
     component: ReadingPlanView,
     meta: {
-      title: 'Reading Plan - Bible Q&A',
+      title: 'Word of Life Answers',
       requiresAuth: false
     }
   },
@@ -79,7 +79,7 @@ const routes = [
     component: AdminDashboard,
     alias: '/admin/dashboard',
     meta: {
-      title: 'Admin Dashboard - Bible Q&A',
+      title: 'Word of Life Answers',
       requiresAuth: true,
       requiresAdmin: true
     }
@@ -116,7 +116,7 @@ router.beforeEach(async (to, from, next) => {
   } else if (requiresGuest) {
     const storedUser = authService.getStoredUser()
     if (storedUser) {
-      next({ name: 'main' })
+      next({ name: 'home' })
       return
     }
   }

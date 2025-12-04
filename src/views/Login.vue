@@ -153,7 +153,7 @@ const handleLogin = async () => {
       const params = planSlug ? { slug: planSlug } : {}
       router.push({ name: 'reading-plan', params })
     } else {
-      router.push({ name: 'main' })
+      router.push({ name: 'home' })
     }
   } else {
     error.value = result.message || authError.value || 'Login failed'

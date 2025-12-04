@@ -1,33 +1,7 @@
 <template>
   <div class="app">
     <!-- Navigation Header -->
-    <nav class="app-nav">
-      <div class="nav-container">
-        <div class="nav-logo">
-          <img :src="navLogo" alt="Word of Life Answers logo" />
-        </div>
-        <div class="nav-links">
-          <router-link to="/" class="nav-link nav-link--active">Adults</router-link>
-          <router-link to="/kids" class="nav-link">Kids</router-link>
-          <router-link 
-            v-if="currentUser?.is_admin" 
-            to="/admin/dashboard" 
-            class="nav-link admin-link"
-          >
-            Admin
-          </router-link>
-          <button
-            v-if="currentUser"
-            type="button"
-            @click="handleLogout"
-            class="nav-link logout-button"
-          >
-            Logout
-          </button>
-          <router-link v-else to="/login" class="nav-link login-button">Login</router-link>
-        </div>
-      </div>
-    </nav>
+    <Navbar :activeTab="activeTab" />
 
     <!-- Background Elements -->
     <div class="app-background">
@@ -81,43 +55,6 @@
             </li>
           </ul>
         </section>
-        <!-- Navigation Tabs -->
-        <div class="nav-tabs">
-          <!-- Ask Question Button -->
-          <button 
-            @click="handleAskTabClick" 
-            :class="['nav-tab', { 'nav-tab--active': activeTab === 'ask' }]"
-          >
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-            </svg>
-            Ask Questions
-          </button>
-
-          <!-- Saved Answers Button -->
-          <button 
-            @click="handleSavedTabClick" 
-            :class="['nav-tab', { 'nav-tab--active': activeTab === 'saved' }]"
-          >
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
-            </svg>
-            Saved Answers
-            <span v-if="savedCount > 0" class="saved-badge">{{ savedCount }}</span>
-          </button>
-
-          <!-- Study Tools Button -->
-          <button
-            @click="handleStudyTabClick"
-            :class="['nav-tab', { 'nav-tab--active': activeTab === 'study' }]"
-          >
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3zm0 2.18L5 8.25v7.5L12 18.8l7-3.05v-7.5L12 5.18zm-.75 3.57h1.5v7.5h-1.5v-7.5zm0 0"/>
-            </svg>
-            Bible Study Helps
-          </button>
-
-        </div>
 
         <!-- Ask Question Tab -->
         <div v-if="activeTab === 'ask'" class="content-wrapper animate-slide-in">
@@ -165,7 +102,7 @@
           <div v-if="!currentUser" class="guest-message">
             <div class="guest-message-icon">🔒</div>
             <h3>Sign in to Save Answers</h3>
-            <p>Create an account or log in to save your favorite Bible Q&A answers and access them anytime.</p>
+            <p>Create an account or log in to save your favorite Bible answers and access them anytime.</p>
             <div class="guest-actions">
               <router-link :to="{ name: 'login', query: { redirect: 'saved' } }" class="btn-primary">Log In</router-link>
               <router-link :to="{ name: 'register', query: { redirect: 'saved' } }" class="btn-secondary">Create Account</router-link>
@@ -241,11 +178,11 @@ import { recentQuestionsService } from '../services/recentQuestionsService.js'
 import { userReadingPlanService } from '../services/userReadingPlanService.js'
 import { useAuth } from '../composables/useAuth.js'
 import { PENDING_SAVED_ANSWER_KEY, RETURN_TO_ANSWER_STATE_KEY } from '../constants/storageKeys.js'
-import navLogo from '../assets/logo_cross.png'
+import Navbar from '../components/Navbar.vue'
 
 const router = useRouter()
 const route = router.currentRoute
-const { currentUser, logout } = useAuth()
+const { currentUser } = useAuth()
 
 const trackedPlans = ref([])
 
@@ -779,12 +716,6 @@ watch(activeTab, (tab) => {
   }
 })
 
-const handleLogout = async () => {
-  resetQAState()
-  recentQuestions.value = []
-  await logout()
-  router.push({ name: 'login' })
-}
 
 // Load saved count on mount and check for tab query parameter
 onMounted(async () => {
@@ -825,6 +756,14 @@ onMounted(async () => {
   // Check if we should open saved tab from query parameter
   if (initialRoute.query.tab === 'saved' || initialRoute.query.tab === 'study') {
     activeTab.value = initialRoute.query.tab
+  }
+})
+
+watch(() => router.currentRoute.value.query.tab, (newTab) => {
+  if (newTab === 'saved' || newTab === 'study') {
+    activeTab.value = newTab
+  } else if (newTab === undefined || newTab === 'ask') {
+    activeTab.value = 'ask'
   }
 })
 </script>
@@ -897,6 +836,47 @@ onMounted(async () => {
   border-color: rgba(47, 74, 126, 0.28);
   box-shadow: 0 12px 28px rgba(31, 50, 86, 0.18);
   transform: translateY(-1px);
+}
+
+.app-nav .nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  text-decoration: none;
+  background-color: rgba(47, 74, 126, 0.12);
+  color: var(--color-primary-dark);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+  justify-content: center;
+}
+
+.app-nav .nav-tab:hover {
+  background-color: rgba(47, 74, 126, 0.18);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.app-nav .nav-tab--active {
+  background: var(--gradient-primary);
+  color: #ffffff;
+  box-shadow: 0 16px 30px rgba(47, 74, 126, 0.28);
+}
+
+.app-nav .nav-tab--active:hover {
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  box-shadow: 0 22px 36px rgba(47, 74, 126, 0.32);
+  transform: translateY(-1px);
+}
+
+.app-nav .nav-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
 }
 
 .nav-link--active {
@@ -1202,75 +1182,6 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-.nav-tabs {
-  display: flex;
-  gap: 0.75rem;                       /* space between buttons */
-  justify-content: center;             /* center buttons horizontally */
-  margin-bottom: var(--spacing-lg);
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(47, 74, 126, 0.12);
-  border-radius: var(--border-radius-xl);
-  padding: var(--spacing-sm);          /* slightly more padding for bigger buttons */
-  box-shadow: 0 20px 40px rgba(31, 50, 86, 0.16);
-  transition: all 0.2s ease-in-out;
-}
-
-
-/* Nav button styling */
-.nav-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 0.75rem;
-  background-color: rgba(47, 74, 126, 0.12);
-  color: var(--color-primary-dark);
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  min-width: 160px;
-  justify-content: center;
-}
-
-/* Inactive hover effect */
-.nav-tab:hover {
-  background-color: rgba(47, 74, 126, 0.18);
-  color: var(--color-primary);
-}
-
-/* Active button */
-.nav-tab--active {
-  background: var(--gradient-primary);
-  color: #ffffff;
-  box-shadow: 0 16px 30px rgba(47, 74, 126, 0.28);
-}
-
-/* Active hover effect */
-.nav-tab--active:hover {
-  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
-  box-shadow: 0 22px 36px rgba(47, 74, 126, 0.32);
-  transform: translateY(-1px);
-}
-
-
-
-/* SVG icons */
-.nav-icon {
-  width: 1.25rem;   /* consistent width */
-  height: 1.25rem;  /* consistent height */
-  flex-shrink: 0;   /* prevents icon from shrinking */
-}
-
-/* Optional: saved badge */
-.saved-badge {
-  display: inline-block;
-  background-color: rgba(47, 74, 126, 0.9);
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: bold;
 .saved-meta-copy {
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-md);
@@ -1279,12 +1190,6 @@ onMounted(async () => {
   color: var(--color-primary-dark);
   font-weight: var(--font-weight-medium);
 }
-  padding: 0.1rem 0.4rem;
-  border-radius: 9999px;
-  margin-left: 0.25rem;
-  pointer-events: none; /* ensures hover passes through badge */
-}
-
 
 .content-wrapper {
   display: flex;
@@ -1541,25 +1446,37 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .nav-container {
     height: auto;
-    padding: var(--spacing-xs) var(--spacing-lg);
+    padding: var(--spacing-xs) var(--spacing-md);
+    flex-wrap: wrap;
   }
-  
+
   .nav-logo {
-    font-size: var(--font-size-base);
-    margin-right: auto;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: var(--spacing-xs);
+    margin-right: 0;
   }
 
   .nav-logo img {
     height: 64px;
   }
-  
+
   .nav-links {
-    gap: var(--spacing-md);
+    width: 100%;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: center;
   }
-  
-  .nav-link {
-    padding: var(--spacing-xs) var(--spacing-md);
-    font-size: var(--font-size-sm);
+
+  .nav-link,
+  .app-nav .nav-tab {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .app-nav .nav-icon {
+    width: 1rem;
+    height: 1rem;
   }
   
   .app-container {

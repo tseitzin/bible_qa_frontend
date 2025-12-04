@@ -1,27 +1,6 @@
 <template>
   <div class="home app">
-    <nav class="app-nav">
-      <div class="nav-container">
-        <div class="nav-logo">
-          <img :src="navLogo" alt="Word of Life Answers logo" />
-          <span class="sr-only">Word of Life Answers</span>
-        </div>
-        <div class="nav-links">
-          <router-link to="/home" class="nav-link nav-link--active">Home</router-link>
-          <router-link to="/" class="nav-link">Adults</router-link>
-          <router-link to="/kids" class="nav-link">Kids</router-link>
-          <button
-            v-if="currentUser"
-            type="button"
-            @click="handleLogout"
-            class="nav-link logout-button"
-          >
-            Logout
-          </button>
-          <router-link v-else to="/login" class="nav-link login-button">Login</router-link>
-        </div>
-      </div>
-    </nav>
+    <Navbar />
 
     <div class="app-background">
       <div class="bg-gradient"></div>
@@ -39,13 +18,12 @@
           <div class="logo-section">
             <div class="logo-wrapper">
               <div class="logo-text">
-                <h1 class="app-title">Welcome Back{{ currentUser?.username ? `, ${currentUser.username}` : '' }}</h1>
+                <h1 class="app-title">Welcome {{ currentUser?.username ? `, ${currentUser.username}` : '' }}</h1>
                 <div class="app-tagline">Scripture • Wisdom • Truth</div>
               </div>
             </div>
             <p class="app-subtitle">
-              Dive into your personalized Bible Q&amp;A experience. Ask thoughtful questions, explore curated answers,
-              and keep learning from Scripture every day.
+              Welcome to your personalized Bible companion—ask thoughtful questions, explore answers and topics, follow guided reading plans, and grow in your understanding of Scripture each day.
             </p>
           </div>
         </div>
@@ -53,25 +31,36 @@
 
       <main class="home-main">
         <section class="home-quick-actions animate-fade-in">
-          <h2 class="section-title">Quick Actions</h2>
+          <!-- <h2 class="section-title">Quick Actions</h2> -->
           <div class="action-grid">
-            <router-link to="/" class="action-card">
-              <div class="action-icon">📖</div>
-              <h3>Continue Exploring</h3>
-              <p>Head to the adults experience to ask detailed questions and see recent answers.</p>
+
+            <router-link to="/adults" class="action-card">
+              <div class="action-icon">❔
+                <h3>Ask Biblical Questions</h3>
+              </div>
+              <p>Open the Questions section to submit detailed Bible questions, explore related topics, and review recently asked questions.</p>
             </router-link>
 
-            <router-link to="/kids" class="action-card">
-              <div class="action-icon">�</div>
+            <!-- <router-link to="/kids" class="action-card">
+              <div class="action-icon">👶</div>
               <h3>Kids Corner</h3>
               <p>Switch to a kid-friendly view with simple explanations and uplifting guidance.</p>
-            </router-link>
+            </router-link> -->
+
+            <button type="button" class="action-card action-card--button" @click="showStudyHelps">
+              <div class="action-icon">📖
+                <h3>Bible Study Aids</h3>
+              </div>
+              <p>Enjoy guided Bible reading plans, explore Scripture at your own pace, and discover biblical topics supported by verse references.</p>
+            </button>
 
             <button type="button" class="action-card action-card--button" @click="showSavedAnswers">
-              <div class="action-icon">💾</div>
-              <h3>Saved Answers</h3>
-              <p>Review and organize the answers you have saved for future reference.</p>
+              <div class="action-icon">💾
+                <h3>Saved Answers</h3>
+              </div>
+              <p>Review your saved answers and choose to copy them for emails or documents, share them through text or email, or export them as a downloadable PDF.</p>
             </button>
+            
           </div>
         </section>
 
@@ -79,18 +68,17 @@
           <div class="insights-card">
             <h3>Need Inspiration?</h3>
             <p>
-              Try asking about themes like forgiveness, faith, or wisdom to uncover fresh scriptural insights tailored to
-              your questions.
+              Whether you’re wondering about forgiveness, faith, wisdom, or any passage of Scripture, your questions can lead to new, insightful perspectives.
             </p>
-            <button type="button" class="btn-primary" @click="goToAdults">
+            <!-- <button type="button" class="btn-primary" @click="goToAdults">
               Ask a Bible Question
-            </button>
+            </button> -->
           </div>
           <div class="insights-card">
-            <h3>Tip: Follow Up</h3>
+            <h3>Tip: Ask Follow-Up Questions</h3>
             <p>
-              Keep the conversation going by asking follow-up questions in the adults experience. Each answer can lead to
-              deeper understanding.
+              Keep the conversation going — after you receive an answer, you can ask follow-up questions to explore the topic more deeply. Every answer is a starting point. 
+              Ask follow-up questions to dig deeper, clarify details, and uncover new insights.
             </p>
           </div>
         </section>
@@ -102,21 +90,21 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
-import navLogo from '../assets/logo_cross.png'
+import Navbar from '../components/Navbar.vue'
 
 const router = useRouter()
-const { currentUser, logout } = useAuth()
-
-const handleLogout = async () => {
-  await logout()
-}
+const { currentUser } = useAuth()
 
 const showSavedAnswers = () => {
-  router.push({ path: '/', query: { tab: 'saved' } })
+  router.push({ path: '/adults', query: { tab: 'saved' } })
+}
+
+const showStudyHelps = () => {
+  router.push({ path: '/adults', query: { tab: 'study' } })
 }
 
 const goToAdults = () => {
-  router.push('/')
+  router.push('/adults')
 }
 </script>
 
@@ -199,6 +187,35 @@ const goToAdults = () => {
   border-color: rgba(47, 74, 126, 0.28);
   box-shadow: 0 12px 28px rgba(31, 50, 86, 0.18);
   transform: translateY(-1px);
+}
+
+.nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  text-decoration: none;
+  background-color: rgba(47, 74, 126, 0.12);
+  color: var(--app-primary-dark);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+  justify-content: center;
+}
+
+.nav-tab:hover {
+  background-color: rgba(47, 74, 126, 0.18);
+  color: var(--app-primary);
+  transform: translateY(-1px);
+}
+
+.nav-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
 }
 
 .nav-link--active {
@@ -340,14 +357,14 @@ const goToAdults = () => {
 
 .app-header {
   text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
 }
 
 .header-content {
   background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-2xl);
-  padding: var(--spacing-xl);
+  padding: var(--spacing-sm);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
   border: 1px solid rgba(47, 74, 126, 0.12);
   position: relative;
@@ -406,6 +423,7 @@ const goToAdults = () => {
   background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-align: center;
   background-clip: text;
   line-height: 1.08;
   font-weight: var(--font-weight-extrabold);
@@ -422,10 +440,10 @@ const goToAdults = () => {
 
 .app-subtitle {
   font-size: var(--font-size-base);
-  color: var(--app-muted);
+  color: rgba(14, 24, 99, 0.829);
   margin: 0;
   line-height: var(--line-height-tight);
-  max-width: 640px;
+  max-width: 720px;
   margin: 0 auto;
   font-weight: var(--font-weight-semibold);
 }
@@ -433,7 +451,7 @@ const goToAdults = () => {
 .home-main {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
 }
 
 .section-title {
@@ -447,7 +465,7 @@ const goToAdults = () => {
 .action-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .action-card {
@@ -468,7 +486,8 @@ const goToAdults = () => {
 .action-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 32px 58px rgba(31, 50, 86, 0.22);
-  border-color: rgba(47, 74, 126, 0.28);
+  border-color: rgb(44, 54, 170);
+  background-color: rgba(44, 55, 170, 0.568);
 }
 
 .action-card--button {
@@ -476,7 +495,7 @@ const goToAdults = () => {
 }
 
 .action-icon {
-  width: 48px;
+  width: 240px;
   height: 48px;
   border-radius: var(--border-radius-xl);
   display: inline-flex;
@@ -484,20 +503,24 @@ const goToAdults = () => {
   justify-content: center;
   font-size: 1.75rem;
   color: var(--app-primary);
-  background: rgba(47, 74, 126, 0.08);
+  background: rgba(32, 62, 117, 0.483);
   box-shadow: 0 12px 24px rgba(31, 50, 86, 0.1);
+}
+
+.action-icon:hover {
+  background: rgba(32, 62, 117, 0.583);
 }
 
 .action-card h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
-  color: var(--app-primary-dark);
+  margin: var(--spacing-sm) 0 var(--spacing-xs) var(--spacing-sm);
+  color: rgb(31, 46, 105);
 }
 
 .action-card p {
   margin: 0;
-  color: rgba(15, 23, 42, 0.75);
+  color: rgba(15, 23, 42, 0.889);
   line-height: var(--line-height-relaxed);
 }
 
@@ -527,7 +550,8 @@ const goToAdults = () => {
 
 .insights-card p {
   margin: 0;
-  color: rgba(15, 23, 42, 0.74);
+  font-size: var(--font-size-md);
+  color: rgba(15, 23, 42, 0.889);
   line-height: var(--line-height-relaxed);
 }
 
@@ -554,25 +578,43 @@ const goToAdults = () => {
 @media (max-width: 768px) {
   .nav-container {
     height: auto;
-    padding: var(--spacing-xs) var(--spacing-lg);
+    padding: var(--spacing-xs) var(--spacing-md);
+    flex-wrap: wrap;
+  }
+
+  .nav-logo {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: var(--spacing-xs);
   }
 
   .nav-logo img {
-    height: 72px;
+    height: 64px;
   }
 
   .nav-links {
-    gap: var(--spacing-md);
+    width: 100%;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: center;
   }
 
-  .nav-link {
-    padding: var(--spacing-xs) var(--spacing-md);
-    font-size: var(--font-size-sm);
+  .nav-link,
+  .nav-tab {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    min-width: auto;
+  }
+
+  .nav-icon {
+    width: 1rem;
+    height: 1rem;
   }
 
   .app-container {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-md) 0;
   }
+
 
   .header-content {
     padding: var(--spacing-lg);
@@ -587,7 +629,7 @@ const goToAdults = () => {
   }
 
   .home-main {
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
   }
 
   .action-grid,
