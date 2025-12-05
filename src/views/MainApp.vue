@@ -1030,7 +1030,7 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 .app-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 40px);
@@ -1040,7 +1040,7 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 
 .app-header {
   text-align: center;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
 }
 
 .header-content {
@@ -1062,8 +1062,8 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+  margin-bottom: 0;
 }
 
 .logo-icon {
@@ -1106,7 +1106,7 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 }
 
 .app-title {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-2xl);
   margin: 0;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -1116,22 +1116,26 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 }
 
 .app-tagline {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-primary-light);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-top: var(--spacing-xs);
+  margin-bottom: 1px;
   text-align: center;
 }
 
 .app-subtitle {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: var(--color-primary-dark);
   margin: 0;
   line-height: var(--line-height-tight);
   max-width: 700px;
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0;
+  margin-bottom: var(--spacing-xs);
   font-weight: var(--font-weight-semibold);
 }
 

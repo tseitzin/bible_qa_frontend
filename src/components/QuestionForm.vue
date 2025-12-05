@@ -3,11 +3,15 @@
     <div class="form-header">
       <div class="form-icon">
         <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15.2c-.66 0-1.2-.54-1.2-1.2
+                  0-.66.54-1.2 1.2-1.2s1.2.54 1.2 1.2c0 .66-.54 1.2-1.2 1.2zm1.58-4.88c-.52.44-.88.87-.88 1.68h-1.5c0-1.26.59-2.03 1.26-2.58
+                  .6-.49 1.12-.91 1.12-1.67 0-.97-.78-1.68-1.83-1.68-1.12 0-1.86.78-1.92 1.82H8.4c.06-2.02 1.58-3.32 3.73-3.32
+                  2.07 0 3.57 1.24 3.57 3.04 0 1.39-.83 2.1-1.52 2.71z"/>
         </svg>
+
       </div>
       <div class="form-title-section">
-        <h2 class="form-title">Ask or Explore Bible Topics</h2>
+        <h2 class="form-title">Ask or Research Bible Topics</h2>
           <p class="form-subtitle">
           Enter one or more questions or request information you’d like to research — from Bible verses to explanations of biblical themes.
           </p>
@@ -75,7 +79,7 @@
         </div>
         
         <div v-if="loading" class="loading-section">
-          <LoadingSpinner :show="true" size="md" class="form-spinner" />
+          <LoadingSpinner :show="true" size="xl" class="form-spinner" />
           <div class="loading-text">
             <p class="loading-primary">Searching Scripture...</p>
             <p class="loading-secondary">Finding the perfect biblical answer for you</p>
@@ -201,11 +205,11 @@ provide('toggleSpeech', toggleSpeech)
 
 const quickSuggestions = [
   "What is love according to the Bible?",
+  "What are the Ten Commandments?",
   "Who was Jesus Christ?",
   "What is the meaning of faith?",
   "How should Christians pray?",
-  "What does the Bible say about forgiveness?",
-  "What is salvation?"
+  "What does the Bible say about forgiveness?"
 ]
 
 const getRecentQuestionText = (item) => {
@@ -293,7 +297,7 @@ const handleSpeechError = (error) => {
   background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
   backdrop-filter: blur(22px);
   border-radius: var(--border-radius-2xl);
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-lg);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
   border: 1px solid rgba(47, 74, 126, 0.12);
   position: relative;
@@ -303,10 +307,10 @@ const handleSpeechError = (error) => {
 .form-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid rgba(47, 74, 126, 0.12);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+  /* border-bottom: 1px solid rgba(47, 74, 126, 0.12); */
 }
 
 .form-icon {
@@ -332,8 +336,8 @@ const handleSpeechError = (error) => {
 }
 
 .form-title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
   margin: 0 0 var(--spacing-xs) 0;
   background: linear-gradient(135deg, var(--question-primary), var(--question-primary-light));
   -webkit-background-clip: text;
