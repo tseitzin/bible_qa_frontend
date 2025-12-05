@@ -18,20 +18,19 @@
       <!-- Header Section -->
       <header class="app-header animate-fade-in">
         <div class="header-content">
-          <div class="logo-section">
-            <div class="logo-wrapper">
-              <!-- <div class="logo-icon" aria-hidden="true">
-                <img :src="navLogo" alt="Word of Life Answers logo" />
-              </div> -->
-              <div class="logo-text">
-                <h2 class="app-title">Answers to your Bible Questions</h2>
-                <div class="app-tagline">Scripture • Wisdom • Truth</div>
+          <Transition name="header-fade" mode="out-in">
+            <div class="logo-section" :key="activeTab">
+              <div class="logo-wrapper">
+                <div class="logo-text">
+                  <h2 class="app-title">{{ headerConfig.title }}</h2>
+                  <div class="app-tagline">{{ headerConfig.tagline }}</div>
+                </div>
               </div>
+              <p class="app-subtitle">
+                {{ headerConfig.subtitle }}
+              </p>
             </div>
-            <p class="app-subtitle">
-              Discover insights rooted in God’s Word with the help of AI-guided Scripture study.
-            </p>
-          </div>
+          </Transition>
         </div>
       </header>
 
@@ -159,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 // Navigation for tracked reading plans
 const goToReadingPlan = (planId, planSlug) => {
@@ -220,6 +219,28 @@ const {
 // Tab management
 const activeTab = ref('ask')
 const savedAnswersRef = ref(null)
+
+// Dynamic header content based on active tab
+const headerConfig = computed(() => {
+  const configs = {
+    ask: {
+      title: 'Answers to your Bible Questions',
+      tagline: 'Scripture • Wisdom • Truth',
+      subtitle: 'Discover insights rooted in God\'s Word with the help of AI-guided Scripture study.'
+    },
+    saved: {
+      title: 'Your Saved Answers',
+      tagline: 'Reference • Reflect • Remember',
+      subtitle: 'Review, copy, export or share your saved Bible answers for easy reference anytime.'
+    },
+    study: {
+      title: 'Bible Study Resources',
+      tagline: 'Explore • Learn • Grow',
+      subtitle: 'Discover Bible reading plans and explore topics to deepen your understanding of Scripture.'
+    }
+  }
+  return configs[activeTab.value] || configs.ask
+})
 const questionSectionRef = ref(null)
 const answerSectionRef = ref(null)
 const savedSectionRef = ref(null)
@@ -1544,5 +1565,21 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
   .logo-icon img {
     width: 120%;
   }
+}
+
+/* Header transition animations */
+.header-fade-enter-active,
+.header-fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.header-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.header-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
 }
 </style>
