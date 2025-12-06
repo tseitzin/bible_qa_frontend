@@ -34,7 +34,7 @@
         
         <BaseButton
           v-if="savedAnswers.length > 0"
-          @click="showExportModal = true"
+          @click="openExportModal"
           variant="secondary"
           size="sm"
         >
@@ -168,12 +168,27 @@
                 @click="copyAnswer(savedAnswer)"
                 variant="secondary"
                 size="sm"
+                :class="{ 'action-button--success': copySuccessId === savedAnswer.id }"
+              >
+                <svg v-if="copySuccessId !== savedAnswer.id" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                  <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+                </svg>
+                <svg v-else viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                {{ copySuccessId === savedAnswer.id ? 'Copied!' : 'Copy' }}
+              </BaseButton>
+
+              <BaseButton
+                @click="shareAnswer(savedAnswer)"
+                variant="secondary"
+                size="sm"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"/>
-                  <path d="M3 5a2 2 0 012-2 3 3 0 003 3h6a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L14.586 13H19v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11.586V13a1 1 0 11-2 0v-1.586l.293.293a1 1 0 001.414-1.414z"/>
+                  <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                 </svg>
-                Copy Conversation
+                Share
               </BaseButton>
             </div>
           </div>
@@ -182,39 +197,125 @@
     </div>
 
     <!-- Export Modal -->
-    <div v-if="showExportModal" class="modal-overlay" @click="showExportModal = false">
-      <div class="modal" @click.stop>
+    <div v-if="showExportModal" class="modal-overlay" @click="closeExportModal">
+      <div class="modal modal--wide" @click.stop>
         <div class="modal-header">
           <h3>Export Saved Answers</h3>
-          <button @click="showExportModal = false" class="modal-close">
+          <button @click="closeExportModal" class="modal-close">
             <svg viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
           </button>
         </div>
         <div class="modal-body">
-          <p>Export your saved answers as a JSON file for backup or sharing.</p>
+          <p>Select the answers you want to export and choose a format.</p>
+          
+          <!-- Select all toolbar -->
+          <div class="export-select-toolbar">
+            <label class="export-select-all">
+              <input
+                type="checkbox"
+                :checked="isAllSelectedForExport"
+                :indeterminate="isPartiallySelectedForExport"
+                @change="toggleSelectAllForExport"
+              />
+              <span>{{ isAllSelectedForExport ? 'Deselect All' : 'Select All' }}</span>
+            </label>
+            <span class="export-selection-count">
+              {{ exportSelectedAnswers.size }} of {{ savedAnswers.length }} selected
+            </span>
+          </div>
+
+          <!-- Answer selection list -->
+          <div class="export-answers-list">
+            <label
+              v-for="answer in savedAnswers"
+              :key="answer.id"
+              class="export-answer-item"
+              :class="{ 'export-answer-item--selected': exportSelectedAnswers.has(answer.id) }"
+            >
+              <input
+                type="checkbox"
+                :checked="exportSelectedAnswers.has(answer.id)"
+                @change="toggleExportSelection(answer.id)"
+              />
+              <div class="export-answer-content">
+                <span class="export-answer-question">{{ answer.question }}</span>
+                <span class="export-answer-meta">
+                  {{ formatDate(answer.saved_at) }} · {{ answer.wordCount }} words
+                </span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Export format selection -->
+          <div class="export-format-section">
+            <h4 class="export-format-title">Export Format</h4>
+            <div class="export-format-options">
+              <label 
+                class="export-format-option"
+                :class="{ 'export-format-option--active': exportFormat === 'text' }"
+              >
+                <input type="radio" v-model="exportFormat" value="text" />
+                <div class="export-format-content">
+                  <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                  </svg>
+                  <span>Text (.txt)</span>
+                </div>
+              </label>
+              <label 
+                class="export-format-option"
+                :class="{ 'export-format-option--active': exportFormat === 'json' }"
+              >
+                <input type="radio" v-model="exportFormat" value="json" />
+                <div class="export-format-content">
+                  <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                  <span>JSON (.json)</span>
+                </div>
+              </label>
+              <label 
+                class="export-format-option"
+                :class="{ 'export-format-option--active': exportFormat === 'pdf' }"
+              >
+                <input type="radio" v-model="exportFormat" value="pdf" />
+                <div class="export-format-content">
+                  <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+                  </svg>
+                  <span>PDF (.pdf)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div class="export-stats">
             <div class="stat-item">
-              <strong>{{ savedAnswers.length }}</strong>
-              <span>Total Answers</span>
+              <strong>{{ exportSelectedAnswers.size }}</strong>
+              <span>Answers to Export</span>
             </div>
             <div class="stat-item">
-              <strong>{{ stats.totalWords }}</strong>
+              <strong>{{ exportSelectedStats.totalWords }}</strong>
               <span>Total Words</span>
             </div>
             <div class="stat-item">
-              <strong>{{ stats.totalTags }}</strong>
+              <strong>{{ exportSelectedStats.totalTags }}</strong>
               <span>Unique Tags</span>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <BaseButton @click="showExportModal = false" variant="secondary">
+          <BaseButton @click="closeExportModal" variant="secondary">
             Cancel
           </BaseButton>
-          <BaseButton @click="exportData" variant="primary">
-            Download Export
+          <BaseButton 
+            @click="exportData" 
+            variant="primary"
+            :disabled="exportSelectedAnswers.size === 0"
+          >
+            Export {{ exportSelectedAnswers.size }} Answer{{ exportSelectedAnswers.size !== 1 ? 's' : '' }}
           </BaseButton>
         </div>
       </div>
@@ -224,6 +325,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { jsPDF } from 'jspdf'
 import BaseButton from './ui/BaseButton.vue'
 import ConversationThread from './ConversationThread.vue'
 import ScriptureText from './ScriptureText.vue'
@@ -237,6 +339,9 @@ const searchQuery = ref('')
 const selectedTag = ref('')
 const expandedCards = ref(new Set())
 const showExportModal = ref(false)
+const copySuccessId = ref(null)
+const exportSelectedAnswers = ref(new Set())
+const exportFormat = ref('text')
 
 const normalizeText = (value) => {
   if (typeof value === 'string') {
@@ -328,6 +433,38 @@ const stats = computed(() => {
   }
 })
 
+// Export selection computed properties
+const isAllSelectedForExport = computed(() => {
+  return savedAnswers.value.length > 0 && 
+         savedAnswers.value.every(answer => exportSelectedAnswers.value.has(answer.id))
+})
+
+const isPartiallySelectedForExport = computed(() => {
+  const selectedCount = savedAnswers.value.filter(answer => exportSelectedAnswers.value.has(answer.id)).length
+  return selectedCount > 0 && selectedCount < savedAnswers.value.length
+})
+
+const exportSelectedAnswersData = computed(() => {
+  return savedAnswers.value.filter(answer => exportSelectedAnswers.value.has(answer.id))
+})
+
+const exportSelectedStats = computed(() => {
+  const selected = exportSelectedAnswersData.value
+  const totalWords = selected.reduce((sum, item) => sum + deriveWordCount(item), 0)
+  
+  const tagsSet = new Set()
+  selected.forEach(item => {
+    if (item.tags && Array.isArray(item.tags)) {
+      item.tags.forEach(tag => tagsSet.add(tag))
+    }
+  })
+  
+  return {
+    totalWords,
+    totalTags: tagsSet.size
+  }
+})
+
 // Methods
 const loadSavedAnswers = async () => {
   try {
@@ -362,43 +499,391 @@ const toggleExpanded = (id) => {
   }
 }
 
+const toggleExportSelection = (id) => {
+  if (exportSelectedAnswers.value.has(id)) {
+    exportSelectedAnswers.value.delete(id)
+  } else {
+    exportSelectedAnswers.value.add(id)
+  }
+  // Force reactivity update
+  exportSelectedAnswers.value = new Set(exportSelectedAnswers.value)
+}
+
+const toggleSelectAllForExport = () => {
+  if (isAllSelectedForExport.value) {
+    // Deselect all
+    exportSelectedAnswers.value.clear()
+  } else {
+    // Select all
+    savedAnswers.value.forEach(answer => {
+      exportSelectedAnswers.value.add(answer.id)
+    })
+  }
+  // Force reactivity update
+  exportSelectedAnswers.value = new Set(exportSelectedAnswers.value)
+}
+
+const openExportModal = () => {
+  // Start with no answers selected
+  exportSelectedAnswers.value.clear()
+  exportSelectedAnswers.value = new Set(exportSelectedAnswers.value)
+  exportFormat.value = 'text'
+  showExportModal.value = true
+}
+
+const closeExportModal = () => {
+  showExportModal.value = false
+  exportSelectedAnswers.value.clear()
+  exportSelectedAnswers.value = new Set(exportSelectedAnswers.value)
+  exportFormat.value = 'text'
+}
+
 const copyAnswer = async (savedAnswer) => {
   try {
-    let textToCopy = ''
-    
-    // If there's a conversation thread, format it nicely
-    if (savedAnswer.conversation_thread && savedAnswer.conversation_thread.length > 1) {
-      textToCopy = savedAnswer.conversation_thread.map((item, index) => {
-        const label = index === 0 ? 'Question' : `Follow-up ${index}`
-        return `${label}: ${item.question}\n\nAnswer: ${item.answer}\n\n${'='.repeat(60)}`
-      }).join('\n\n')
-    } else {
-      // Single Q&A
-      textToCopy = `Question: ${savedAnswer.question}\n\nAnswer: ${savedAnswer.answer}`
-    }
-    
+    const textToCopy = formatAnswerForShare(savedAnswer)
     await navigator.clipboard.writeText(textToCopy)
-    // You could add a toast notification here
+    copySuccessId.value = savedAnswer.id
+    setTimeout(() => {
+      copySuccessId.value = null
+    }, 2000)
   } catch (err) {
     console.error('Failed to copy text: ', err)
   }
 }
 
+const formatAnswerForShare = (savedAnswer) => {
+  let textToShare = ''
+  
+  // If there's a conversation thread, format it nicely
+  if (savedAnswer.conversation_thread && savedAnswer.conversation_thread.length > 1) {
+    textToShare = savedAnswer.conversation_thread.map((item, index) => {
+      const label = index === 0 ? 'Question' : `Follow-up ${index}`
+      return `${label}: ${item.question}\n\nAnswer: ${item.answer}`
+    }).join('\n\n' + '='.repeat(60) + '\n\n')
+  } else {
+    // Single Q&A
+    textToShare = `Question: ${savedAnswer.question}\n\nAnswer: ${savedAnswer.answer}`
+  }
+  
+  return textToShare
+}
+
+const shareAnswer = async (savedAnswer) => {
+  const textToShare = formatAnswerForShare(savedAnswer)
+  
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Bible Q&A - Saved Answer',
+        text: textToShare,
+      })
+    } catch (error) {
+      // User cancelled or share failed, fall back to copy
+      if (error.name !== 'AbortError') {
+        console.error('Error sharing:', error)
+        copyAnswer(savedAnswer)
+      }
+    }
+    return
+  }
+
+  // Fallback to copy if Web Share API is not available
+  copyAnswer(savedAnswer)
+}
+
+const formatAnswerForText = (answer) => {
+  let text = ''
+  text += `Question: ${answer.question}\n`
+  text += `Saved: ${formatDate(answer.saved_at)}\n`
+  text += `${'─'.repeat(50)}\n\n`
+  
+  if (answer.conversation_thread && answer.conversation_thread.length > 1) {
+    answer.conversation_thread.forEach((item, index) => {
+      const label = index === 0 ? 'Question' : `Follow-up ${index}`
+      text += `${label}: ${item.question}\n\n`
+      text += `Answer: ${item.answer}\n\n`
+      if (index < answer.conversation_thread.length - 1) {
+        text += `${'─'.repeat(30)}\n\n`
+      }
+    })
+  } else {
+    text += `Answer:\n${answer.answer}\n`
+  }
+  
+  if (answer.tags && answer.tags.length > 0) {
+    text += `\nTags: ${answer.tags.join(', ')}\n`
+  }
+  
+  return text
+}
+
+const exportAsText = (dataToExport) => {
+  const dateStr = new Date().toISOString().split('T')[0]
+  const count = dataToExport.length
+  
+  let content = `Bible Q&A - Saved Answers Export\n`
+  content += `Exported: ${new Date().toLocaleString()}\n`
+  content += `Total Answers: ${count}\n`
+  content += `${'═'.repeat(60)}\n\n`
+  
+  dataToExport.forEach((answer, index) => {
+    content += formatAnswerForText(answer)
+    if (index < dataToExport.length - 1) {
+      content += `\n${'═'.repeat(60)}\n\n`
+    }
+  })
+  
+  const filename = count === savedAnswers.value.length
+    ? `bible-qa-saved-answers-${dateStr}.txt`
+    : `bible-qa-saved-answers-${count}-selected-${dateStr}.txt`
+  
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  downloadBlob(blob, filename)
+}
+
+const exportAsJson = (dataToExport) => {
+  const now = new Date()
+  const dateStr = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + '_' +
+    String(now.getHours()).padStart(2, '0') + '-' +
+    String(now.getMinutes()).padStart(2, '0') + '-' +
+    String(now.getSeconds()).padStart(2, '0')
+  const count = dataToExport.length
+  
+  const exportObject = {
+    exportDate: new Date().toISOString(),
+    count: count,
+    answers: dataToExport
+  }
+  
+  const filename = count === savedAnswers.value.length
+    ? `bible-qa-saved-answers-${dateStr}.json`
+    : `bible-qa-saved-answers-${count}-selected-${dateStr}.json`
+  
+  const blob = new Blob([JSON.stringify(exportObject, null, 2)], { type: 'application/json' })
+  downloadBlob(blob, filename)
+}
+
+const exportAsPdf = async (dataToExport) => {
+  const now = new Date()
+  const dateStr = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + '_' +
+    String(now.getHours()).padStart(2, '0') + '-' +
+    String(now.getMinutes()).padStart(2, '0') + '-' +
+    String(now.getSeconds()).padStart(2, '0')
+  const count = dataToExport.length
+  
+  // Create PDF document
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  })
+  
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const margin = 20
+  const bottomMargin = 25
+  const contentWidth = pageWidth - (margin * 2)
+  let yPosition = margin
+  
+  // Helper function to sanitize text for PDF (handle unsupported characters)
+  const sanitizeText = (text) => {
+    if (!text) return ''
+    // Replace common problematic characters with ASCII equivalents
+    return text
+      // Greek letters commonly used in biblical texts
+      .replace(/τέκτων/g, 'tekton')
+      .replace(/[α-ωΑ-Ω]/g, (match) => {
+        const greekToLatin = {
+          'α': 'a', 'β': 'b', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'e', 'θ': 'th',
+          'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm', 'ν': 'n', 'ξ': 'x', 'ο': 'o', 'π': 'p',
+          'ρ': 'r', 'σ': 's', 'ς': 's', 'τ': 't', 'υ': 'u', 'φ': 'ph', 'χ': 'ch', 'ψ': 'ps', 'ω': 'o',
+          'Α': 'A', 'Β': 'B', 'Γ': 'G', 'Δ': 'D', 'Ε': 'E', 'Ζ': 'Z', 'Η': 'E', 'Θ': 'Th',
+          'Ι': 'I', 'Κ': 'K', 'Λ': 'L', 'Μ': 'M', 'Ν': 'N', 'Ξ': 'X', 'Ο': 'O', 'Π': 'P',
+          'Ρ': 'R', 'Σ': 'S', 'Τ': 'T', 'Υ': 'U', 'Φ': 'Ph', 'Χ': 'Ch', 'Ψ': 'Ps', 'Ω': 'O'
+        }
+        return greekToLatin[match] || match
+      })
+      // Hebrew letters
+      .replace(/[\u0590-\u05FF]/g, '')
+      // Em dashes, en dashes, special quotes
+      .replace(/—/g, ' - ')
+      .replace(/–/g, '-')
+      .replace(/[""]/g, '"')
+      .replace(/['']/g, "'")
+      .replace(/…/g, '...')
+      // Remove any remaining non-ASCII characters that could cause issues
+      .replace(/[^\x00-\x7F]/g, '')
+  }
+  
+  // Helper function to check if we need a new page
+  const checkNewPage = (neededSpace) => {
+    if (yPosition + neededSpace > pageHeight - bottomMargin) {
+      doc.addPage()
+      yPosition = margin
+      return true
+    }
+    return false
+  }
+  
+  // Helper function to add text with word wrap and proper page breaks
+  const addWrappedText = (text, x, y, maxWidth, fontSize, fontStyle = 'normal') => {
+    doc.setFontSize(fontSize)
+    doc.setFont('helvetica', fontStyle)
+    const sanitizedText = sanitizeText(text)
+    const lines = doc.splitTextToSize(sanitizedText, maxWidth)
+    const lineHeight = fontSize * 0.4
+    
+    let currentY = y
+    
+    for (let i = 0; i < lines.length; i++) {
+      // Check if this line would go past the bottom margin
+      if (currentY + lineHeight > pageHeight - bottomMargin) {
+        doc.addPage()
+        currentY = margin
+      }
+      
+      doc.text(lines[i], x, currentY)
+      currentY += lineHeight
+    }
+    
+    return currentY
+  }
+  
+  // Title
+  doc.setFontSize(22)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(47, 74, 126)
+  doc.text('Bible Q&A - Saved Answers', margin, yPosition)
+  yPosition += 10
+  
+  // Draw title underline
+  doc.setDrawColor(47, 74, 126)
+  doc.setLineWidth(0.5)
+  doc.line(margin, yPosition, pageWidth - margin, yPosition)
+  yPosition += 8
+  
+  // Export info
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(100, 100, 100)
+  doc.text(`Exported: ${new Date().toLocaleString()} | Total Answers: ${count}`, margin, yPosition)
+  yPosition += 15
+  
+  // Process each answer
+  dataToExport.forEach((answer, index) => {
+    // Check if we need a new page (estimate space needed)
+    checkNewPage(60)
+    
+    // Question
+    doc.setTextColor(47, 74, 126)
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    yPosition = addWrappedText(answer.question, margin, yPosition, contentWidth, 12, 'bold')
+    yPosition += 2
+    
+    // Meta info
+    doc.setTextColor(130, 130, 130)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Saved: ${formatDate(answer.saved_at)} | ${answer.wordCount} words`, margin, yPosition)
+    yPosition += 8
+    
+    // Answer content
+    doc.setTextColor(50, 50, 50)
+    
+    if (answer.conversation_thread && answer.conversation_thread.length > 1) {
+      answer.conversation_thread.forEach((item, i) => {
+        checkNewPage(40)
+        
+        const label = i === 0 ? 'Question' : `Follow-up ${i}`
+        
+        // Thread label
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(80, 80, 80)
+        yPosition = addWrappedText(`${label}: ${item.question}`, margin + 5, yPosition, contentWidth - 10, 10, 'bold')
+        yPosition += 3
+        
+        // Thread answer
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(50, 50, 50)
+        doc.setFontSize(10)
+        yPosition = addWrappedText(item.answer, margin + 5, yPosition, contentWidth - 10, 10)
+        yPosition += 8
+      })
+    } else {
+      doc.setFontSize(10)
+      yPosition = addWrappedText(answer.answer, margin, yPosition, contentWidth, 10)
+      yPosition += 5
+    }
+    
+    // Tags
+    if (answer.tags && answer.tags.length > 0) {
+      checkNewPage(15)
+      doc.setFontSize(8)
+      doc.setTextColor(47, 74, 126)
+      doc.text(`Tags: ${answer.tags.join(', ')}`, margin, yPosition)
+      yPosition += 8
+    }
+    
+    // Divider between answers
+    if (index < dataToExport.length - 1) {
+      yPosition += 5
+      checkNewPage(20)
+      doc.setDrawColor(200, 200, 200)
+      doc.setLineWidth(0.2)
+      doc.line(margin, yPosition, pageWidth - margin, yPosition)
+      yPosition += 10
+    }
+  })
+  
+  // Generate filename and save
+  const filename = count === savedAnswers.value.length
+    ? `bible-qa-saved-answers-${dateStr}.pdf`
+    : `bible-qa-saved-answers-${count}-selected-${dateStr}.pdf`
+  
+  doc.save(filename)
+}
+
+const escapeHtml = (text) => {
+  if (!text) return ''
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+const downloadBlob = (blob, filename) => {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 const exportData = async () => {
   try {
-    const exportString = await savedAnswersService.exportData()
-    const blob = new Blob([exportString], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
+    const dataToExport = exportSelectedAnswersData.value
     
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `bible-qa-saved-answers-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    switch (exportFormat.value) {
+      case 'text':
+        exportAsText(dataToExport)
+        break
+      case 'json':
+        exportAsJson(dataToExport)
+        break
+      case 'pdf':
+        await exportAsPdf(dataToExport)
+        break
+    }
     
-    showExportModal.value = false
+    closeExportModal()
   } catch (error) {
     console.error('Failed to export data:', error)
   }
@@ -749,6 +1234,12 @@ defineExpose({
   gap: var(--spacing-sm);
 }
 
+.action-button--success {
+  background: rgba(34, 197, 94, 0.15) !important;
+  color: #15803d !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+
 /* Card expand animation */
 .card-expand-enter-active,
 .card-expand-leave-active {
@@ -774,10 +1265,11 @@ defineExpose({
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
   padding: var(--spacing-lg);
+  overflow-y: auto;
 }
 
 .modal {
@@ -786,20 +1278,27 @@ defineExpose({
   box-shadow: var(--shadow-xl);
   max-width: 500px;
   width: 100%;
-  max-height: 90vh;
+  max-height: calc(100vh - 2 * var(--spacing-lg));
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin: auto 0;
+}
+
+.modal--wide {
+  max-width: 600px;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
 
 .modal-header h3 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: white;
   margin: 0;
@@ -830,12 +1329,169 @@ defineExpose({
 }
 
 .modal-body {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .modal-body p {
   color: white;
+  margin-bottom: var(--spacing-md);
+}
+
+.export-select-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-background-muted);
+  border-radius: var(--border-radius-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.export-select-all {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: white;
+}
+
+.export-select-all input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.export-selection-count {
+  font-size: var(--font-size-sm);
+  color: white;
+  font-weight: var(--font-weight-semibold);
+}
+
+.export-answers-list {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
   margin-bottom: var(--spacing-lg);
+}
+
+.export-answer-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.export-answer-item:last-child {
+  border-bottom: none;
+}
+
+.export-answer-item:hover {
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.export-answer-item--selected {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.export-answer-item input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.export-answer-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.export-answer-question {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: white;
+  line-height: var(--line-height-normal);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.export-answer-meta {
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.export-format-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.export-format-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: white;
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.export-format-options {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.export-format-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.export-format-option:hover {
+  border-color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.export-format-option--active {
+  border-color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.export-format-option input[type="radio"] {
+  display: none;
+}
+
+.export-format-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: white;
+}
+
+.export-format-content svg {
+  width: 24px;
+  height: 24px;
+}
+
+.export-format-content span {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .export-stats {
@@ -855,13 +1511,13 @@ defineExpose({
   display: block;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
+  color: white;
   margin-bottom: var(--spacing-xs);
 }
 
 .stat-item span {
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .modal-footer {

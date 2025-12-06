@@ -100,15 +100,16 @@ const handleLogout = async () => {
 .navbar-simple-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
+  justify-content: flex-start;
+  position: relative;
+  width: 100%;
+  padding: 0 1rem 0 1rem;
   height: 72px;
 }
 .navbar-simple-logo-link {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 .navbar-simple-logo {
   height: 72px;
@@ -121,6 +122,9 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 2rem;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 .navbar-simple-link {
   text-decoration: none;
@@ -140,7 +144,7 @@ const handleLogout = async () => {
   color: #007bff;
 }
 .navbar-simple-auth {
-  margin-left: 2rem;
+  margin-left: auto;
 }
 .navbar-simple-auth-btn {
   background: #12375fcc;
