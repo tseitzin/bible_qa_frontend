@@ -81,23 +81,6 @@
               <span class="action-emoji">{{ copySuccess ? '✅' : '📋' }}</span>
               {{ copySuccess ? 'Copied!' : 'Copy' }}
             </button>
-            
-            <button
-              @click="shareAnswer"
-              class="kids-action-button kids-action-button--share"
-            >
-              <span class="action-emoji">📤</span>
-              Share
-            </button>
-            
-            <button
-              @click="saveAnswer"
-              :class="['kids-action-button', 'kids-action-button--save', { 'kids-action-button--success': saveSuccess }]"
-              :disabled="saving"
-            >
-              <span class="action-emoji">{{ saveSuccess ? '💖' : '💾' }}</span>
-              {{ saveSuccess ? 'Saved!' : 'Save' }}
-            </button>
           </div>
           
           <div class="answer-time">
@@ -170,11 +153,8 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
 import ScriptureText from '../ScriptureText.vue'
-import { savedAnswersService } from '../../services/savedAnswersService.js'
-import { useAuth } from '../../composables/useAuth.js'
 
-const emit = defineEmits(['answerSaved', 'followUpQuestion', 'loginRequired', 'readingView'])
-const { currentUser } = useAuth()
+const emit = defineEmits(['followUpQuestion', 'readingView'])
 
 const props = defineProps({
   answer: {
@@ -204,8 +184,6 @@ const props = defineProps({
 })
 
 const copySuccess = ref(false)
-const saveSuccess = ref(null)
-const saving = ref(false)
 const followUpQuestion = ref('')
 const latestQuestion = ref('')
 const hasScrolled = ref(false)
@@ -250,78 +228,6 @@ const copyAnswer = async () => {
     }, 3000)
   } catch (err) {
     console.error('Failed to copy text: ', err)
-  }
-}
-
-const shareAnswer = async () => {
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Kids Bible Q&A Answer',
-        text: props.answer,
-      })
-    } catch (err) {
-      console.error('Error sharing:', err)
-    }
-  } else {
-    copyAnswer()
-  }
-}
-
-const saveAnswer = async () => {
-  if (saving.value) return
-
-  if (!currentUser.value) {
-    const shouldLogin = confirm('You need to be logged in to save answers. Would you like to create an account or log in?')
-    if (shouldLogin) {
-      emit('loginRequired', {
-        question: props.question,
-        answer: props.answer,
-        questionId: props.questionId
-      })
-    }
-    return
-  }
-
-  if (!props.questionId) {
-    console.error('Cannot save answer without a questionId.')
-    saveSuccess.value = false
-    setTimeout(() => {
-      saveSuccess.value = null
-    }, 3000)
-    return
-  }
-  
-  try {
-    saving.value = true
-    
-    await new Promise(resolve => setTimeout(resolve, 0))
-    
-    const result = await savedAnswersService.save(props.questionId)
-    
-    if (result.success) {
-      saveSuccess.value = true
-      emit('answerSaved', result.id)
-      
-      // Change character and encouragement message
-      currentCharacter.value = characters[Math.floor(Math.random() * characters.length)]
-      encouragementMessage.value = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]
-    } else {
-      saveSuccess.value = false
-    }
-    
-    setTimeout(() => {
-      saveSuccess.value = null
-    }, 3000)
-  } catch (error) {
-    console.error('Failed to save answer:', error)
-    saveSuccess.value = false
-    
-    setTimeout(() => {
-      saveSuccess.value = null
-    }, 3000)
-  } finally {
-    saving.value = false
   }
 }
 
@@ -901,16 +807,6 @@ watch(
 
 .kids-action-button--copy {
   background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-  color: white;
-}
-
-.kids-action-button--share {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
-}
-
-.kids-action-button--save {
-  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
   color: white;
 }
 

@@ -67,9 +67,7 @@
             :stream-status="streamStatus"
             :is-streaming="isStreaming"
             class="kids-answer-section"
-            @answer-saved="handleAnswerSaved"
             @follow-up-question="handleFollowUpQuestion"
-            @login-required="handleLoginRequired"
             @reading-view="handleReadingViewNavigation"
           />
           
@@ -106,7 +104,6 @@ import KidsQuestionForm from '../components/kids/KidsQuestionForm.vue'
 import KidsAnswerDisplay from '../components/kids/KidsAnswerDisplay.vue'
 import KidsErrorMessage from '../components/kids/KidsErrorMessage.vue'
 import { useKidsBibleQA } from '../composables/useKidsBibleQA.js'
-import { PENDING_SAVED_ANSWER_KEY } from '../constants/storageKeys.js'
 
 const router = useRouter()
 
@@ -114,9 +111,6 @@ const {
   question,
   answer,
   questionId,
-  rootQuestionId,
-  isBiblicalAnswer,
-  conversationHistory,
   loading,
   error,
   streamStatus,
@@ -140,34 +134,6 @@ const handleClear = () => {
 
 const handleFollowUpQuestion = async (followUpText) => {
   await askFollowUpQuestion(followUpText)
-}
-
-const handleAnswerSaved = () => {
-  // Answer saved successfully
-}
-
-const handleLoginRequired = (payload) => {
-  if (typeof window !== 'undefined') {
-    try {
-      const pendingData = {
-        question: payload?.question || question.value || '',
-        answer: payload?.answer || answer.value || '',
-        questionId: payload?.questionId ?? questionId.value,
-        rootQuestionId: rootQuestionId.value,
-        conversationHistory: Array.isArray(conversationHistory.value)
-          ? JSON.parse(JSON.stringify(conversationHistory.value))
-          : []
-      }
-
-      if (pendingData.question && pendingData.answer) {
-        sessionStorage.setItem(PENDING_SAVED_ANSWER_KEY, JSON.stringify(pendingData))
-      }
-    } catch (storageError) {
-      console.error('Failed to persist pending answer before login:', storageError)
-    }
-  }
-
-  router.push({ name: 'login', query: { redirect: 'kids-pending-save' } })
 }
 
 const handleReadingViewNavigation = (payload) => {
