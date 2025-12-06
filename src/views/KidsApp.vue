@@ -2,39 +2,13 @@
   <div class="kids-app">
     <!-- Navigation Header -->
     <nav class="kids-nav">
-      <div class="nav-container">
-        <div class="nav-logo">
-          <div class="kids-logo-icon">
-            🌟
-          </div>
-          <span>Kids Bible Q&A</span>
-        </div>
-        <div class="nav-links">
-          <router-link to="/" class="nav-link">Home</router-link>
-
-          <router-link to="/adults" class="nav-tab">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-            </svg>
-            Ask Questions
-          </router-link>
-
-          <router-link to="/adults?tab=saved" class="nav-tab">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
-            </svg>
-            Saved Answers
-          </router-link>
-
-          <router-link to="/adults?tab=study" class="nav-tab">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3zm0 2.18L5 8.25v7.5L12 18.8l7-3.05v-7.5L12 5.18zm-.75 3.57h1.5v7.5h-1.5v-7.5zm0 0"/>
-            </svg>
-            Bible Study
-          </router-link>
-
-          <router-link to="/kids" class="nav-link nav-link--active">Kids</router-link>
-        </div>
+      <div class="nav-container nav-container--centered">
+        <router-link to="/" class="nav-link nav-link--home">
+          <svg class="nav-home-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+          </svg>
+          Home
+        </router-link>
       </div>
     </nav>
 
@@ -57,82 +31,46 @@
       <!-- Header Section -->
       <header class="kids-header animate-bounce-in">
         <div class="header-content">
-          <div class="kids-logo-section">
-            <div class="big-logo">
-              <div class="logo-character">
-                📖
-              </div>
-              <div class="sparkles">
-                <span class="sparkle sparkle--1">✨</span>
-                <span class="sparkle sparkle--2">⭐</span>
-                <span class="sparkle sparkle--3">💫</span>
+          <div class="logo-section">
+            <div class="logo-wrapper">
+              <div class="logo-icon">📖</div>
+              <div class="logo-text">
+                <h2 class="kids-title">Answers from God's Word</h2>
+                <div class="kids-tagline">Questions • Stories • Faith</div>
               </div>
             </div>
-            <h1 class="kids-title">
-              <span class="title-word title-word--1">Kids</span>
-              <span class="title-word title-word--2">Bible</span>
-              <span class="title-word title-word--3">Q&A</span>
-            </h1>
             <p class="kids-subtitle">
-              🌟 Ask questions about God, Jesus, and the Bible! 🌟
+              Ask anything about God, Jesus, and the Bible<br>
+              and discover answers from Scripture made just for you!
             </p>
-          </div>
-          
-          <!-- Fun features -->
-          <div class="fun-features">
-            <div class="feature-bubble">
-              <div class="bubble-emoji">🤔</div>
-              <span>Ask Questions</span>
-            </div>
-            <div class="feature-bubble">
-              <div class="bubble-emoji">📚</div>
-              <span>Learn Stories</span>
-            </div>
-            <div class="feature-bubble">
-              <div class="bubble-emoji">❤️</div>
-              <span>Grow Faith</span>
-            </div>
           </div>
         </div>
       </header>
       
       <!-- Main Content -->
       <main class="kids-main">
-        <!-- Fun Navigation Tabs -->
-        <div class="kids-nav-tabs">
-          <button 
-            @click="activeTab = 'ask'" 
-            :class="['kids-tab', { 'kids-tab--active': activeTab === 'ask' }]"
-          >
-            <span class="tab-emoji">🙋‍♀️</span>
-            Ask a Question
-          </button>
-          <button 
-            @click="activeTab = 'saved'" 
-            :class="['kids-tab', { 'kids-tab--active': activeTab === 'saved' }]"
-          >
-            <span class="tab-emoji">💾</span>
-            My Saved Answers
-            <span v-if="savedCount > 0" class="kids-badge">{{ savedCount }}</span>
-          </button>
-        </div>
-
-        <!-- Ask Question Tab -->
-        <div v-if="activeTab === 'ask'" class="kids-content animate-slide-in">
+        <!-- Question Content -->
+        <div class="kids-content animate-slide-in">
           <KidsQuestionForm
             v-model:question="question"
             :loading="loading"
             @submit="handleQuestionSubmit"
+            @clear="handleClear"
             class="kids-question-section"
           />
           
           <KidsAnswerDisplay 
             :answer="answer" 
             :question="question"
-            :image="image"
-            :image-loading="imageLoading"
+            :question-id="questionId"
+            :loading="loading"
+            :stream-status="streamStatus"
+            :is-streaming="isStreaming"
             class="kids-answer-section"
             @answer-saved="handleAnswerSaved"
+            @follow-up-question="handleFollowUpQuestion"
+            @login-required="handleLoginRequired"
+            @reading-view="handleReadingViewNavigation"
           />
           
           <KidsErrorMessage 
@@ -142,13 +80,6 @@
           />
         </div>
 
-        <!-- Saved Answers Tab -->
-        <div v-else-if="activeTab === 'saved'" class="kids-saved-content animate-fade-in">
-          <KidsSavedAnswers 
-            ref="savedAnswersRef" 
-            @update="handleSavedAnswersUpdated"
-          />
-        </div>
       </main>
       
       <!-- Fun Footer -->
@@ -170,65 +101,83 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import KidsQuestionForm from '../components/kids/KidsQuestionForm.vue'
 import KidsAnswerDisplay from '../components/kids/KidsAnswerDisplay.vue'
 import KidsErrorMessage from '../components/kids/KidsErrorMessage.vue'
-import KidsSavedAnswers from '../components/kids/KidsSavedAnswers.vue'
 import { useKidsBibleQA } from '../composables/useKidsBibleQA.js'
-import { savedAnswersService } from '../services/savedAnswersService.js'
+import { PENDING_SAVED_ANSWER_KEY } from '../constants/storageKeys.js'
+
+const router = useRouter()
 
 const {
   question,
   answer,
-  image,
+  questionId,
+  rootQuestionId,
+  isBiblicalAnswer,
+  conversationHistory,
   loading,
-  imageLoading,
   error,
+  streamStatus,
+  isStreaming,
   askQuestion,
+  askFollowUpQuestion,
+  clearAll,
   clearError
 } = useKidsBibleQA()
 
-// Tab management
-const activeTab = ref('ask')
-const savedAnswersRef = ref(null)
-
-// Saved answers count for badge
-const savedCount = ref(0)
-
-const updateSavedCount = () => {
-  try {
-    savedCount.value = savedAnswersService.getAll().length
-  } catch (error) {
-    console.error('Error updating saved count:', error)
-    savedCount.value = 0
-  }
+const handleQuestionSubmit = async (questionText) => {
+  await askQuestion(questionText)
 }
 
-const handleQuestionSubmit = (questionText) => {
-  askQuestion(questionText)
-  // Auto-switch to ask tab if user submits from saved tab
-  if (activeTab.value !== 'ask') {
-    activeTab.value = 'ask'
-  }
+const handleClear = () => {
+  clearAll()
+  // Explicitly clear the answer to ensure it's cleared
+  answer.value = ''
+  question.value = ''
+}
+
+const handleFollowUpQuestion = async (followUpText) => {
+  await askFollowUpQuestion(followUpText)
 }
 
 const handleAnswerSaved = () => {
-  updateSavedCount()
-  // Refresh the saved answers component if it exists
-  if (savedAnswersRef.value) {
-    savedAnswersRef.value.refresh()
+  // Answer saved successfully
+}
+
+const handleLoginRequired = (payload) => {
+  if (typeof window !== 'undefined') {
+    try {
+      const pendingData = {
+        question: payload?.question || question.value || '',
+        answer: payload?.answer || answer.value || '',
+        questionId: payload?.questionId ?? questionId.value,
+        rootQuestionId: rootQuestionId.value,
+        conversationHistory: Array.isArray(conversationHistory.value)
+          ? JSON.parse(JSON.stringify(conversationHistory.value))
+          : []
+      }
+
+      if (pendingData.question && pendingData.answer) {
+        sessionStorage.setItem(PENDING_SAVED_ANSWER_KEY, JSON.stringify(pendingData))
+      }
+    } catch (storageError) {
+      console.error('Failed to persist pending answer before login:', storageError)
+    }
   }
+
+  router.push({ name: 'login', query: { redirect: 'kids-pending-save' } })
 }
 
-const handleSavedAnswersUpdated = () => {
-  updateSavedCount()
+const handleReadingViewNavigation = (payload) => {
+  // Navigate to reading view
+  const query = { ref: payload.reference }
+  if (payload.source) {
+    query.source = payload.source
+  }
+  router.push({ name: 'reading', query })
 }
-
-// Load saved count on mount
-onMounted(() => {
-  updateSavedCount()
-})
 </script>
 
 <style scoped>
@@ -258,6 +207,23 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.nav-container--centered {
+  justify-content: center;
+}
+
+.nav-link--home {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-2xl);
+  font-size: var(--font-size-lg);
+}
+
+.nav-home-icon {
+  width: 24px;
+  height: 24px;
 }
 
 .nav-logo {
@@ -430,7 +396,7 @@ onMounted(() => {
 
 .kids-header {
   text-align: center;
-  margin-bottom: var(--spacing-3xl);
+  margin-bottom: var(--spacing-md);
 }
 
 .header-content {
@@ -438,8 +404,8 @@ onMounted(() => {
     rgba(255, 255, 255, 0.95) 0%, 
     rgba(255, 255, 255, 0.9) 100%);
   backdrop-filter: blur(20px);
-  border-radius: 30px;
-  padding: var(--spacing-3xl);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-md);
   box-shadow: 0 20px 40px rgba(255, 107, 157, 0.2);
   border: 3px solid rgba(255, 255, 255, 0.5);
   position: relative;
@@ -452,7 +418,7 @@ onMounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
+  height: 4px;
   background: linear-gradient(90deg, #ff6b9d, #c44569, #f8b500, #ff6b9d);
   background-size: 200% 100%;
   animation: rainbow-border 3s linear infinite;
@@ -463,146 +429,65 @@ onMounted(() => {
   100% { background-position: 200% 50%; }
 }
 
-.kids-logo-section {
-  margin-bottom: var(--spacing-2xl);
+.logo-section {
+  margin-bottom: var(--spacing-xs);
 }
 
-.big-logo {
-  position: relative;
-  margin-bottom: var(--spacing-xl);
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-bottom: 0;
 }
 
-.logo-character {
-  font-size: 5rem;
+.logo-icon {
+  font-size: 2.5rem;
   animation: bounce-gentle 2s ease-in-out infinite;
-  display: inline-block;
 }
 
 @keyframes bounce-gentle {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-3px); }
 }
 
-.sparkles {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 100px;
-  pointer-events: none;
-}
-
-.sparkle {
-  position: absolute;
-  font-size: 1.5rem;
-  animation: sparkle-twinkle 1.5s ease-in-out infinite;
-}
-
-.sparkle--1 {
-  top: 10px;
-  left: 10px;
-  animation-delay: 0s;
-}
-
-.sparkle--2 {
-  top: 20px;
-  right: 10px;
-  animation-delay: 0.5s;
-}
-
-.sparkle--3 {
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  animation-delay: 1s;
-}
-
-@keyframes sparkle-twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
+.logo-text {
+  text-align: left;
 }
 
 .kids-title {
-  font-size: 3.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);
-  margin: 0 0 var(--spacing-lg) 0;
-  line-height: 1.1;
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-md);
-  flex-wrap: wrap;
-}
-
-.title-word {
+  margin: 0;
   background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #f8b500 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: word-bounce 2s ease-in-out infinite;
-  display: inline-block;
+  line-height: 1.1;
 }
 
-.title-word--1 { animation-delay: 0s; }
-.title-word--2 { animation-delay: 0.2s; }
-.title-word--3 { animation-delay: 0.4s; }
-
-@keyframes word-bounce {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
+.kids-tagline {
+  font-size: var(--font-size-xs);
+  color: #ff6b9d;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: var(--spacing-xs);
+  margin-bottom: 1px;
+  text-align: center;
 }
 
 .kids-subtitle {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-sm);
   color: #2d3748;
   margin: 0;
-  font-weight: var(--font-weight-bold);
-  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-.fun-features {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-xl);
-  margin-top: var(--spacing-2xl);
-  flex-wrap: wrap;
-}
-
-.feature-bubble {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-lg);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
-  border-radius: 25px;
-  border: 3px solid rgba(255, 107, 157, 0.3);
-  transition: all var(--transition-normal);
-  min-width: 120px;
-}
-
-.feature-bubble:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 10px 25px rgba(255, 107, 157, 0.3);
-  border-color: rgba(255, 107, 157, 0.5);
-}
-
-.bubble-emoji {
-  font-size: 2.5rem;
-  animation: emoji-wiggle 3s ease-in-out infinite;
-}
-
-@keyframes emoji-wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(5deg); }
-  75% { transform: rotate(-5deg); }
-}
-
-.feature-bubble span {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
-  color: #2d3748;
-  text-align: center;
+  line-height: var(--line-height-tight);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0;
+  margin-bottom: var(--spacing-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .kids-main {
@@ -611,86 +496,10 @@ onMounted(() => {
   flex-direction: column;
 }
 
-.kids-nav-tabs {
-  display: flex;
-  margin-bottom: var(--spacing-xl);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.8) 100%);
-  border: 3px solid rgba(255, 107, 157, 0.3);
-  border-radius: 25px;
-  padding: var(--spacing-sm);
-  box-shadow: 0 8px 25px rgba(255, 107, 157, 0.2);
-}
-
-.kids-tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-lg) var(--spacing-xl);
-  border: none;
-  background: transparent;
-  color: #2d3748;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  position: relative;
-}
-
-.tab-emoji {
-  font-size: 1.5rem;
-  animation: tab-emoji-bounce 2s ease-in-out infinite;
-}
-
-@keyframes tab-emoji-bounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-.kids-tab:hover {
-  background: rgba(255, 107, 157, 0.2);
-  transform: translateY(-2px);
-}
-
-.kids-tab--active {
-  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
-  color: white;
-  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
-  transform: translateY(-2px);
-}
-
-.kids-tab--active .tab-emoji {
-  animation: tab-emoji-excited 1s ease-in-out infinite;
-}
-
-@keyframes tab-emoji-excited {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.2) rotate(5deg); }
-}
-
-.kids-badge {
-  background: white;
-  color: #ff6b9d;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  padding: 4px 8px;
-  border-radius: 15px;
-  min-width: 20px;
-  text-align: center;
-  line-height: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
 .kids-content {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
-  flex: 1;
-}
-
-.kids-saved-content {
   flex: 1;
 }
 
@@ -820,36 +629,16 @@ onMounted(() => {
 @media (max-width: 768px) {
   .nav-container {
     padding: var(--spacing-sm) var(--spacing-md);
-    flex-wrap: wrap;
   }
 
-  .nav-logo {
-    width: 100%;
-    justify-content: center;
+  .nav-link--home {
+    padding: var(--spacing-sm) var(--spacing-lg);
     font-size: var(--font-size-base);
-    margin-bottom: var(--spacing-xs);
   }
 
-  .kids-logo-icon {
-    font-size: 24px;
-  }
-
-  .nav-links {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: var(--spacing-xs);
-    justify-content: center;
-  }
-
-  .nav-link,
-  .nav-tab {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: var(--font-size-xs);
-  }
-
-  .nav-icon {
-    width: 1rem;
-    height: 1rem;
+  .nav-home-icon {
+    width: 20px;
+    height: 20px;
   }
   
   .kids-container {
@@ -857,19 +646,20 @@ onMounted(() => {
   }
   
   .header-content {
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-sm);
+  }
+  
+  .logo-wrapper {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .logo-text {
+    text-align: center;
   }
   
   .kids-title {
-    font-size: 2.5rem;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-  }
-  
-  .fun-features {
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-lg);
+    font-size: var(--font-size-xl);
   }
   
   .character-bubble {
@@ -899,19 +689,19 @@ onMounted(() => {
   }
   
   .header-content {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-sm);
   }
   
   .kids-title {
+    font-size: var(--font-size-lg);
+  }
+  
+  .logo-icon {
     font-size: 2rem;
   }
   
-  .logo-character {
-    font-size: 4rem;
-  }
-  
   .kids-subtitle {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-xs);
   }
 }
 </style>

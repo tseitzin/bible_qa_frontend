@@ -923,14 +923,14 @@ defineExpose({
 .saved-answers {
   max-width: 1000px;
   margin: 0 auto;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-sm);
 }
 
 .saved-answers-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
   gap: var(--spacing-lg);
 }
 

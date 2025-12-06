@@ -1,6 +1,6 @@
 <template>
   <transition name="kids-answer-appear" appear>
-    <div v-if="answer" class="kids-answer-display animate-bounce-in">
+    <div v-if="answer || loading" class="kids-answer-display animate-bounce-in">
       <div class="answer-header">
         <div class="header-character">
           <div class="character-icon">{{ currentCharacter }}</div>
@@ -11,41 +11,58 @@
           </div>
         </div>
         <div class="header-content">
-          <h3 class="answer-title">Here's what I found! 🎉</h3>
+          <h3 class="answer-title">{{ loading && !answer ? 'Finding your answer! 🔍' : 'Here\'s what I found! 🎉' }}</h3>
           <p class="answer-subtitle">A special answer just for you!</p>
         </div>
-        <div class="answer-badge">
+        <div class="answer-badge" v-if="!loading || answer">
           <span class="badge-emoji">✅</span>
           <span>Bible Answer</span>
         </div>
       </div>
       
       <div class="answer-content">
+        <!-- Streaming Status -->
+        <transition name="status-fade">
+          <div v-if="streamStatus" class="stream-status">
+            <div class="stream-status-icon">⚡</div>
+            <span>{{ streamStatus }}</span>
+          </div>
+        </transition>
+
         <div class="answer-text-wrapper">
-          <!-- Biblical Image Section -->
-          <div v-if="image || imageLoading" class="answer-image-section">
-            <div v-if="imageLoading" class="image-loading">
-              <div class="image-loading-spinner">🎨</div>
-              <p class="image-loading-text">Creating a special picture for you...</p>
-            </div>
-            <div v-else-if="image" class="answer-image-wrapper">
-              <img 
-                :src="image" 
-                :alt="`Biblical illustration for: ${question}`"
-                class="answer-image"
-                @error="handleImageError"
-              />
-              <div class="image-caption">
-                <span class="caption-emoji">🎨</span>
-                A special picture just for your question!
-              </div>
+          <!-- Question prompt -->
+          <div v-if="latestQuestion" class="question-prompt">
+            <span class="question-prompt__label">🙋 You asked:</span>
+            <p class="question-prompt__text">{{ latestQuestion }}</p>
+          </div>
+
+          <!-- Answer text with scripture reference linking -->
+          <ScriptureText
+            v-if="answer"
+            :text="answer"
+            text-class="answer-text"
+            navigation-source="kids-answer"
+            @reading-view="handleReadingViewNavigate"
+          />
+          
+          <!-- Loading state while streaming -->
+          <div v-if="loading && !answer" class="kids-loading-inline">
+            <div class="loading-character">📖</div>
+            <div class="loading-text">
+              <p class="loading-primary">Looking through the Bible for you!</p>
+              <p class="loading-secondary">Finding the perfect answer... ✨</p>
             </div>
           </div>
           
-          <div class="answer-text">{{ answer }}</div>
+          <!-- Typing indicator while streaming content -->
+          <div v-if="isStreaming && answer" class="typing-indicator">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
           
-          <!-- Fun reading info -->
-          <div class="reading-info">
+          <!-- Fun reading info - only show when done -->
+          <div v-if="answer && !isStreaming" class="reading-info">
             <span class="reading-emoji">⏰</span>
             <span>{{ readingTime }} minute{{ readingTime !== 1 ? 's' : '' }} to read</span>
             <span class="word-info">
@@ -55,7 +72,7 @@
           </div>
         </div>
         
-        <div class="answer-actions">
+        <div v-if="answer && !isStreaming" class="answer-actions">
           <div class="action-buttons">
             <button
               @click="copyAnswer"
@@ -89,9 +106,42 @@
           </div>
         </div>
       </div>
+
+      <!-- Follow-up question section -->
+      <section v-if="answer && !isStreaming" class="followup-section">
+        <div class="followup-header">
+          <span class="followup-emoji">💬</span>
+          <span class="followup-title">Want to know more?</span>
+        </div>
+        <p class="followup-description">Ask a follow-up question to learn even more!</p>
+        <div class="followup-input-group">
+          <input
+            v-model="followUpQuestion"
+            class="followup-input"
+            type="text"
+            :disabled="loading"
+            placeholder="e.g., Tell me more about ..."
+            @keyup.enter="submitFollowUp"
+          />
+          <button
+            class="kids-followup-button"
+            :disabled="loading || !followUpQuestion.trim()"
+            @click="submitFollowUp"
+          >
+            <span v-if="!loading" class="followup-button-content">
+              <span class="followup-button-emoji">🚀</span>
+              Ask More!
+            </span>
+            <span v-else class="followup-button-content">
+              <span class="followup-button-emoji">⏳</span>
+              Asking...
+            </span>
+          </button>
+        </div>
+      </section>
       
       <!-- Fun feedback section -->
-      <div class="kids-feedback">
+      <div v-if="answer && !isStreaming" class="kids-feedback">
         <div class="feedback-header">
           <span class="feedback-emoji">🤗</span>
           <span class="feedback-title">Did this help you learn?</span>
@@ -109,7 +159,7 @@
       </div>
       
       <!-- Encouragement message -->
-      <div class="encouragement">
+      <div v-if="answer && !isStreaming" class="encouragement">
         <div class="encouragement-character">🌟</div>
         <p class="encouragement-text">{{ encouragementMessage }}</p>
       </div>
@@ -118,10 +168,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import ScriptureText from '../ScriptureText.vue'
 import { savedAnswersService } from '../../services/savedAnswersService.js'
+import { useAuth } from '../../composables/useAuth.js'
 
-const emit = defineEmits(['answerSaved'])
+const emit = defineEmits(['answerSaved', 'followUpQuestion', 'loginRequired', 'readingView'])
+const { currentUser } = useAuth()
 
 const props = defineProps({
   answer: {
@@ -132,11 +185,19 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  image: {
+  questionId: {
+    type: Number,
+    default: null
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  },
+  streamStatus: {
     type: String,
     default: ''
   },
-  imageLoading: {
+  isStreaming: {
     type: Boolean,
     default: false
   }
@@ -145,6 +206,9 @@ const props = defineProps({
 const copySuccess = ref(false)
 const saveSuccess = ref(null)
 const saving = ref(false)
+const followUpQuestion = ref('')
+const latestQuestion = ref('')
+const hasScrolled = ref(false)
 
 const characters = ['🦁', '🐑', '🕊️', '👼', '⭐']
 const currentCharacter = ref(characters[Math.floor(Math.random() * characters.length)])
@@ -206,14 +270,34 @@ const shareAnswer = async () => {
 
 const saveAnswer = async () => {
   if (saving.value) return
+
+  if (!currentUser.value) {
+    const shouldLogin = confirm('You need to be logged in to save answers. Would you like to create an account or log in?')
+    if (shouldLogin) {
+      emit('loginRequired', {
+        question: props.question,
+        answer: props.answer,
+        questionId: props.questionId
+      })
+    }
+    return
+  }
+
+  if (!props.questionId) {
+    console.error('Cannot save answer without a questionId.')
+    saveSuccess.value = false
+    setTimeout(() => {
+      saveSuccess.value = null
+    }, 3000)
+    return
+  }
   
   try {
     saving.value = true
     
     await new Promise(resolve => setTimeout(resolve, 0))
     
-    const question = props.question || ''
-    const result = savedAnswersService.save(question, props.answer)
+    const result = await savedAnswersService.save(props.questionId)
     
     if (result.success) {
       saveSuccess.value = true
@@ -246,10 +330,52 @@ const provideFeedback = (type) => {
   // Could add fun animations or sounds here
 }
 
-const handleImageError = () => {
-  console.warn('Failed to load generated image')
-  // Could emit an event to parent to handle image error
+const handleReadingViewNavigate = (payload) => {
+  emit('readingView', payload)
 }
+
+const submitFollowUp = () => {
+  if (!followUpQuestion.value.trim() || props.loading) {
+    return
+  }
+
+  emit('followUpQuestion', followUpQuestion.value)
+  latestQuestion.value = followUpQuestion.value
+  followUpQuestion.value = ''
+}
+
+// Update latest question when the question prop changes
+watch(
+  () => props.question,
+  (newQuestion) => {
+    latestQuestion.value = newQuestion || ''
+  },
+  { immediate: true }
+)
+
+// Auto-scroll to answer when it starts displaying
+watch(
+  () => props.answer,
+  async (newAnswer, oldAnswer) => {
+    if (!newAnswer) {
+      hasScrolled.value = false
+      return
+    }
+
+    // Only scroll once when answer first appears (was empty, now has content)
+    // Don't scroll during streaming updates
+    if (!oldAnswer && newAnswer && !hasScrolled.value) {
+      hasScrolled.value = true
+      await nextTick()
+      setTimeout(() => {
+        const element = document.querySelector('.kids-answer-display')
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    }
+  },
+)
 </script>
 
 <style scoped>
@@ -389,6 +515,237 @@ const handleImageError = () => {
   padding: var(--spacing-2xl);
 }
 
+/* Streaming Status */
+.stream-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.15) 0%, rgba(49, 130, 206, 0.1) 100%);
+  border-left: 4px solid #4299e1;
+  border-radius: 15px;
+  color: #2d3748;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.stream-status-icon {
+  font-size: 1.3rem;
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+.status-fade-enter-active,
+.status-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.status-fade-enter-from,
+.status-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Question Prompt */
+.question-prompt {
+  border: 2px solid rgba(255, 107, 157, 0.25);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: 0 8px 20px rgba(255, 107, 157, 0.1);
+}
+
+.question-prompt__label {
+  display: inline-block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: #ff6b9d;
+  margin-bottom: var(--spacing-xs);
+}
+
+.question-prompt__text {
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: #2d3748;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Kids Loading Inline */
+.kids-loading-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
+  border: 3px dashed rgba(72, 187, 120, 0.3);
+  border-radius: 25px;
+  margin: var(--spacing-lg) 0;
+}
+
+.kids-loading-inline .loading-character {
+  font-size: 3rem;
+  animation: loading-bounce 1s ease-in-out infinite;
+}
+
+@keyframes loading-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.kids-loading-inline .loading-text {
+  flex: 1;
+}
+
+.kids-loading-inline .loading-primary {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: #2d3748;
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.kids-loading-inline .loading-secondary {
+  font-size: var(--font-size-base);
+  color: #4a5568;
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.typing-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+  animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.7; }
+  30% { transform: translateY(-10px); opacity: 1; }
+}
+
+/* Follow-up Section */
+.followup-section {
+  padding: var(--spacing-xl);
+  border-top: 3px dashed rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+}
+
+.followup-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.followup-emoji {
+  font-size: 1.5rem;
+  animation: followup-wiggle 2s ease-in-out infinite;
+}
+
+@keyframes followup-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+.followup-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: #2d3748;
+}
+
+.followup-description {
+  margin: 0 0 var(--spacing-md) 0;
+  color: #4a5568;
+  font-weight: var(--font-weight-semibold);
+}
+
+.followup-input-group {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.followup-input {
+  flex: 1;
+  min-width: 200px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: 20px;
+  border: 3px solid rgba(102, 126, 234, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  color: #2d3748;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  font-family: 'Comic Sans MS', cursive, system-ui;
+  transition: all var(--transition-normal);
+}
+
+.followup-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+}
+
+.followup-input::placeholder {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.kids-followup-button {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  font-family: 'Comic Sans MS', cursive, system-ui;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+}
+
+.kids-followup-button:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.45);
+}
+
+.kids-followup-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.followup-button-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.followup-button-emoji {
+  font-size: 1.2rem;
+}
+
 .answer-text-wrapper {
   margin-bottom: var(--spacing-xl);
 }
@@ -469,10 +826,10 @@ const handleImageError = () => {
   50% { filter: brightness(1.3); }
 }
 
-.answer-text {
+:deep(.answer-text) {
   font-size: var(--font-size-lg);
   line-height: var(--line-height-relaxed);
-  color: #2d3748;
+  color: var(--color-primary-dark);
   white-space: pre-wrap;
   margin-bottom: var(--spacing-lg);
   font-weight: var(--font-weight-semibold);
@@ -750,7 +1107,7 @@ const handleImageError = () => {
 }
 
 @media (max-width: 480px) {
-  .answer-text {
+  :deep(.answer-text) {
     font-size: var(--font-size-base);
   }
   

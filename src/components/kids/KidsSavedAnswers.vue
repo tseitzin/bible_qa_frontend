@@ -1,150 +1,182 @@
 <template>
   <div class="kids-saved-answers">
-    <div class="kids-saved-header">
-      <div class="header-mascot">
-        <div class="mascot">📚</div>
-        <div class="mascot-speech">
-          <div class="speech-bubble">
-            Look at all the cool things you've learned! 🌟
+    <!-- Guest user message -->
+    <div v-if="!currentUser" class="kids-guest-message">
+      <div class="guest-character">🔒</div>
+      <h3 class="guest-title">Sign In to Save Answers!</h3>
+      <p class="guest-text">
+        Create an account or log in to save your favorite Bible answers and come back to them anytime! 🌟
+      </p>
+      <div class="guest-actions">
+        <router-link :to="{ name: 'login', query: { redirect: 'kids-saved' } }" class="kids-btn-primary">
+          <span class="btn-emoji">🔑</span>
+          Log In
+        </router-link>
+        <router-link :to="{ name: 'register', query: { redirect: 'kids-saved' } }" class="kids-btn-secondary">
+          <span class="btn-emoji">✨</span>
+          Create Account
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Authenticated user content -->
+    <template v-else>
+      <div class="kids-saved-header">
+        <div class="header-mascot">
+          <div class="mascot">📚</div>
+          <div class="mascot-speech">
+            <div class="speech-bubble">
+              Look at all the cool things you've learned! 🌟
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div class="header-title">
-        <h2 class="kids-saved-title">My Saved Answers</h2>
-        <span v-if="savedAnswers.length > 0" class="kids-count-badge">
-          <span class="badge-emoji">🎉</span>
-          {{ savedAnswers.length }} awesome answer{{ savedAnswers.length !== 1 ? 's' : '' }}!
-        </span>
-      </div>
-      
-      <div class="header-actions">
-        <div class="kids-search-container">
-          <div class="search-icon">🔍</div>
-          <input
-            v-model="searchQuery"
-            type="search"
-            placeholder="Search your saved answers..."
-            class="kids-search-input"
-          />
-          <button
-            v-if="searchQuery"
-            @click="searchQuery = ''"
-            class="search-clear"
-            title="Clear search"
-          >
-            ❌
-          </button>
+        
+        <div class="header-title">
+          <h2 class="kids-saved-title">My Saved Answers</h2>
+          <span v-if="savedAnswers.length > 0" class="kids-count-badge">
+            <span class="badge-emoji">🎉</span>
+            {{ savedAnswers.length }} awesome answer{{ savedAnswers.length !== 1 ? 's' : '' }}!
+          </span>
         </div>
-      </div>
-    </div>
-
-    <!-- Empty state -->
-    <div v-if="savedAnswers.length === 0" class="kids-empty-state">
-      <div class="empty-character">📖</div>
-      <h3 class="empty-title">No saved answers yet!</h3>
-      <p class="empty-text">
-        When you find awesome answers to your Bible questions, click the 
-        <span class="save-example">💾 Save</span> button to keep them here! 
-        Then you can read them again anytime! 🌟
-      </p>
-      <div class="empty-encouragement">
-        <div class="encouragement-emoji">🚀</div>
-        <span>Go ask your first question!</span>
-      </div>
-    </div>
-
-    <!-- Filtered empty state -->
-    <div v-else-if="filteredAnswers.length === 0" class="kids-empty-state">
-      <div class="empty-character">🔍</div>
-      <h3 class="empty-title">No matches found!</h3>
-      <p class="empty-text">
-        I couldn't find any saved answers that match "{{ searchQuery }}". 
-        Try searching for something else! 😊
-      </p>
-    </div>
-
-    <!-- Saved answers list -->
-    <div v-else class="kids-answers-grid">
-      <div
-        v-for="(savedAnswer, index) in filteredAnswers"
-        :key="savedAnswer.id"
-        class="kids-answer-card"
-        :style="{ animationDelay: `${index * 0.1}s` }"
-      >
-        <div class="card-header">
-          <div class="card-emoji">{{ getRandomEmoji() }}</div>
-          <h3 class="card-question">{{ savedAnswer.question }}</h3>
-          <div class="card-actions">
+        
+        <div class="header-actions">
+          <div class="kids-search-container">
+            <div class="search-icon">🔍</div>
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search your saved answers..."
+              class="kids-search-input"
+            />
             <button
-              @click="toggleExpanded(savedAnswer.id)"
-              class="kids-expand-button"
-              :class="{ 'kids-expand-button--active': expandedCards.has(savedAnswer.id) }"
+              v-if="searchQuery"
+              @click="searchQuery = ''"
+              class="search-clear"
+              title="Clear search"
             >
-              <span class="expand-emoji">{{ expandedCards.has(savedAnswer.id) ? '🔼' : '🔽' }}</span>
-            </button>
-            <button
-              @click="deleteAnswer(savedAnswer.id)"
-              class="kids-delete-button"
-              title="Delete this answer"
-            >
-              <span class="delete-emoji">🗑️</span>
+              ❌
             </button>
           </div>
         </div>
+      </div>
 
-        <transition name="kids-card-expand">
-          <div v-if="expandedCards.has(savedAnswer.id)" class="card-content">
-            <div class="answer-text">{{ savedAnswer.answer }}</div>
-            
-            <div class="answer-meta">
-              <div class="meta-item">
-                <span class="meta-emoji">📅</span>
-                <span>{{ formatKidsDate(savedAnswer.timestamp) }}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-emoji">📝</span>
-                <span>{{ savedAnswer.wordCount }} words</span>
-              </div>
-            </div>
+      <!-- Loading state -->
+      <div v-if="loading" class="kids-loading-state">
+        <div class="loading-character">📖</div>
+        <p class="loading-text">Loading your saved answers... ✨</p>
+      </div>
 
-            <div v-if="savedAnswer.tags && savedAnswer.tags.length > 0" class="kids-tags">
-              <span
-                v-for="tag in savedAnswer.tags"
-                :key="tag"
-                class="kids-tag"
-              >
-                <span class="tag-emoji">🏷️</span>
-                {{ tag }}
-              </span>
-            </div>
+      <!-- Empty state -->
+      <div v-else-if="savedAnswers.length === 0" class="kids-empty-state">
+        <div class="empty-character">📖</div>
+        <h3 class="empty-title">No saved answers yet!</h3>
+        <p class="empty-text">
+          When you find awesome answers to your Bible questions, click the 
+          <span class="save-example">💾 Save</span> button to keep them here! 
+          Then you can read them again anytime! 🌟
+        </p>
+        <div class="empty-encouragement">
+          <div class="encouragement-emoji">🚀</div>
+          <span>Go ask your first question!</span>
+        </div>
+      </div>
 
-            <div class="card-bottom-actions">
+      <!-- Filtered empty state -->
+      <div v-else-if="filteredAnswers.length === 0" class="kids-empty-state">
+        <div class="empty-character">🔍</div>
+        <h3 class="empty-title">No matches found!</h3>
+        <p class="empty-text">
+          I couldn't find any saved answers that match "{{ searchQuery }}". 
+          Try searching for something else! 😊
+        </p>
+      </div>
+
+      <!-- Saved answers list -->
+      <div v-else class="kids-answers-grid">
+        <div
+          v-for="(savedAnswer, index) in filteredAnswers"
+          :key="savedAnswer.id"
+          class="kids-answer-card"
+          :style="{ animationDelay: `${index * 0.1}s` }"
+        >
+          <div class="card-header">
+            <div class="card-emoji">{{ getRandomEmoji() }}</div>
+            <h3 class="card-question">{{ savedAnswer.question }}</h3>
+            <div class="card-actions">
               <button
-                @click="copyAnswer(savedAnswer.answer)"
-                class="kids-copy-button"
+                @click="toggleExpanded(savedAnswer.id)"
+                class="kids-expand-button"
+                :class="{ 'kids-expand-button--active': expandedCards.has(savedAnswer.id) }"
               >
-                <span class="copy-emoji">📋</span>
-                Copy Answer
+                <span class="expand-emoji">{{ expandedCards.has(savedAnswer.id) ? '🔼' : '🔽' }}</span>
+              </button>
+              <button
+                @click="deleteAnswer(savedAnswer.id)"
+                class="kids-delete-button"
+                title="Delete this answer"
+              >
+                <span class="delete-emoji">🗑️</span>
               </button>
             </div>
           </div>
-        </transition>
+
+          <transition name="kids-card-expand">
+            <div v-if="expandedCards.has(savedAnswer.id)" class="card-content">
+              <div class="answer-text">{{ savedAnswer.answer }}</div>
+              
+              <div class="answer-meta">
+                <div class="meta-item">
+                  <span class="meta-emoji">📅</span>
+                  <span>{{ formatKidsDate(savedAnswer.saved_at || savedAnswer.timestamp) }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-emoji">📝</span>
+                  <span>{{ savedAnswer.word_count || savedAnswer.wordCount || 0 }} words</span>
+                </div>
+              </div>
+
+              <div v-if="savedAnswer.tags && savedAnswer.tags.length > 0" class="kids-tags">
+                <span
+                  v-for="tag in savedAnswer.tags"
+                  :key="tag"
+                  class="kids-tag"
+                >
+                  <span class="tag-emoji">🏷️</span>
+                  {{ tag }}
+                </span>
+              </div>
+
+              <div class="card-bottom-actions">
+                <button
+                  @click="copyAnswer(savedAnswer.answer)"
+                  class="kids-copy-button"
+                >
+                  <span class="copy-emoji">📋</span>
+                  Copy Answer
+                </button>
+              </div>
+            </div>
+          </transition>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { savedAnswersService } from '../../services/savedAnswersService.js'
+import { useAuth } from '../../composables/useAuth.js'
 
 const emit = defineEmits(['update'])
+
+const { currentUser } = useAuth()
 
 // Reactive data
 const savedAnswers = ref([])
 const searchQuery = ref('')
 const expandedCards = ref(new Set())
+const loading = ref(false)
 
 // Fun emojis for cards
 const cardEmojis = ['🌟', '💖', '🌈', '✨', '🎉', '🦋', '🌸', '🎈', '🍀', '🌺']
@@ -154,31 +186,47 @@ const filteredAnswers = computed(() => {
   let filtered = savedAnswers.value || []
 
   if (searchQuery.value && searchQuery.value.trim()) {
-    try {
-      filtered = savedAnswersService.search(searchQuery.value.trim())
-    } catch (error) {
-      console.error('Search error:', error)
-      filtered = []
-    }
+    const query = searchQuery.value.trim().toLowerCase()
+    filtered = filtered.filter(answer => 
+      (answer.question && answer.question.toLowerCase().includes(query)) ||
+      (answer.answer && answer.answer.toLowerCase().includes(query))
+    )
   }
 
   return filtered
 })
 
 // Methods
-const loadSavedAnswers = () => {
-  savedAnswers.value = savedAnswersService.getAll()
+const loadSavedAnswers = async () => {
+  if (!currentUser.value) {
+    savedAnswers.value = []
+    return
+  }
+  
+  loading.value = true
+  try {
+    savedAnswers.value = await savedAnswersService.getAll()
+  } catch (error) {
+    console.error('Error loading saved answers:', error)
+    savedAnswers.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
-const deleteAnswer = (id) => {
+const deleteAnswer = async (id) => {
   if (confirm('Are you sure you want to delete this saved answer? 🤔')) {
-    const result = savedAnswersService.delete(id)
-    if (result.success) {
-      loadSavedAnswers()
-      expandedCards.value.delete(id)
-      emit('update')
-    } else {
-      console.error('Failed to delete answer:', result.message)
+    try {
+      const result = await savedAnswersService.delete(id)
+      if (result.success) {
+        await loadSavedAnswers()
+        expandedCards.value.delete(id)
+        emit('update')
+      } else {
+        console.error('Failed to delete answer:', result.message)
+      }
+    } catch (error) {
+      console.error('Error deleting answer:', error)
     }
   }
 }
@@ -223,6 +271,11 @@ const getRandomEmoji = () => {
   return cardEmojis[Math.floor(Math.random() * cardEmojis.length)]
 }
 
+// Watch for user changes
+watch(currentUser, () => {
+  loadSavedAnswers()
+})
+
 // Lifecycle
 onMounted(() => {
   loadSavedAnswers()
@@ -239,6 +292,130 @@ defineExpose({
   max-width: 1000px;
   margin: 0 auto;
   padding: var(--spacing-xl);
+}
+
+/* Guest Message Styles */
+.kids-guest-message {
+  text-align: center;
+  padding: var(--spacing-4xl);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 255, 255, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 30px;
+  border: 3px solid rgba(255, 107, 157, 0.3);
+  box-shadow: 0 15px 35px rgba(255, 107, 157, 0.2);
+}
+
+.guest-character {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+  animation: guest-bounce 2s ease-in-out infinite;
+}
+
+@keyframes guest-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.guest-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  margin-bottom: var(--spacing-md);
+  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.guest-text {
+  font-size: var(--font-size-lg);
+  color: #2d3748;
+  max-width: 400px;
+  margin: 0 auto var(--spacing-xl);
+  line-height: var(--line-height-relaxed);
+  font-weight: var(--font-weight-semibold);
+}
+
+.guest-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.kids-btn-primary,
+.kids-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: 25px;
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+  transition: all var(--transition-normal);
+  font-family: 'Comic Sans MS', cursive, system-ui;
+  font-size: var(--font-size-base);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.kids-btn-primary {
+  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(255, 107, 157, 0.4);
+}
+
+.kids-btn-primary:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(255, 107, 157, 0.5);
+}
+
+.kids-btn-secondary {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+  color: #ff6b9d;
+  border: 3px solid rgba(255, 107, 157, 0.3);
+}
+
+.kids-btn-secondary:hover {
+  background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+  color: white;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(255, 107, 157, 0.5);
+}
+
+.btn-emoji {
+  font-size: 1.2rem;
+}
+
+/* Loading State */
+.kids-loading-state {
+  text-align: center;
+  padding: var(--spacing-4xl);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%, 
+    rgba(255, 255, 255, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 30px;
+  border: 3px solid rgba(255, 107, 157, 0.3);
+  box-shadow: 0 15px 35px rgba(255, 107, 157, 0.2);
+}
+
+.kids-loading-state .loading-character {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+  animation: loading-spin 2s linear infinite;
+}
+
+@keyframes loading-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.kids-loading-state .loading-text {
+  font-size: var(--font-size-lg);
+  color: #2d3748;
+  font-weight: var(--font-weight-bold);
+  margin: 0;
 }
 
 .kids-saved-header {
