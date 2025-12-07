@@ -18,12 +18,13 @@
           <div class="logo-section">
             <div class="logo-wrapper">
               <div class="logo-text">
-                <h1 class="app-title">Welcome {{ currentUser?.username ? `, ${currentUser.username}` : '' }}</h1>
+                <h1 class="app-title">Word of Life Answers</h1>
                 <div class="app-tagline">Scripture • Wisdom • Truth</div>
               </div>
             </div>
             <p class="app-subtitle">
-              Welcome to your personalized Bible companion—ask thoughtful questions, explore answers and topics, follow guided reading plans, and grow in your understanding of Scripture each day.
+              Your personal Bible companion for thoughtful questions, guided study,
+              <br>and growing daily in your understanding of God’s Word.
             </p>
           </div>
         </div>
@@ -426,7 +427,7 @@ const goToAdults = () => {
   text-align: center;
   background-clip: text;
   line-height: 1.08;
-  font-weight: var(--font-weight-extrabold);
+  font-weight: var(--font-weight-bold);
 }
 
 .app-tagline {
@@ -434,6 +435,7 @@ const goToAdults = () => {
   color: var(--app-primary-light);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.1em;
+  text-align: center;
   text-transform: uppercase;
   margin-top: var(--spacing-xs);
 }

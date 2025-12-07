@@ -950,6 +950,10 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
   box-shadow: 0 22px 36px rgba(47, 74, 126, 0.32);
 }
 
+/* ============================= */
+/* APP BACKGROUND FOUNDATION */
+/* ============================= */
+
 .app {
   position: relative;
   min-height: 100vh;
@@ -960,91 +964,112 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 
 .app-background {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: -1;
   overflow: hidden;
 }
 
+/* ============================= */
+/* SOFT PRIMARY GRADIENT (CALMED) */
+/* ============================= */
+
 .bg-gradient {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: linear-gradient(140deg,
     var(--color-primary-dark) 0%,
-    var(--color-primary) 45%,
+    var(--color-primary) 55%,
     var(--color-primary-light) 100%);
-  opacity: 0.28;
+  opacity: 0.18;   /* ✅ Reduced from 0.28 */
 }
+
+/* ============================= */
+/* SIMPLIFIED, QUIET PATTERN */
+/* ============================= */
 
 .bg-pattern {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-image:
-    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.12) 0%, transparent 55%),
-    radial-gradient(circle at 70% 30%, rgba(47, 74, 126, 0.22) 0%, transparent 55%),
-    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 55%);
-  background-size: 800px 800px, 600px 600px, 400px 400px;
-  animation: float 20s ease-in-out infinite;
+    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.07) 0%, transparent 60%),
+    radial-gradient(circle at 80% 35%, rgba(47, 74, 126, 0.10) 0%, transparent 60%);
+  background-size: 900px 900px, 700px 700px;
+  animation: floatPattern 40s ease-in-out infinite;
 }
+
+/* ============================= */
+/* FLOATING ATMOSPHERIC ELEMENTS */
+/* ============================= */
 
 .floating-elements {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   pointer-events: none;
 }
 
 .floating-element {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(10px);
-  animation: float 15s ease-in-out infinite;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+  backdrop-filter: blur(6px);
+  animation: floatSoft 30s ease-in-out infinite;
 }
 
+/* ✅ Reduced sizes for calmer feel */
 .floating-element--1 {
-  width: 200px;
-  height: 200px;
-  top: 10%;
-  left: 10%;
-  animation-delay: 0s;
+  width: 170px;
+  height: 170px;
+  top: 12%;
+  left: 8%;
 }
 
 .floating-element--2 {
-  width: 150px;
-  height: 150px;
-  top: 60%;
-  right: 15%;
-  animation-delay: -5s;
+  width: 125px;
+  height: 125px;
+  top: 62%;
+  right: 12%;
 }
 
 .floating-element--3 {
-  width: 100px;
-  height: 100px;
-  bottom: 20%;
-  left: 20%;
-  animation-delay: -10s;
+  width: 85px;
+  height: 85px;
+  bottom: 18%;
+  left: 22%;
 }
 
-@keyframes float {
+/* ============================= */
+/* ANIMATIONS (SOFTER + SLOWER) */
+/* ============================= */
+
+@keyframes floatSoft {
   0%, 100% {
-    transform: translateY(0px) rotate(0deg);
+    transform: translateY(0px);
   }
-  33% {
-    transform: translateY(-20px) rotate(120deg);
+  50% {
+    transform: translateY(-14px);
   }
-  66% {
-    transform: translateY(10px) rotate(240deg);
+}
+
+@keyframes floatPattern {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* ============================= */
+/* ACCESSIBILITY & PERFORMANCE */
+/* ============================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-pattern,
+  .floating-element {
+    animation: none !important;
   }
 }
 

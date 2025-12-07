@@ -3,6 +3,12 @@
     <div class="navbar-simple-row">
       <router-link to="/" class="navbar-simple-logo-link">
         <img :src="logo" alt="Word of Life Answers" class="navbar-simple-logo" />
+         <div class="navbar-brand-text">
+          <div class="navbar-brand-title">Word of Life Answers</div>
+          <div class="navbar-brand-tagline">
+            Bible Questions • Scripture Study • Guided Insight
+         </div>
+         </div>
       </router-link>
       <div class="navbar-simple-links">
         <router-link
@@ -109,23 +115,51 @@ const handleLogout = async () => {
 .navbar-simple-logo-link {
   display: flex;
   align-items: center;
+  gap: 12px;
   flex-shrink: 0;
+  text-decoration: none;
 }
+
+/* Logo image */
 .navbar-simple-logo {
-  height: 72px;
+  height: 64px;              /* 🔥 Reduced for balance */
   width: auto;
-  max-width: 340px;
+  max-width: 290px;
   object-fit: contain;
   display: block;
 }
+
+/* Text container */
+.navbar-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+/* Main site name */
+.navbar-brand-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f3b63;           /* Deep navy brand anchor */
+  letter-spacing: 0.2px;
+}
+
+/* Sub tagline */
+.navbar-brand-tagline {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #7b8fb3;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+}
+
 .navbar-simple-links {
   display: flex;
   align-items: center;
   gap: 2rem;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  margin: 0 auto;  /* ✅ TRUE CENTERING */
 }
+
 .navbar-simple-link {
   text-decoration: none;
   color: #333;
