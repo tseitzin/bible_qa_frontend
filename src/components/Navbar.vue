@@ -51,7 +51,7 @@
           :aria-label="isDevotion ? 'Switch to Light Mode' : 'Switch to Devotion Mode'"
         >
           <span class="theme-toggle-icon">{{ isDevotion ? '☀️' : '🌙' }}</span>
-          <span class="theme-toggle-label">{{ isDevotion ? 'Light/Focus Mode' : 'Devotion/Dark mode' }}</span>
+          <span class="theme-toggle-label">{{ isDevotion ? 'Focus/Light Mode' : 'Devotion/Dark mode' }}</span>
         </button>
         <button
           v-if="currentUser"
