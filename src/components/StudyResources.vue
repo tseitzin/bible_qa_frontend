@@ -605,35 +605,36 @@ onMounted(async () => {
 }
 
 .study-card {
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--header-bg, rgba(255, 255, 255, 0.96));
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
-  color: black;
+  color: var(--text-main);
   box-shadow: 0 24px 48px rgba(31, 50, 86, 0.12);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .study-card p {
-  color: black;
+  color: var(--text-main);
 }
 
 .study-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  color: black;
+  color: var(--text-main);
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-md);
 }
 
 .study-card__header h3 {
   margin: 0;
-  color: black;
+  color: var(--brand-primary);
 }
 
 .study-card__header p {
   margin: 0.25rem 0 0 0;
-  color: black;
+  color: var(--text-main);
 }
 
 .link-button {
@@ -747,8 +748,8 @@ textarea {
   justify-content: space-between;
   gap: var(--spacing-md);
   padding: var(--spacing-sm) 0;
-  color: black;
-  border-bottom: 1px solid rgba(47, 74, 126, 0.08);
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .topic-grid {
@@ -758,15 +759,16 @@ textarea {
 }
 
 .topic-card {
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-md);
-  background: rgba(247, 248, 252, 0.8);
+  background: var(--card-bg, rgba(247, 248, 252, 0.8));
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .topic-card h4 {
   margin-top: 0;
-  color: black;
+  color: var(--brand-primary);
 }
 
 .topic-tags {
@@ -810,7 +812,7 @@ textarea {
 .plan-group__header h4 {
   margin: 0;
   font-size: 1rem;
-  color: black;
+  color: var(--brand-primary);
 }
 
 .plan-detail-hint {
@@ -848,9 +850,9 @@ textarea {
   border: 1px solid transparent;
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-sm) var(--spacing-md);
-  background: rgba(247, 248, 252, 0.9);
+  background: var(--card-bg, rgba(247, 248, 252, 0.9));
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.3s ease;
 }
 
 .plan-card--accent {
@@ -892,7 +894,7 @@ textarea {
 
 .plan-card__header h4 {
   margin: 0;
-  color: black;
+  color: var(--brand-primary);
   font-size: 1rem;
 }
 
@@ -916,14 +918,14 @@ textarea {
 }
 
 .plan-progress {
-  color: black;
+  color: var(--text-main);
   font-size: 0.85rem;
   margin-top: var(--spacing-xs);
   font-weight: var(--font-weight-semibold);
 }
 
 .plan-detail {
-  border-top: 1px solid rgba(47, 74, 126, 0.12);
+  border-top: 1px solid var(--border-soft);
   padding-top: var(--spacing-md);
 }
 

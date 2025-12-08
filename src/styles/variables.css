@@ -103,11 +103,132 @@
   --z-modal: 1050;
   --z-popover: 1060;
   --z-tooltip: 1070;
+  
+  /* Theme-aware tokens (light mode defaults) */
+  --bg-main: #f5f3ee;
+  --bg-card: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --brand-primary: #2f4a7e;
+  --brand-secondary: #7b8fb3;
+  --input-bg: #ffffff;
+  --input-text: #1f2937;
+  --input-placeholder: #6b7280;
+  --button-bg: #2f4a7e;
+  --button-text: #ffffff;
+  --border-soft: rgba(0, 0, 0, 0.08);
+  
+  /* Card and overlay backgrounds for theming */
+  --card-bg: rgba(255, 255, 255, 0.98);
+  --card-bg-alt: rgba(245, 243, 238, 0.94);
+  --nav-bg: rgba(255, 255, 255, 0.95);
+  --header-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  --footer-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
 }
 
-/* Dark mode support */
+/* ============================================
+   DEVOTION MODE (Night Theme)
+   ============================================ */
+html[data-theme="devotion"] {
+  /* Core colors */
+  --bg-main: #0f172a;
+  --bg-card: #111c36;
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  
+  --brand-primary: #93c5fd;
+  --brand-secondary: #7dd3fc;
+  
+  --input-bg: #1e293b;
+  --input-text: #f8fafc;
+  --input-placeholder: #94a3b8;
+  
+  --button-bg: #1e40af;
+  --button-text: #ffffff;
+  
+  --border-soft: rgba(255, 255, 255, 0.08);
+  
+  /* Card and overlay backgrounds */
+  --card-bg: rgba(17, 28, 54, 0.98);
+  --card-bg-alt: rgba(15, 23, 42, 0.94);
+  --nav-bg: rgba(15, 23, 42, 0.95);
+  --header-bg: linear-gradient(155deg, rgba(17, 28, 54, 0.98), rgba(15, 23, 42, 0.94));
+  --footer-bg: linear-gradient(155deg, rgba(17, 28, 54, 0.98), rgba(15, 23, 42, 0.94));
+  
+  /* Override existing color variables */
+  --color-primary: #93c5fd;
+  --color-primary-dark: #60a5fa;
+  --color-primary-light: #bfdbfe;
+  --color-primary-bright: #dbeafe;
+  
+  --color-secondary: #7dd3fc;
+  --color-secondary-dark: #38bdf8;
+  --color-secondary-light: #bae6fd;
+  
+  --color-accent: #86efac;
+  --color-accent-dark: #4ade80;
+  
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #e5e7eb;
+  --color-text-muted: #9ca3af;
+  --color-text-inverse: #0f172a;
+  --color-text-accent: #86efac;
+  
+  --color-background: #0f172a;
+  --color-background-alt: #1e293b;
+  --color-background-muted: #334155;
+  --color-background-dark: #020617;
+  --color-background-overlay: rgba(15, 23, 42, 0.96);
+  
+  --color-border: #334155;
+  --color-border-light: #475569;
+  --color-border-focus: #93c5fd;
+  --color-border-muted: #1e293b;
+  --color-highlight: rgba(147, 197, 253, 0.15);
+  
+  /* Gradients for devotion mode - lighter for visibility on dark backgrounds */
+  --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+  --gradient-secondary: linear-gradient(135deg, #0ea5e9 0%, #7dd3fc 100%);
+  --gradient-accent: linear-gradient(135deg, #059669 0%, #34d399 100%);
+  --gradient-background: linear-gradient(140deg, rgba(37, 99, 235, 0.15) 0%, rgba(34, 197, 94, 0.1) 45%, rgba(14, 165, 233, 0.08) 100%);
+  --gradient-card: linear-gradient(155deg, rgba(17, 28, 54, 0.98) 0%, rgba(15, 23, 42, 0.94) 100%);
+  
+  /* Override color-primary-light for tagline visibility */
+  --color-primary-light: #7dd3fc;
+  
+  /* Shadows for dark mode (lighter/glowing) */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Devotion mode background overrides */
+html[data-theme="devotion"] .bg-gradient {
+  background: radial-gradient(circle at 50% 20%,
+    rgba(37, 99, 235, 0.25),
+    #020617 60%);
+  opacity: 1;
+}
+
+html[data-theme="devotion"] .bg-pattern {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.04) 0%, transparent 60%),
+    radial-gradient(circle at 80% 70%, rgba(147, 197, 253, 0.06) 0%, transparent 60%);
+}
+
+html[data-theme="devotion"] .floating-element {
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.015)
+  );
+}
+
+/* Dark mode automatic detection (fallback when no explicit theme set) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --color-text-primary: #f9fafb;
     --color-text-secondary: #d1d5db;
     --color-text-muted: #9ca3af;

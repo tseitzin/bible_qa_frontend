@@ -1090,14 +1090,15 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 }
 
 .header-content {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  background: var(--header-bg, linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94)));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-md);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .logo-section {
@@ -1259,13 +1260,14 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 .guest-message {
   text-align: center;
   padding: var(--spacing-3xl);
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  background: var(--header-bg, linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94)));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-2xl);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   max-width: 500px;
   margin: 0 auto;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .guest-message-icon {
@@ -1318,10 +1320,11 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--card-bg, rgba(255, 255, 255, 0.96));
   color: var(--color-primary);
-  border: 1px solid rgba(47, 74, 126, 0.32);
+  border: 1px solid var(--border-soft);
   box-shadow: 0 14px 30px rgba(31, 50, 86, 0.15);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .btn-secondary:hover {
@@ -1343,12 +1346,13 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 }
 
 .footer-content {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  background: var(--footer-bg, linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94)));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-lg);
   box-shadow: 0 24px 48px rgba(31, 50, 86, 0.18);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .footer-main {
@@ -1419,15 +1423,16 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 /* Tracked Reading Plans Card Styles */
 .tracked-plans-card {
   margin-bottom: var(--spacing-lg);
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  background: var(--header-bg, linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94)));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-xl);
-  color: rgb(31, 50, 86);
+  color: var(--text-main);
   padding: var(--spacing-md);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .tracked-plans-list {
@@ -1443,24 +1448,25 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
   margin-bottom: var(--spacing-xs);
   font-weight: semibold;
   font-size: var(--font-size-lg);
-  color: rgb(31, 50, 86);
-  border-bottom: 1px solid rgba(31, 50, 86, 0.803);
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .tracked-plans-card p {
   margin: 0 0 var(--spacing-md) 0;
   margin-bottom: var(--spacing-xs);
   font-size: var(--font-size-sm);
-  color: rgba(31, 50, 86, 0.861);
+  color: var(--text-muted);
   font-weight: var(--font-weight-medium);
 }
 
 .tracked-plan-item {
   padding: var(--spacing-xs) 0;
-  background-color: rgba(233, 235, 238, 0.993);
-  color: rgb(68, 68, 68);
-  border-bottom: 1px solid rgba(47, 74, 126, 0.08);
+  background-color: var(--color-background-alt, rgba(233, 235, 238, 0.993));
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border-soft);
   padding-left: 1rem;
+  transition: background-color 0.3s ease;
 }
 
 .tracked-plan-info {

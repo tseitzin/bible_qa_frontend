@@ -277,11 +277,11 @@ const autoResizeTextarea = (textarea) => {
   line-height: var(--line-height-relaxed);
   border: 2px solid var(--color-border);
   border-radius: var(--border-radius-lg);
-  background-color: rgba(15, 23, 42, 0.92);
+  background-color: var(--input-bg, rgba(15, 23, 42, 0.92));
   background-image: none;
-  color: var(--color-text-inverse);
-  -webkit-text-fill-color: var(--color-text-inverse);
-  caret-color: var(--color-text-inverse);
+  color: var(--input-text, #f1f5f9);
+  -webkit-text-fill-color: var(--input-text, #f1f5f9);
+  caret-color: var(--input-text, #f1f5f9);
   color-scheme: dark;
   resize: vertical;
   transition: all var(--transition-normal);
@@ -358,8 +358,8 @@ const autoResizeTextarea = (textarea) => {
 }
 
 .base-textarea::placeholder {
-  color: #9ca3af;
-  opacity: 0.6;
+  color: var(--input-placeholder, #9ca3af);
+  opacity: 0.7;
   transition: all var(--transition-fast);
 }
 
@@ -367,11 +367,11 @@ const autoResizeTextarea = (textarea) => {
   outline: none;
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  background-color: rgba(15, 23, 42, 0.95);
+  background-color: var(--input-bg, rgba(15, 23, 42, 0.95));
   background-image: none;
-  color: var(--color-text-inverse);
-  -webkit-text-fill-color: var(--color-text-inverse);
-  caret-color: var(--color-text-inverse);
+  color: var(--input-text, #f1f5f9);
+  -webkit-text-fill-color: var(--input-text, #f1f5f9);
+  caret-color: var(--input-text, #f1f5f9);
 }
 
 .base-textarea:focus::placeholder {

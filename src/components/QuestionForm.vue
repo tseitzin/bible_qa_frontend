@@ -294,14 +294,15 @@ const handleSpeechError = (error) => {
   --question-accent: var(--color-secondary-light);
   --question-muted: var(--color-text-muted);
   --question-gradient: linear-gradient(135deg, var(--question-primary), var(--question-primary-light));
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  background: var(--header-bg, linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94)));
   backdrop-filter: blur(22px);
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .form-header {
@@ -364,8 +365,10 @@ const handleSpeechError = (error) => {
 
 :deep(.question-input textarea) {
   border: 2px solid rgba(47, 74, 126, 0.16);
-  background: rgba(31, 50, 86, 0.95);
-  color: var(--color-text-inverse);
+  background: var(--input-bg, rgba(31, 50, 86, 0.95));
+  color: var(--input-text, #f8fafc);
+  -webkit-text-fill-color: var(--input-text, #f8fafc);
+  caret-color: var(--input-text, #f8fafc);
   box-shadow: 0 16px 32px rgba(31, 50, 86, 0.12);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
@@ -374,7 +377,7 @@ const handleSpeechError = (error) => {
   border-color: var(--question-primary);
   box-shadow: 0 22px 40px rgba(47, 74, 126, 0.22);
   transform: translateY(-1px);
-  background: rgba(31, 50, 86, 0.97);
+  background: var(--input-bg, rgba(31, 50, 86, 0.97));
 }
 
 :deep(.question-input textarea:focus::placeholder) {
@@ -492,7 +495,7 @@ const handleSpeechError = (error) => {
 .quick-suggestions {
   margin-top: var(--spacing-sm);
   padding-top: var(--spacing-sm);
-  border-top: 1px solid rgba(47, 74, 126, 0.12);
+  border-top: 1px solid var(--border-soft);
 }
 
 .suggestions-group + .suggestions-group {
@@ -524,10 +527,10 @@ const handleSpeechError = (error) => {
   gap: var(--spacing-sm);
   width: 100%;
   padding: var(--spacing-sm) calc(var(--spacing-md) + 1.5rem) var(--spacing-sm) var(--spacing-md);
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(47, 74, 126, 0.16);
+  background: var(--card-bg, rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--border-soft);
   border-radius: var(--border-radius-lg);
-  color: var(--question-primary-dark);
+  color: var(--text-main);
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -537,9 +540,9 @@ const handleSpeechError = (error) => {
 }
 
 .suggestion-button:hover {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(47, 74, 126, 0.32);
-  color: var(--question-primary);
+  background: var(--card-bg-alt, rgba(255, 255, 255, 0.98));
+  border-color: var(--color-primary);
+  color: var(--brand-primary);
   transform: translateY(-2px);
   box-shadow: 0 18px 32px rgba(31, 50, 86, 0.18);
 }

@@ -362,14 +362,15 @@ const goToAdults = () => {
 }
 
 .header-content {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94));
+  background: var(--header-bg, linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94)));
   backdrop-filter: blur(20px);
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-sm);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .logo-section {
@@ -421,7 +422,7 @@ const goToAdults = () => {
 .app-title {
   font-size: var(--font-size-4xl);
   margin: 0;
-  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-light));
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-align: center;
@@ -432,7 +433,7 @@ const goToAdults = () => {
 
 .app-tagline {
   font-size: var(--font-size-sm);
-  color: var(--app-primary-light);
+  color: var(--color-primary-light);
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.1em;
   text-align: center;
@@ -442,7 +443,7 @@ const goToAdults = () => {
 
 .app-subtitle {
   font-size: var(--font-size-base);
-  color: rgba(14, 24, 99, 0.829);
+  color: var(--color-primary-dark);
   margin: 0;
   line-height: var(--line-height-tight);
   max-width: 720px;
@@ -471,18 +472,18 @@ const goToAdults = () => {
 }
 
 .action-card {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.9));
+  background: var(--header-bg, linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.9)));
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
   text-align: left;
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   box-shadow: 0 24px 48px rgba(31, 50, 86, 0.18);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
   text-decoration: none;
-  color: var(--app-primary-dark);
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+  color: var(--text-main);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal), background 0.3s ease;
 }
 
 .action-card:hover {
@@ -517,12 +518,12 @@ const goToAdults = () => {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   margin: var(--spacing-sm) 0 var(--spacing-xs) var(--spacing-sm);
-  color: rgb(31, 46, 105);
+  color: var(--brand-primary);
 }
 
 .action-card p {
   margin: 0;
-  color: rgba(15, 23, 42, 0.889);
+  color: var(--text-main);
   line-height: var(--line-height-relaxed);
 }
 
@@ -533,27 +534,28 @@ const goToAdults = () => {
 }
 
 .insights-card {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.92));
+  background: var(--header-bg, linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.92)));
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-lg);
   box-shadow: 0 20px 40px rgba(31, 50, 86, 0.16);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .insights-card h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   margin: 0;
-  color: var(--app-primary-dark);
+  color: var(--brand-primary);
 }
 
 .insights-card p {
   margin: 0;
   font-size: var(--font-size-md);
-  color: rgba(15, 23, 42, 0.889);
+  color: var(--text-main);
   line-height: var(--line-height-relaxed);
 }
 
