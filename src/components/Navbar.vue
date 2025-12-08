@@ -225,7 +225,7 @@ html[data-theme="devotion"] .navbar-simple-logo {
 .theme-toggle {
   margin-right: 0.5rem;
   background: var(--card-bg, rgba(255, 255, 255, 0.9));
-  border: 1.5px solid var(--brand-primary);
+  border: 1px solid var(--toggle-border, rgba(200, 200, 210, 0.4));
   border-radius: 999px;
   padding: 0.25rem 0.5rem;
   cursor: pointer;
@@ -255,6 +255,11 @@ html[data-theme="devotion"] .navbar-simple-logo {
   color: var(--button-text, #fff);
   transform: scale(1.03);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.theme-toggle:focus {
+  outline: none;
+  border-color: var(--toggle-border, rgba(200, 200, 210, 0.4));
 }
 
 .theme-toggle:active {

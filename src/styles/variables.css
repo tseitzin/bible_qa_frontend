@@ -117,6 +117,7 @@
   --button-bg: #2f4a7e;
   --button-text: #ffffff;
   --border-soft: rgba(0, 0, 0, 0.08);
+  --toggle-border: rgba(180, 185, 195, 0.25);
   
   /* Card and overlay backgrounds for theming */
   --card-bg: rgba(255, 255, 255, 0.98);
@@ -145,8 +146,8 @@ html[data-theme="devotion"] {
   
   --button-bg: #1e40af;
   --button-text: #ffffff;
-  
   --border-soft: rgba(255, 255, 255, 0.08);
+  --toggle-border: rgba(150, 160, 180, 0.35);
   
   /* Card and overlay backgrounds */
   --card-bg: rgba(17, 28, 54, 0.98);

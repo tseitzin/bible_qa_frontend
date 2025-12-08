@@ -21,7 +21,8 @@ const applyTheme = (devotionMode) => {
 }
 
 /**
- * Initialize theme from localStorage or system preference
+ * Initialize theme from localStorage
+ * Defaults to light mode if no preference is saved
  * Call this once on app startup
  */
 const initTheme = () => {
@@ -33,9 +34,8 @@ const initTheme = () => {
     // Use saved preference
     applyTheme(savedTheme === THEME_DEVOTION)
   } else {
-    // Fall back to system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    applyTheme(prefersDark)
+    // Default to light mode (no system preference fallback)
+    applyTheme(false)
   }
 }
 
