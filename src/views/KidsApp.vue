@@ -40,7 +40,7 @@
           </div>
 
           <p class="kids-subtitle">
-            Ask anything about God, Jesus, and the Bible  
+            Ask anything about God, Jesus, and the Bible  <br>
             and discover answers from Scripture made just for you!
           </p>
         </div>
@@ -243,26 +243,27 @@ const handleReadingViewNavigation = (payload) => {
 /*         HEADER SECTION           */
 /* ================================ */
 
-.kids-header { text-align: center; margin-bottom: 1rem; }
+.kids-header { text-align: center; margin-bottom: var(--spacing-md); }
 
 .header-content {
   background: #FFFFFFEE;
   backdrop-filter: blur(20px);
   border-radius: 25px;
-  padding: 2rem 1rem;
+  padding: var(--spacing-md);
   box-shadow: 0 15px 40px rgba(255, 143, 194, 0.25);
   border: 3px solid rgba(255, 143, 194, 0.3);
 }
 
 .logo-wrapper {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
 .logo-icon {
-  font-size: 3rem;
+  font-size: 2.5rem;
   animation: bounce 2s infinite;
 }
 
@@ -272,24 +273,28 @@ const handleReadingViewNavigation = (payload) => {
 }
 
 .kids-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   background: linear-gradient(135deg, #FF6FAE, #FFA93B);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  margin: 0;
 }
 
 .kids-tagline {
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
   color: #FF6FAE;
   font-weight: 600;
   text-transform: uppercase;
+  margin: 0;
+  text-align: center;
 }
 
 .kids-subtitle {
-  margin-top: 0.5rem;
-  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 0.875rem;
   color: #2D3748;
   font-weight: 600;
   max-width: 600px;
@@ -304,31 +309,33 @@ const handleReadingViewNavigation = (payload) => {
 .kids-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--spacing-sm);
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 40px);
 }
 .kids-main {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
 }
 .kids-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--spacing-xs);
 }
 
 /* ================================ */
 /*         FOOTER SECTION           */
 /* ================================ */
 
-.kids-footer { margin-top: 2rem; }
+.kids-footer { margin-top: var(--spacing-sm); }
 
 .footer-content {
   background: #FFFFFFEE;
   border: 3px solid rgba(255, 143, 194, 0.3);
   border-radius: 25px;
-  padding: 2rem;
+  padding: var(--spacing-xs);
   text-align: center;
   box-shadow: 0 10px 30px rgba(255, 143, 194, 0.25);
 }
@@ -342,12 +349,12 @@ const handleReadingViewNavigation = (payload) => {
   background: #fff;
   border: 3px solid #FF6FAE;
   border-radius: 20px;
-  padding: 1rem;
+  padding: 0;
   font-size: 1rem;
   font-weight: 600;
   color: #2D3748;
   max-width: 400px;
-  margin: 1rem auto 0;
+  margin: 0 auto 0;
   position: relative;
   box-shadow: 0 5px 20px rgba(255, 143, 194, 0.25);
 }

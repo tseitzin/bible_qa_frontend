@@ -294,7 +294,7 @@ watch(
   border: 3px solid rgba(255, 107, 157, 0.3);
   box-shadow: 0 20px 40px rgba(255, 107, 157, 0.2);
   overflow: hidden;
-  margin-top: var(--spacing-xl);
+  margin-top: var(--spacing-xs);
   position: relative;
 }
 
@@ -313,8 +313,8 @@ watch(
 .answer-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-xl);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
   background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
   color: white;
   position: relative;
@@ -418,7 +418,7 @@ watch(
 }
 
 .answer-content {
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-md);
 }
 
 /* Streaming Status */
@@ -487,12 +487,12 @@ watch(
 .kids-loading-inline {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-xl);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
   background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
   border: 3px dashed rgba(72, 187, 120, 0.3);
   border-radius: 25px;
-  margin: var(--spacing-lg) 0;
+  margin: var(--spacing-sm) 0;
 }
 
 .kids-loading-inline .loading-character {
@@ -551,7 +551,7 @@ watch(
 
 /* Follow-up Section */
 .followup-section {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
   border-top: 3px dashed rgba(102, 126, 234, 0.3);
   background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
 }
@@ -653,7 +653,7 @@ watch(
 }
 
 .answer-text-wrapper {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-sm);
 }
 
 .answer-image-section {
@@ -777,10 +777,10 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: var(--spacing-xl);
+  padding-top: var(--spacing-sm);
   border-top: 3px dashed rgba(255, 107, 157, 0.3);
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .action-buttons {
@@ -855,7 +855,7 @@ watch(
 }
 
 .kids-feedback {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
   background: linear-gradient(135deg, rgba(248, 181, 0, 0.1) 0%, rgba(237, 137, 54, 0.1) 100%);
   border-top: 3px dashed rgba(248, 181, 0, 0.3);
 }
@@ -928,7 +928,7 @@ watch(
 }
 
 .encouragement {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
   background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
   border-top: 3px dashed rgba(72, 187, 120, 0.3);
   text-align: center;

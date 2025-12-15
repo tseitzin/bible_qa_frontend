@@ -179,22 +179,16 @@ const mascotMessages = [
 ]
 
 const placeholders = [
-  "How much does God love me? 💖",
   "Who is baby Jesus? 👶",
   "Why did God make animals? 🦁",
   "What is prayer? 🙏",
-  "Who is my guardian angel? 👼",
   "Why is the sky blue? 🌤️"
 ]
 
 const kidsSuggestions = [
-  "How much does God love me?",
   "Who is baby Jesus?",
   "Why did God make animals?",
   "What is prayer?",
-  "Who is my guardian angel?",
-  "What happens in heaven?",
-  "Why should I be kind?",
   "Who was Noah?"
 ]
 
@@ -320,7 +314,7 @@ const getFriendlyErrorMessage = (error) => {
     rgba(255, 255, 255, 0.9) 100%);
   backdrop-filter: blur(20px);
   border-radius: 30px;
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-lg);
   box-shadow: 0 20px 40px rgba(255, 107, 157, 0.2);
   border: 3px solid rgba(255, 107, 157, 0.3);
   position: relative;
@@ -347,15 +341,15 @@ const getFriendlyErrorMessage = (error) => {
 .form-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-2xl);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
   flex-wrap: wrap;
 }
 
 .mascot-section {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-sm);
   flex-shrink: 0;
 }
 
@@ -364,7 +358,7 @@ const getFriendlyErrorMessage = (error) => {
 }
 
 .mascot-character {
-  font-size: 4rem;
+  font-size: 2.5rem;
   animation: mascot-bounce 2s ease-in-out infinite;
   filter: drop-shadow(0 4px 8px rgba(255, 107, 157, 0.3));
 }
@@ -417,9 +411,9 @@ const getFriendlyErrorMessage = (error) => {
   background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
   border: 3px solid #ff6b9d;
   border-radius: 20px;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm);
   position: relative;
-  max-width: 250px;
+  max-width: 200px;
   box-shadow: 0 8px 25px rgba(255, 107, 157, 0.2);
 }
 
@@ -448,7 +442,7 @@ const getFriendlyErrorMessage = (error) => {
 }
 
 .bubble-content {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: #2d3748;
   font-weight: var(--font-weight-bold);
   text-align: center;
@@ -461,9 +455,9 @@ const getFriendlyErrorMessage = (error) => {
 }
 
 .kids-form-title {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-extrabold);
-  margin: 0 0 var(--spacing-sm) 0;
+  margin: 0 0 var(--spacing-xs) 0;
   background: linear-gradient(135deg, #ff6b9d 0%, #c44569 50%, #f8b500 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -477,7 +471,7 @@ const getFriendlyErrorMessage = (error) => {
 }
 
 .kids-form-subtitle {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: #2d3748;
   margin: 0;
   font-weight: var(--font-weight-bold);
@@ -486,13 +480,13 @@ const getFriendlyErrorMessage = (error) => {
 .kids-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-xs);
 }
 
 .question-input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 .kids-label {
@@ -521,9 +515,9 @@ const getFriendlyErrorMessage = (error) => {
 
 .kids-textarea {
   width: 100%;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   padding-right: 80px;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-md);
   font-family: 'Comic Sans MS', cursive, system-ui;
   line-height: var(--line-height-relaxed);
   border: 3px solid #ff6b9d;
@@ -695,9 +689,9 @@ const getFriendlyErrorMessage = (error) => {
 .kids-submit-button {
   flex: 1;
   min-width: 200px;
-  padding: var(--spacing-lg) var(--spacing-xl);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   border: none;
   border-radius: 25px;
   background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
@@ -777,8 +771,8 @@ const getFriendlyErrorMessage = (error) => {
 .kids-loading-section {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-xl);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
   background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
   border: 3px solid rgba(72, 187, 120, 0.3);
   border-radius: 25px;
@@ -814,8 +808,8 @@ const getFriendlyErrorMessage = (error) => {
 }
 
 .kids-suggestions {
-  margin-top: var(--spacing-2xl);
-  padding-top: var(--spacing-xl);
+  margin-top: var(--spacing-xs);
+  padding-top: 0;
   border-top: 3px dashed rgba(255, 107, 157, 0.3);
 }
 
@@ -827,7 +821,7 @@ const getFriendlyErrorMessage = (error) => {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   color: #2d3748;
-  margin: 0 0 var(--spacing-lg) 0;
+  margin: 0 0 0 0;
 }
 
 .title-emoji {
@@ -850,7 +844,7 @@ const getFriendlyErrorMessage = (error) => {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
   border: 2px solid rgba(255, 107, 157, 0.3);
   border-radius: 20px;
