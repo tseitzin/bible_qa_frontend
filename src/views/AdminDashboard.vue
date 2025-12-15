@@ -337,6 +337,7 @@
               <th>Username</th>
               <th>Status</th>
               <th>Location</th>
+              <th>IP Address</th>
               <th>Questions</th>
               <th>Saved Answers</th>
               <th>Last Activity</th>
@@ -362,9 +363,9 @@
                 <span v-if="user.country_code" class="location-cell" :title="getUserFullLocation(user)">
                   {{ getCountryFlag(user.country_code) }} {{ user.city || user.country_name || user.country_code }}
                 </span>
-                <span v-else-if="user.last_ip_address" class="text-muted" :title="user.last_ip_address">IP only</span>
                 <span v-else class="text-muted">—</span>
               </td>
+              <td>{{ user.last_ip_address || 'N/A' }}</td>
               <td>{{ user.question_count }}</td>
               <td>{{ user.saved_answer_count }}</td>
               <td>{{ formatDate(user.last_activity) || 'Never' }}</td>
