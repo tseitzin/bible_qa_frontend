@@ -101,6 +101,7 @@
               <th>Endpoint</th>
               <th>Method</th>
               <th>Status</th>
+              <th>Location</th>
               <th>IP</th>
             </tr>
           </thead>
@@ -118,6 +119,12 @@
                 <span class="status-badge" :class="getStatusClass(log.status_code)">
                   {{ log.status_code }}
                 </span>
+              </td>
+              <td>
+                <span v-if="log.country_code" class="location-cell" :title="getFullLocation(log)">
+                  {{ getCountryFlag(log.country_code) }} {{ log.city || log.country_name || log.country_code }}
+                </span>
+                <span v-else class="text-muted">—</span>
               </td>
               <td>{{ log.ip_address }}</td>
             </tr>
@@ -329,7 +336,7 @@
               <th>Email</th>
               <th>Username</th>
               <th>Status</th>
-              <th>IP Address</th>
+              <th>Location</th>
               <th>Questions</th>
               <th>Saved Answers</th>
               <th>Last Activity</th>
@@ -351,7 +358,13 @@
                 </span>
                 <span v-if="user.is_admin" class="admin-badge">Admin</span>
               </td>
-              <td>{{ user.last_ip_address || 'N/A' }}</td>
+              <td>
+                <span v-if="user.country_code" class="location-cell" :title="getUserFullLocation(user)">
+                  {{ getCountryFlag(user.country_code) }} {{ user.city || user.country_name || user.country_code }}
+                </span>
+                <span v-else-if="user.last_ip_address" class="text-muted" :title="user.last_ip_address">IP only</span>
+                <span v-else class="text-muted">—</span>
+              </td>
               <td>{{ user.question_count }}</td>
               <td>{{ user.saved_answer_count }}</td>
               <td>{{ formatDate(user.last_activity) || 'Never' }}</td>
@@ -824,6 +837,34 @@ const cleanupGuestUsers = async () => {
   } catch (e) {
     error.value = 'Failed to cleanup guest users: ' + e.message
   }
+}
+
+// Geolocation helper functions
+const getCountryFlag = (countryCode) => {
+  if (!countryCode || countryCode.length !== 2) return ''
+  // Convert country code to flag emoji (e.g., US -> 🇺🇸)
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt())
+  return String.fromCodePoint(...codePoints)
+}
+
+const getFullLocation = (log) => {
+  const parts = []
+  if (log.city) parts.push(log.city)
+  if (log.country_name) parts.push(log.country_name)
+  if (log.ip_address) parts.push(`IP: ${log.ip_address}`)
+  return parts.join(', ') || 'Unknown location'
+}
+
+const getUserFullLocation = (user) => {
+  const parts = []
+  if (user.city) parts.push(user.city)
+  if (user.region) parts.push(user.region)
+  if (user.country_name) parts.push(user.country_name)
+  if (user.last_ip_address) parts.push(`IP: ${user.last_ip_address}`)
+  return parts.join(', ') || 'Unknown location'
 }
 
 onMounted(() => {
@@ -1438,5 +1479,21 @@ tbody tr:hover {
 
 .btn-warning:hover {
   background: #e0a800;
+}
+
+/* Geolocation Styles */
+.location-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #2f4a7e;
+  cursor: help;
+}
+
+.text-muted {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.85rem;
 }
 </style>
