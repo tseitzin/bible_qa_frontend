@@ -672,9 +672,20 @@ input,
 select,
 textarea {
   border-radius: var(--border-radius-lg);
-  border: 1px solid rgba(47, 74, 126, 0.2);
+  border: 1px solid var(--border-soft, rgba(47, 74, 126, 0.2));
   padding: 0.65rem 0.85rem;
   font-size: 1rem;
+  background: var(--card-bg, #ffffff);
+  color: var(--text-main, #1f2a44);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #1f3b63);
+  box-shadow: 0 0 0 2px rgba(47, 74, 126, 0.18);
 }
 
 .btn-primary,

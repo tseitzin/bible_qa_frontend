@@ -130,29 +130,7 @@
         </div>
       </main>
       
-      <!-- Footer -->
-      <footer class="app-footer">
-        <div class="footer-content">
-          <div class="footer-main">
-            <div class="footer-disclaimer">
-              <div class="disclaimer-icon">
-                <svg viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <p>
-                <strong>Important:</strong> Always verify answers with Scripture and consult trusted biblical sources, 
-                pastors, or theologians for important spiritual matters.
-              </p>
-            </div>
-            
-            <p class="footer-description">
-              Powered by advanced AI technology to provide thoughtful, scripture-based answers 
-              to your biblical questions.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <FooterSimple />
     </div>
   </div>
 </template>
@@ -178,6 +156,7 @@ import { userReadingPlanService } from '../services/userReadingPlanService.js'
 import { useAuth } from '../composables/useAuth.js'
 import { PENDING_SAVED_ANSWER_KEY, RETURN_TO_ANSWER_STATE_KEY } from '../constants/storageKeys.js'
 import Navbar from '../components/Navbar.vue'
+import FooterSimple from '../components/FooterSimple.vue'
 
 const router = useRouter()
 const route = router.currentRoute
@@ -1338,85 +1317,6 @@ watch(() => router.currentRoute.value.query.tab, (newTab) => {
 .answer-section,
 .error-section {
   animation-delay: 0.2s;
-}
-
-.app-footer {
-  margin-top: var(--spacing-sm);
-  padding-top: var(--spacing-sm);
-}
-
-.footer-content {
-  background: var(--footer-bg, linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 238, 0.94)));
-  backdrop-filter: blur(20px);
-  border-radius: var(--border-radius-xl);
-  padding: var(--spacing-lg);
-  box-shadow: 0 24px 48px rgba(31, 50, 86, 0.18);
-  border: 1px solid var(--border-soft);
-  transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-.footer-main {
-  text-align: center;
-  margin-bottom: var(--spacing-md);
-}
-
-.footer-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  color: var(--color-primary);
-  font-weight: var(--font-weight-semibold);
-}
-
-.footer-logo svg {
-  width: 24px;
-  height: 24px;
-}
-
-.footer-description {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  margin: 0;
-  max-width: 500px;
-  margin: 0 auto;
-  font-weight: var(--font-weight-semibold);
-}
-
-.footer-disclaimer {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  background: rgba(47, 74, 126, 0.08);
-  border: 1px solid rgba(47, 74, 126, 0.15);
-  border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-sm);
-}
-
-.disclaimer-icon {
-  width: 20px;
-  height: 20px;
-  color: var(--color-primary);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.disclaimer-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.footer-disclaimer p {
-  margin: 0;
-  color: var(--color-primary-dark);
-  line-height: var(--line-height-normal);
-  font-weight: var(--font-weight-semibold);
-}
-
-.footer-disclaimer strong {
-  color: var(--color-primary);
 }
 
 /* Responsive Design */

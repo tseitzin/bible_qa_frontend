@@ -85,11 +85,14 @@
         </div>
       </section>
     </main>
+
+    <FooterSimple />
   </div>
 </template>
 
 <script setup>
 import Navbar from '../components/Navbar.vue'
+import FooterSimple from '../components/FooterSimple.vue'
 </script>
 
 <style scoped>
@@ -141,7 +144,7 @@ import Navbar from '../components/Navbar.vue'
 
 .about-content {
   max-width: 1100px;
-  margin: 0 auto 4rem;
+  margin: 0 auto 1.5rem;
   padding: 0 1rem;
   display: flex;
   flex-direction: column;

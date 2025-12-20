@@ -9,6 +9,9 @@ import ReadingPlanView from '../views/ReadingPlanView.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import About from '../views/About.vue'
 import AIScripture from '../views/AIScripture.vue'
+import Privacy from '../views/Privacy.vue'
+import Terms from '../views/Terms.vue'
+import Contact from '../views/Contact.vue'
 import authService from '../services/authService'
 
 const routes = [
@@ -54,6 +57,33 @@ const routes = [
     component: AIScripture,
     meta: {
       title: 'AI & Scripture',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/privacy',
+    name: 'privacy',
+    component: Privacy,
+    meta: {
+      title: 'Privacy Policy',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/terms',
+    name: 'terms',
+    component: Terms,
+    meta: {
+      title: 'Terms of Use',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/contact',
+    name: 'contact',
+    component: Contact,
+    meta: {
+      title: 'Contact',
       requiresAuth: false
     }
   },

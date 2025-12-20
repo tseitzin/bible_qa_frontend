@@ -102,6 +102,8 @@
           </div>
         </section>
       </main>
+
+      <FooterSimple />
     </div>
   </div>
 </template>
@@ -110,6 +112,7 @@
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import Navbar from '../components/Navbar.vue'
+import FooterSimple from '../components/FooterSimple.vue'
 
 const router = useRouter()
 const { currentUser } = useAuth()
@@ -476,7 +479,7 @@ const goToAdults = () => {
 }
 
 .about-highlight {
-  background: var(--header-bg, linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.9)));
+  background: var(--card-bg, rgba(255, 255, 255, 0.95));
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-sm);
   border: 1px solid var(--border-soft);
@@ -492,15 +495,15 @@ const goToAdults = () => {
   padding: var(--spacing-sm);
   border-radius: var(--border-radius-xl);
   transition: transform 0.12s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-  border: 1px solid rgba(47, 74, 126, 0.08);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-soft, rgba(47, 74, 126, 0.12));
+  background: var(--card-bg, rgba(255, 255, 255, 0.92));
 }
 
 .about-highlight-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 16px 32px rgba(31, 50, 86, 0.16);
-  border-color: rgba(47, 74, 126, 0.18);
-  background: rgba(255, 255, 255, 0.96);
+  border-color: var(--color-primary, #2f4a7e);
+  background: var(--card-bg, rgba(255, 255, 255, 0.98));
 }
 
 .about-highlight-content {
@@ -525,7 +528,7 @@ const goToAdults = () => {
 
 .about-highlight-subtext {
   margin: 0;
-  color: #172435;
+  color: var(--text-main);
   line-height: var(--line-height-tight);
   font-size: var(--font-size-sm);
 }
