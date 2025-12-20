@@ -31,6 +31,24 @@
       </header>
 
       <main class="home-main">
+        <section class="about-highlight animate-fade-in">
+          <router-link to="/about" class="about-highlight-card">
+            <div class="about-highlight-content">
+              <h3>What is Word of Life Answers?</h3>
+              <p class="about-highlight-lede">
+                Word of Life Answers was created to help people explore Scripture thoughtfully, ask meaningful questions,
+                and grow in their understanding of God’s Word.
+              </p>
+              <p class="about-highlight-subtext">
+                The Bible is rich, deep, and sometimes challenging to understand. This site is a study companion to support
+                reflection, learning, and curiosity about Scripture.
+              </p>
+              <span class="about-highlight-kjv">All Scripture comes from the King James Version (KJV).</span>
+              <span class="about-highlight-link">Read the About page →</span>
+            </div>
+          </router-link>
+        </section>
+
         <section class="home-quick-actions animate-fade-in">
           <!-- <h2 class="section-title">Quick Actions</h2> -->
           <div class="action-grid">
@@ -457,6 +475,75 @@ const goToAdults = () => {
   gap: var(--spacing-md);
 }
 
+.about-highlight {
+  background: var(--header-bg, linear-gradient(150deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 238, 0.9)));
+  border-radius: var(--border-radius-2xl);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 20px 40px rgba(31, 50, 86, 0.16);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.about-highlight-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-xl);
+  transition: transform 0.12s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  border: 1px solid rgba(47, 74, 126, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.about-highlight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(31, 50, 86, 0.16);
+  border-color: rgba(47, 74, 126, 0.18);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.about-highlight-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  text-align: center;
+  color: var(--text-main);
+}
+
+.about-highlight h3 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  color: var(--brand-primary);
+}
+
+.about-highlight-lede {
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+}
+
+.about-highlight-subtext {
+  margin: 0;
+  color: #172435;
+  line-height: var(--line-height-tight);
+  font-size: var(--font-size-sm);
+}
+
+.about-highlight-kjv {
+  margin: 0;
+  display: inline-block;
+  color: var(--color-primary, #1f3b63);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}
+
+.about-highlight-link {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary, #1f3b63);
+  margin-top: var(--spacing-2xs);
+}
+
 .section-title {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
@@ -469,6 +556,8 @@ const goToAdults = () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--spacing-md);
+  align-items: stretch;
+  justify-items: stretch;
 }
 
 .action-card {
@@ -506,7 +595,7 @@ const goToAdults = () => {
   justify-content: center;
   font-size: 1.75rem;
   color: var(--app-primary);
-  background: rgba(32, 62, 117, 0.483);
+  background: rgba(32, 62, 117, 0.321);
   box-shadow: 0 12px 24px rgba(31, 50, 86, 0.1);
 }
 
@@ -634,6 +723,10 @@ const goToAdults = () => {
 
   .home-main {
     gap: var(--spacing-md);
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
   }
 
   .action-grid,

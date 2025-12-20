@@ -17,6 +17,11 @@
           :class="{ 'active': $route.path === '/' && !$route.path.includes('/adults') && !$route.path.includes('/kids') }"
         >Home</router-link>
         <router-link
+          to="/about"
+          class="navbar-simple-link"
+          :class="{ 'active': $route.path === '/about' }"
+        >About</router-link>
+        <router-link
           to="/adults"
           class="navbar-simple-link"
           :class="{ 'active': computedActiveTab === 'ask' }"
@@ -51,7 +56,7 @@
           :aria-label="isDevotion ? 'Switch to Light Mode' : 'Switch to Devotion Mode'"
         >
           <span class="theme-toggle-icon">{{ isDevotion ? '☀️' : '🌙' }}</span>
-          <span class="theme-toggle-label">{{ isDevotion ? 'Focus/Light Mode' : 'Devotion/Dark mode' }}</span>
+          <span class="theme-toggle-label">{{ isDevotion ? 'Focus/Light Mode' : 'Devotion/Dark Mode' }}</span>
         </button>
         <button
           v-if="currentUser"
@@ -185,14 +190,15 @@ html[data-theme="devotion"] .navbar-simple-logo {
   text-decoration: none;
   color: var(--text-main, #333);
   font-weight: 500;
-  font-size: 1.1rem;
-  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.7rem;
   border-radius: 4px;
   transition: background 0.2s, color 0.2s;
 }
 .navbar-simple-link:hover {
   background: var(--color-highlight, rgba(0, 0, 0, 0.06));
   color: var(--brand-primary, #007bff);
+  border: 1px solid #0056b3;
 }
 .navbar-simple-link.active {
   background: var(--color-highlight, rgba(0, 0, 0, 0.06));

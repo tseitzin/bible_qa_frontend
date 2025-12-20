@@ -7,6 +7,8 @@ import Home from '../views/Home.vue'
 import ReadingView from '../views/ReadingView.vue'
 import ReadingPlanView from '../views/ReadingPlanView.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
+import About from '../views/About.vue'
+import AIScripture from '../views/AIScripture.vue'
 import authService from '../services/authService'
 
 const routes = [
@@ -34,6 +36,24 @@ const routes = [
     component: Home,
     meta: {
       title: 'Home',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: About,
+    meta: {
+      title: 'About Word of Life Answers',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/ai-scripture',
+    name: 'ai-scripture',
+    component: AIScripture,
+    meta: {
+      title: 'AI & Scripture',
       requiresAuth: false
     }
   },
