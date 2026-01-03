@@ -10,42 +10,58 @@
          </div>
          </div>
       </router-link>
-      <div class="navbar-simple-links">
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-toggle" @click="mobileMenuOpen = !mobileMenuOpen" :aria-label="mobileMenuOpen ? 'Close menu' : 'Open menu'">
+        <span class="hamburger-icon" :class="{ 'open': mobileMenuOpen }">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+      
+      <div class="navbar-simple-links" :class="{ 'mobile-open': mobileMenuOpen }">
         <router-link
           to="/"
           class="navbar-simple-link"
           :class="{ 'active': $route.path === '/' && !$route.path.includes('/adults') && !$route.path.includes('/kids') }"
+          @click="mobileMenuOpen = false"
         >Home</router-link>
         <router-link
           to="/about"
           class="navbar-simple-link"
           :class="{ 'active': $route.path === '/about' }"
+          @click="mobileMenuOpen = false"
         >About</router-link>
         <router-link
           to="/adults"
           class="navbar-simple-link"
           :class="{ 'active': computedActiveTab === 'ask' }"
+          @click="mobileMenuOpen = false"
         >Ask Questions</router-link>
         <router-link
           to="/adults?tab=saved"
           class="navbar-simple-link"
           :class="{ 'active': computedActiveTab === 'saved' }"
+          @click="mobileMenuOpen = false"
         >Saved Answers</router-link>
         <router-link
           to="/adults?tab=study"
           class="navbar-simple-link"
           :class="{ 'active': computedActiveTab === 'study' }"
+          @click="mobileMenuOpen = false"
         >Bible Study</router-link>
         <router-link
           to="/kids"
           class="navbar-simple-link"
           :class="{ 'active': $route.path === '/kids' }"
+          @click="mobileMenuOpen = false"
         >Kids</router-link>
         <router-link
           v-if="currentUser?.is_admin"
           to="/admin/dashboard"
           class="navbar-simple-link"
           :class="{ 'active': $route.path.includes('/admin') }"
+          @click="mobileMenuOpen = false"
         >Admin</router-link>
       </div>
       <div class="navbar-simple-auth">
@@ -91,6 +107,8 @@ const router = useRouter()
 const route = useRoute()
 const { currentUser, logout } = useAuth()
 const { isDevotion, toggleTheme } = useTheme()
+
+const mobileMenuOpen = ref(false)
 
 const computedActiveTab = computed(() => {
   if (props.activeTab) {
@@ -270,5 +288,136 @@ html[data-theme="devotion"] .navbar-simple-logo {
 
 .theme-toggle:active {
   transform: scale(0.97);
+}
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+  z-index: 51;
+}
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 24px;
+  height: 20px;
+}
+
+.hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: var(--brand-primary);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-icon.open span:nth-child(1) {
+  transform: rotate(45deg) translateY(10px);
+}
+
+.hamburger-icon.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-icon.open span:nth-child(3) {
+  transform: rotate(-45deg) translateY(-10px);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 1280px) {
+  .navbar-simple .mobile-menu-toggle {
+    display: block;
+  }
+  
+  .navbar-simple-row .navbar-brand-text {
+    display: none;
+  }
+  
+  .navbar-simple-row {
+    flex-wrap: wrap;
+  }
+  
+  .navbar-simple-logo {
+    height: 48px;
+  }
+  
+  .navbar-simple-row .navbar-simple-links {
+    display: none !important;
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    background: var(--nav-bg, rgba(255, 255, 255, 0.98));
+    border-bottom: 1px solid var(--border-soft);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin: 0;
+    padding: 1rem 0;
+    backdrop-filter: blur(12px);
+    z-index: 49;
+  }
+  
+  .navbar-simple-row .navbar-simple-links.mobile-open {
+    display: flex !important;
+  }
+  
+  .navbar-simple-link {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 0;
+    border-bottom: 1px solid var(--border-soft, rgba(0, 0, 0, 0.05));
+  }
+  
+  .navbar-simple-link:last-child {
+    border-bottom: none;
+  }
+  
+  .navbar-simple-auth {
+    margin-left: 0;
+    gap: 0.5rem;
+  }
+  
+  .theme-toggle-label {
+    display: none;
+  }
+  
+  .theme-toggle {
+    padding: 0.4rem 0.5rem;
+  }
+  
+  .navbar-simple-auth-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-simple-logo {
+    height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-simple-row {
+    padding: 0 0.75rem;
+  }
+  
+  .navbar-simple-logo {
+    height: 40px;
+  }
+  
+  .navbar-simple-auth-btn {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.85rem;
+  }
 }
 </style>

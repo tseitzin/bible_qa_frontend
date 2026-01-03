@@ -54,7 +54,8 @@
           <div class="action-grid">
 
             <router-link to="/adults" class="action-card">
-              <div class="action-icon">❔
+              <div class="action-header">
+                <div class="action-icon">❔</div>
                 <h3>Ask Biblical Questions</h3>
               </div>
               <p>Open the Questions section to submit detailed Bible questions, explore related topics, and review recently asked questions.</p>
@@ -67,14 +68,16 @@
             </router-link> -->
 
             <button type="button" class="action-card action-card--button" @click="showStudyHelps">
-              <div class="action-icon">📖
+              <div class="action-header">
+                <div class="action-icon">📖</div>
                 <h3>Bible Study Aids</h3>
               </div>
               <p>Enjoy guided Bible reading plans, explore Scripture at your own pace, and discover biblical topics supported by verse references.</p>
             </button>
 
             <button type="button" class="action-card action-card--button" @click="showSavedAnswers">
-              <div class="action-icon">💾
+              <div class="action-header">
+                <div class="action-icon">💾</div>
                 <h3>Saved Answers</h3>
               </div>
               <p>Review your saved answers and choose to copy them for emails or documents, share them through text or email, or export them as a downloadable PDF.</p>
@@ -589,11 +592,19 @@ const goToAdults = () => {
   cursor: pointer;
 }
 
+.action-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
 .action-icon {
-  width: 240px;
+  width: 48px;
   height: 48px;
+  min-width: 48px;
   border-radius: var(--border-radius-xl);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.75rem;
@@ -602,15 +613,16 @@ const goToAdults = () => {
   box-shadow: 0 12px 24px rgba(31, 50, 86, 0.1);
 }
 
-.action-icon:hover {
+.action-card:hover .action-icon {
   background: rgba(32, 62, 117, 0.583);
 }
 
 .action-card h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  margin: var(--spacing-sm) 0 var(--spacing-xs) var(--spacing-sm);
+  margin: 0;
   color: var(--brand-primary);
+  flex: 1;
 }
 
 .action-card p {
