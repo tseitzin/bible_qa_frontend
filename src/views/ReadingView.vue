@@ -533,16 +533,16 @@ onMounted(async () => {
 .reference-pill {
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  background: rgba(47, 74, 126, 0.12);
-  color: var(--color-primary-dark);
+  background: var(--color-highlight);
+  color: var(--brand-primary);
   font-weight: var(--font-weight-semibold);
 }
 
 .reading-card {
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--card-bg, rgba(255, 255, 255, 0.96));
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-xl);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--border-soft);
   box-shadow: 0 30px 60px rgba(31, 50, 86, 0.16);
 }
 
@@ -565,7 +565,7 @@ onMounted(async () => {
 .card-header h1,
 .card-header h2 {
   margin: 0.2rem 0 0 0;
-  color: var(--color-primary-dark);
+  color: var(--text-main);
 }
 
 .card-actions {
@@ -577,8 +577,8 @@ onMounted(async () => {
   border: none;
   border-radius: var(--border-radius-lg);
   padding: 0.65rem 1.25rem;
-  background: rgba(47, 74, 126, 0.12);
-  color: var(--color-primary-dark);
+  background: var(--color-highlight);
+  color: var(--brand-primary);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
@@ -600,7 +600,7 @@ onMounted(async () => {
 .chapter-text p {
   margin: 0 0 1rem 0;
   line-height: 1.65;
-  color: var(--color-primary-dark);
+  color: var(--text-main);
 }
 
 .passage-text p:last-child,
@@ -645,7 +645,7 @@ onMounted(async () => {
 
 .chapter-nav__status {
   font-weight: var(--font-weight-semibold);
-  color: var(--color-primary-dark);
+  color: var(--text-main);
 }
 
 .error-text {

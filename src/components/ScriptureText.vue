@@ -1020,12 +1020,12 @@ onBeforeUnmount(() => {
   z-index: 1000;
   max-width: 560px;
   min-width: 360px;
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-soft);
   border-radius: var(--border-radius-lg, 12px);
   padding: var(--spacing-md, 0.75rem);
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
-  color: #0f172a;
+  color: var(--text-main);
   pointer-events: auto;
 }
 
@@ -1033,7 +1033,7 @@ onBeforeUnmount(() => {
   display: block;
   margin-bottom: var(--spacing-xs, 0.5rem);
   font-weight: var(--font-weight-bold, 600);
-  color: var(--color-primary, #2563eb);
+  color: var(--brand-primary);
 }
 
 .verse-popup__status,
@@ -1044,11 +1044,11 @@ onBeforeUnmount(() => {
 }
 
 .verse-popup__status {
-  color: #4b5563;
+  color: var(--text-muted);
 }
 
 .verse-popup__text {
-  color: #1a202c;
+  color: var(--text-main);
   font-weight: var(--font-weight-medium, 500);
   white-space: pre-line;
 }
@@ -1056,14 +1056,14 @@ onBeforeUnmount(() => {
 .verse-popup__notice {
   margin: 0 0 var(--spacing-sm, 0.5rem) 0;
   font-size: var(--font-size-xs, 0.75rem);
-  color: #6b7280;
+  color: var(--text-muted);
   line-height: var(--line-height-tight, 1.3);
 }
 
 .verse-popup__link {
   display: inline-block;
   font-size: var(--font-size-xs, 0.75rem);
-  color: var(--color-primary, #2563eb);
+  color: var(--brand-primary);
   text-decoration: none;
   font-weight: var(--font-weight-semibold, 600);
 }
