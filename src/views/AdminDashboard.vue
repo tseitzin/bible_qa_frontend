@@ -37,6 +37,12 @@
       >
         Users
       </button>
+      <button 
+        :class="{ active: activeTab === 'analytics' }" 
+        @click="switchToAnalyticsTab"
+      >
+        Page Analytics
+      </button>
     </div>
 
     <!-- Error Display -->
@@ -474,6 +480,180 @@
       </div>
     </div>
 
+    <!-- Page Analytics Tab -->
+    <div v-if="activeTab === 'analytics'" class="tab-content">
+      <h2>Page Analytics</h2>
+      
+      <!-- Analytics Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Page Views</h3>
+          <div class="stat-value">{{ analyticsStats.total_page_views || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Unique Visitors</h3>
+          <div class="stat-value">{{ analyticsStats.unique_users || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Unique Sessions</h3>
+          <div class="stat-value">{{ analyticsStats.unique_sessions || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>Avg Duration</h3>
+          <div class="stat-value">{{ Math.round(analyticsStats.avg_duration_seconds || 0) }}s</div>
+        </div>
+        <div class="stat-card">
+          <h3>Avg Scroll Depth</h3>
+          <div class="stat-value">{{ Math.round(analyticsStats.avg_scroll_depth_percent || 0) }}%</div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Clicks</h3>
+          <div class="stat-value">{{ analyticsStats.total_clicks || 0 }}</div>
+        </div>
+      </div>
+
+      <!-- Page Path Statistics -->
+      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Top Pages by Views</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Page Path</th>
+              <th>Views</th>
+              <th>Unique Users</th>
+              <th>Avg Duration</th>
+              <th>Avg Scroll %</th>
+              <th>Total Clicks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="page in pagePathStats" :key="page.page_path">
+              <td class="endpoint-cell">{{ page.page_path }}</td>
+              <td>{{ page.view_count }}</td>
+              <td>{{ page.unique_users }}</td>
+              <td>{{ Math.round(page.avg_duration_seconds || 0) }}s</td>
+              <td>{{ Math.round(page.avg_scroll_depth_percent || 0) }}%</td>
+              <td>{{ page.total_clicks || 0 }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="pagePathStats.length === 0" class="empty-state">
+          No page analytics data available
+        </div>
+      </div>
+
+      <!-- Click Statistics -->
+      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Click Statistics by Element Type</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Element Type</th>
+              <th>Click Count</th>
+              <th>Unique Users</th>
+              <th>Pages</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="stat in clickStats" :key="stat.element_type">
+              <td>{{ stat.element_type }}</td>
+              <td>{{ stat.click_count }}</td>
+              <td>{{ stat.unique_users }}</td>
+              <td>{{ stat.pages_affected }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="clickStats.length === 0" class="empty-state">
+          No click data available yet
+        </div>
+      </div>
+
+      <!-- Detailed Click Events -->
+      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Recent Click Events (Detailed)</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Page Path</th>
+              <th>Element Type</th>
+              <th>Element Text</th>
+              <th>Element ID</th>
+              <th>User ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="click in clickEvents" :key="click.id">
+              <td>{{ formatDate(click.created_at) }}</td>
+              <td class="endpoint-cell">{{ click.page_path }}</td>
+              <td><span class="element-type-badge">{{ click.element_type }}</span></td>
+              <td class="click-text-cell" :title="click.element_text">{{ truncate(click.element_text, 40) }}</td>
+              <td class="code-cell">{{ click.element_id || '—' }}</td>
+              <td>{{ click.user_id || 'Guest' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="clickEvents.length === 0" class="empty-state">
+          No click events logged yet
+        </div>
+      </div>
+      <div v-if="clickEvents.length > 0" class="pagination">
+        <button @click="previousClickEventsPage" :disabled="clickEventsCurrentPage === 1" class="btn-secondary">
+          Previous
+        </button>
+        <span class="page-info">Page {{ clickEventsCurrentPage }}</span>
+        <button @click="nextClickEventsPage" :disabled="clickEvents.length < clickEventsPageSize" class="btn-secondary">
+          Next
+        </button>
+      </div>
+
+      <!-- Recent Page Views -->
+      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Recent Page Views</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User ID</th>
+              <th>Page Path</th>
+              <th>Duration</th>
+              <th>Scroll %</th>
+              <th>Clicks</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="view in pageViews" :key="view.id">
+              <td>{{ formatDate(view.created_at) }}</td>
+              <td>{{ view.user_id || 'Guest' }}</td>
+              <td class="endpoint-cell">{{ view.page_path }}</td>
+              <td>{{ view.visit_duration_seconds ? view.visit_duration_seconds + 's' : '—' }}</td>
+              <td>{{ view.max_scroll_depth_percent ? view.max_scroll_depth_percent + '%' : '—' }}</td>
+              <td>{{ view.clicks_count || 0 }}</td>
+              <td>
+                <span v-if="view.country_code" class="location-cell" :title="getAnalyticsLocation(view)">
+                  {{ getCountryFlag(view.country_code) }} {{ view.city || view.country_name || view.country_code }}
+                </span>
+                <span v-else class="text-muted">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="pageViews.length === 0" class="empty-state">
+          No page views logged yet
+        </div>
+      </div>
+      <div v-if="pageViews.length > 0" class="pagination">
+        <button @click="previousPageViewsPage" :disabled="pageViewsCurrentPage === 1" class="btn-secondary">
+          Previous
+        </button>
+        <span class="page-info">Page {{ pageViewsCurrentPage }}</span>
+        <button @click="nextPageViewsPage" :disabled="pageViews.length < pageViewsPageSize" class="btn-secondary">
+          Next
+        </button>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -505,6 +685,16 @@ const filters = ref({
   status_code: '',
   user_id: null,
 })
+// Page analytics state
+const analyticsStats = ref({})
+const pageViews = ref([])
+const pagePathStats = ref([])
+const clickStats = ref([])
+const clickEvents = ref([])
+const pageViewsCurrentPage = ref(1)
+const pageViewsPageSize = ref(50)
+const clickEventsCurrentPage = ref(1)
+const clickEventsPageSize = ref(50)
 
 // Debounce timer
 let debounceTimer = null
@@ -866,6 +1056,104 @@ const getUserFullLocation = (user) => {
   if (user.country_name) parts.push(user.country_name)
   if (user.last_ip_address) parts.push(`IP: ${user.last_ip_address}`)
   return parts.join(', ') || 'Unknown location'
+}
+
+const getAnalyticsLocation = (view) => {
+  const parts = []
+  if (view.city) parts.push(view.city)
+  if (view.country_name) parts.push(view.country_name)
+  if (view.ip_address) parts.push(`IP: ${view.ip_address}`)
+  return parts.join(', ') || 'Unknown location'
+}
+
+// Page Analytics Functions
+const loadAnalyticsStats = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getPageAnalyticsStats()
+    analyticsStats.value = data
+  } catch (e) {
+    error.value = 'Failed to load analytics stats: ' + e.message
+  }
+}
+
+const loadPageViews = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getPageViews({ 
+      limit: pageViewsPageSize.value,
+      offset: (pageViewsCurrentPage.value - 1) * pageViewsPageSize.value
+    })
+    pageViews.value = data.page_views || []
+  } catch (e) {
+    error.value = 'Failed to load page views: ' + e.message
+  }
+}
+
+const loadPagePathStats = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getPagePathStats({ limit: 20 })
+    pagePathStats.value = data.page_stats || []
+  } catch (e) {
+    error.value = 'Failed to load page path stats: ' + e.message
+  }
+}
+
+const loadClickStats = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getClickStats()
+    clickStats.value = data.click_stats || []
+  } catch (e) {
+    error.value = 'Failed to load click stats: ' + e.message
+  }
+}
+
+const loadClickEvents = async () => {
+  try {
+    error.value = ''
+    const data = await bibleApi.getClickEvents({ 
+      limit: clickEventsPageSize.value,
+      offset: (clickEventsCurrentPage.value - 1) * clickEventsPageSize.value
+    })
+    clickEvents.value = data.clicks || []
+  } catch (e) {
+    error.value = 'Failed to load click events: ' + e.message
+  }
+}
+
+const switchToAnalyticsTab = () => {
+  activeTab.value = 'analytics'
+  loadAnalyticsStats()
+  loadPageViews()
+  loadPagePathStats()
+  loadClickStats()
+  loadClickEvents()
+}
+
+const previousPageViewsPage = () => {
+  if (pageViewsCurrentPage.value > 1) {
+    pageViewsCurrentPage.value--
+    loadPageViews()
+  }
+}
+
+const nextPageViewsPage = () => {
+  pageViewsCurrentPage.value++
+  loadPageViews()
+}
+
+const previousClickEventsPage = () => {
+  if (clickEventsCurrentPage.value > 1) {
+    clickEventsCurrentPage.value--
+    loadClickEvents()
+  }
+}
+
+const nextClickEventsPage = () => {
+  clickEventsCurrentPage.value++
+  loadClickEvents()
 }
 
 onMounted(() => {
@@ -1496,5 +1784,33 @@ tbody tr:hover {
   color: #6c757d;
   font-style: italic;
   font-size: 0.85rem;
+}
+
+/* Analytics-specific styles */
+.element-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.click-text-cell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-cell {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.location-cell {
+  cursor: help;
 }
 </style>

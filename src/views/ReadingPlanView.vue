@@ -737,7 +737,7 @@ onMounted(async () => {
 .reading-plan-view {
   min-height: 100vh;
   padding: var(--spacing-lg) var(--spacing-lg);
-  background: linear-gradient(160deg, rgba(247, 248, 252, 0.9), rgba(226, 234, 247, 0.9));
+  background: var(--bg-main);
 }
 
 .btn-primary,
@@ -785,7 +785,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  color: black;
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -796,11 +796,11 @@ onMounted(async () => {
 }
 
 .plan-hero {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-lg);
-  box-shadow: 0 18px 36px rgba(31, 50, 86, 0.15);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -812,7 +812,7 @@ onMounted(async () => {
 
 .plan-hero__content h1 {
   margin: 0;
-  color: black;
+  color: var(--color-text-primary);
   font-size: 1.75rem;
   line-height: 1.2;
 }
@@ -820,7 +820,7 @@ onMounted(async () => {
 .plan-hero__content p {
   margin-top: var(--spacing-xs);
   max-width: 600px;
-  color: black;
+  color: var(--color-text-primary);
   font-size: 0.95rem;
 }
 
@@ -844,7 +844,7 @@ onMounted(async () => {
 }
 
 .plan-status {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-card);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-xl);
   text-align: center;
@@ -852,11 +852,11 @@ onMounted(async () => {
 }
 
 .plan-controls {
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--bg-card);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-lg);
-  box-shadow: 0 20px 40px rgba(31, 50, 86, 0.12);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
   margin-bottom: var(--spacing-sm);
   display: grid;
   gap: var(--spacing-md);
@@ -888,26 +888,27 @@ onMounted(async () => {
   flex-direction: column;
   gap: 0.35rem;
   font-weight: var(--font-weight-semibold);
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .control-form input {
   border-radius: var(--border-radius-lg);
-  border: 1px solid rgba(47, 74, 126, 0.2);
+  border: 1px solid var(--color-border);
   padding: 0.65rem 0.85rem;
-  color: black;
+  color: var(--color-text-primary);
+  background: var(--input-bg);
   width: 240px;
   max-width: 100%;
 }
 
 .control-hint {
   margin: 0;
-  color: black;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
 .control-hint span {
-  color: black;
+  color: var(--color-text-secondary);
 }
 
 .link-button--inline {
@@ -926,16 +927,16 @@ onMounted(async () => {
 }
 
 .plan-schedule {
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--bg-card);
   border-radius: var(--border-radius-2xl);
   padding: var(--spacing-xl);
-  box-shadow: 0 30px 60px rgba(31, 50, 86, 0.18);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
 }
 
 .plan-schedule__header {
   margin-bottom: var(--spacing-md);
-  color: black;
+  color: var(--color-text-primary);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -944,11 +945,11 @@ onMounted(async () => {
 
 .plan-schedule__header h2 {
   margin: 0;
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .plan-schedule__header p {
-  color: black;
+  color: var(--color-text-secondary);
 }
 
 .plan-pill {
@@ -956,8 +957,8 @@ onMounted(async () => {
   align-items: center;
   padding: 0.2rem 0.8rem;
   border-radius: 999px;
-  background: rgba(47, 74, 126, 0.12);
-  color: black;
+  background: var(--color-background-muted);
+  color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
   font-size: 0.8rem;
   margin-bottom: var(--spacing-sm);
@@ -965,7 +966,7 @@ onMounted(async () => {
 
 .plan-pill h1 {
   margin: 0;
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .schedule-list {
@@ -982,21 +983,21 @@ onMounted(async () => {
   justify-content: space-between;
   padding: var(--spacing-md);
   border-radius: var(--border-radius-lg);
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  background: var(--card-bg-alt, var(--color-background-alt));
+  border: 1px solid var(--color-border);
   transition: background 0.2s ease;
 }
 
 .schedule-completed {
-  background: #e6fbe6 !important;
+  background: var(--color-success-light, #e6fbe6) !important;
 }
 
 .tracking-panel p {
-  color: black !important;
+  color: var(--color-text-primary) !important;
 }
 
 .tracking-cta-text {
-  color: black !important;
+  color: var(--color-text-primary) !important;
   font-size: 0.95rem;
   font-weight: var(--font-weight-semibold);
 }
@@ -1010,7 +1011,7 @@ onMounted(async () => {
 
 .schedule-details {
   flex: 1;
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .schedule-meta {
@@ -1035,17 +1036,17 @@ onMounted(async () => {
   margin-top: var(--spacing-xs);
   margin-bottom: var(--spacing-xs);
   font-size: 0.9rem;
-  color: black;
+  color: var(--color-text-secondary);
 }
 
 
 .tracking-panel {
   padding: var(--spacing-md);
   border-radius: var(--border-radius-xl);
-  background: rgba(47, 74, 126, 0.05);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  background: var(--color-background-muted);
+  border: 1px solid var(--color-border);
   display: flex;
-  color: black;
+  color: var(--color-text-primary);
   flex-direction: column;
   gap: var(--spacing-sm);
 }
@@ -1065,14 +1066,14 @@ onMounted(async () => {
 
 .tracking-panel__header h3 {
   margin: 0;
-  color: black;
+  color: var(--color-text-primary);
   font-size: 1rem;
   line-height: 1.2;
 }
 
 .tracking-panel__header p {
   margin: 0;
-  color: black;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
   max-width: 320px;
 }
@@ -1087,14 +1088,14 @@ onMounted(async () => {
 
 .tracking-subtitle {
   margin: 0;
-  color: black;
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
 }
 
 .tracking-subtitle p {
   margin: 0;
-  color: black;
-} 
+  color: var(--color-text-secondary);
+}
 
 .tracking-panel__compact-body {
   display: flex;
@@ -1106,17 +1107,17 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-md);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card-bg-alt, var(--color-background-alt));
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-xs) var(--spacing-md);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--color-border);
 }
 
 .tracking-summary-row > div {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .tracking-summary-row strong {
@@ -1127,7 +1128,7 @@ onMounted(async () => {
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
-  color: black;
+  color: var(--color-text-muted);
 }
 
 .tracking-compact-grid {
@@ -1137,12 +1138,12 @@ onMounted(async () => {
 }
 
 .tracking-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--card-bg-alt, var(--color-background-alt));
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid rgba(47, 74, 126, 0.12);
+  border: 1px solid var(--color-border);
   display: flex;
-  color: black;
+  color: var(--color-text-primary);
   flex-direction: column;
   gap: var(--spacing-xs);
 }
@@ -1180,8 +1181,10 @@ onMounted(async () => {
 .tracking-mini-fields input,
 .tracking-card select {
   border-radius: var(--border-radius-lg);
-  border: 1px solid rgba(47, 74, 126, 0.2);
+  border: 1px solid var(--color-border);
   padding: 0.55rem 0.7rem;
+  background: var(--input-bg);
+  color: var(--color-text-primary);
 }
 
 .tracking-card button {
@@ -1197,12 +1200,12 @@ onMounted(async () => {
 .tracking-panel__header + .tracking-panel__compact-body,
 .tracking-panel__header + .tracking-status {
   margin-top: var(--spacing-xs);
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .tracking-status,
 .tracking-empty {
-  color: black;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 

@@ -347,13 +347,13 @@ const togglePasswordVisibility = () => {
 h2 {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--login-primary);
+  color: #1a202c;
   margin: 0 0 var(--spacing-xs) 0;
   text-align: center;
 }
 
 .subtitle {
-  color: var(--login-primary);
+  color: #1a202c;
   text-align: center;
   margin-bottom: var(--spacing-lg);
   font-size: var(--font-size-sm);
@@ -385,8 +385,20 @@ input {
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-sm);
   transition: all var(--transition-normal);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.95) !important;
   width: 100%;
+  color: #1a202c !important; /* Explicit dark text color for inputs */
+  -webkit-text-fill-color: #1a202c !important;
+}
+
+/* Override autofill styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.95) inset !important;
+  -webkit-text-fill-color: #1a202c !important;
+  color: #1a202c !important;
 }
 
 .password-input {
@@ -395,6 +407,7 @@ input {
 
 .password-input input {
   padding-right: calc(var(--spacing-md) + 2.25rem);
+  color: #1a202c !important; /* Ensure password input text is visible */
 }
 
 .password-toggle {
@@ -449,9 +462,9 @@ input:disabled {
 /* Buttons */
 .btn-primary {
   padding: var(--spacing-sm) var(--spacing-lg);
-  background: linear-gradient(135deg, var(--login-primary), var(--login-primary-light));
+  background: linear-gradient(135deg, #2f4a7e, #7faf9a);
   color: white;
-    position: relative;
+  border: none;
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
@@ -490,7 +503,7 @@ input:disabled {
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: linear-gradient(135deg, rgba(47, 74, 126, 0.6), rgba(127, 175, 154, 0.6));
+  background: linear-gradient(135deg, #2f4a7e, #7faf9a);
 }
 
 /* Divider */
@@ -499,7 +512,7 @@ input:disabled {
   align-items: center;
   text-align: center;
   margin: var(--spacing-xs) 0;
-  color: var(--login-muted);
+  color: #6c757d;
 }
 
 .auth-divider::before,
@@ -523,8 +536,8 @@ input:disabled {
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-lg);
   background: white;
-  color: var(--login-primary);
-  border: 2px solid var(--login-primary);
+  color: #2f4a7e;
+  border: 2px solid #2f4a7e;
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
@@ -539,7 +552,7 @@ input:disabled {
 }
 
 .btn-guest:hover {
-  background: var(--login-primary);
+  background: #2f4a7e;
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(47, 74, 126, 0.22);
@@ -573,13 +586,13 @@ input:disabled {
 .auth-footer {
   text-align: center;
   margin-top: var(--spacing-xs);
-  color: var(--login-primary-dark);
+  color: #1a202c;
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-lg);
 }
 
 .auth-footer a {
-  color: var(--login-primary);
+  color: #2f4a7e;
   text-decoration: none;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-extrabold);
@@ -588,7 +601,7 @@ input:disabled {
 }
 
 .auth-footer a:hover {
-  color: var(--login-primary-light);
+  color: #7faf9a;
   text-decoration: underline;
 }
 
@@ -596,7 +609,7 @@ input:disabled {
 .guest-note {
   text-align: center;
   margin-top: var(--spacing-sm);
-  color: var(--login-primary-dark);
+  color: #1a202c;
   font-size: var(--font-size-xs);
   padding: var(--spacing-sm);
   background: rgba(255, 255, 255, 0.92);

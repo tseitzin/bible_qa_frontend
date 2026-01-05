@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 // Navigation for tracked reading plans
 const goToReadingPlan = (planId, planSlug) => {

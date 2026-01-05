@@ -52,21 +52,21 @@ defineProps({
 }
 
 .thread-item {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%);
+  background: var(--card-bg-alt, var(--color-background-alt));
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
 }
 
 .thread-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
 .thread-item.follow-up {
   margin-left: 2rem;
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid var(--color-primary);
 }
 
 .thread-header {
@@ -75,7 +75,7 @@ defineProps({
   gap: 0.5rem;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .thread-icon {
@@ -85,7 +85,7 @@ defineProps({
 .thread-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #3b82f6;
+  color: var(--color-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -99,14 +99,14 @@ defineProps({
 .answer-section h4 {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .question-text {
-  color: #1a202c;
+  color: var(--color-text-primary);
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.6;
@@ -114,7 +114,7 @@ defineProps({
 }
 
 .answer-text {
-  color: #4a5568;
+  color: var(--color-text-secondary);
   font-size: 0.95rem;
   line-height: 1.7;
   white-space: pre-wrap;

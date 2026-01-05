@@ -474,6 +474,149 @@ export const bibleApi = {
     } catch (error) {
       throw error
     }
+  },
+
+  // ===== Page Analytics Methods =====
+
+  /**
+   * Log a page view
+   * @param {Object} data - Page view data
+   * @param {string} data.session_id - Session identifier
+   * @param {string} data.page_path - Page path (e.g., '/app')
+   * @param {string} data.page_title - Page title
+   * @param {string} data.referrer - Referrer URL
+   */
+  async logPageView(data) {
+    try {
+      const response = await apiClient.post('/api/analytics/page-view', data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Update page metrics (scroll depth, duration)
+   * @param {Object} data - Metrics data
+   * @param {number} data.page_analytics_id - Page analytics ID
+   * @param {number} data.visit_duration_seconds - Time spent on page
+   * @param {number} data.max_scroll_depth_percent - Max scroll percentage (0-100)
+   */
+  async updatePageMetrics(data) {
+    try {
+      const response = await apiClient.put('/api/analytics/page-metrics', data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Log a click event
+   * @param {Object} data - Click event data
+   * @param {string} data.session_id - Session identifier
+   * @param {string} data.page_path - Page path
+   * @param {number} data.page_analytics_id - Optional page analytics ID
+   * @param {string} data.element_type - Element type (button, link, etc.)
+   * @param {string} data.element_id - Element ID
+   * @param {string} data.element_text - Element text content
+   * @param {string} data.element_class - Element class names
+   * @param {number} data.click_position_x - X coordinate
+   * @param {number} data.click_position_y - Y coordinate
+   */
+  async logClickEvent(data) {
+    try {
+      const response = await apiClient.post('/api/analytics/click-event', data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get page analytics statistics
+   * @param {Object} params - Query parameters
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getPageAnalyticsStats(params = {}) {
+    try {
+      const response = await apiClient.get('/api/analytics/admin/stats', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get page views
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Maximum number of records
+   * @param {number} params.offset - Offset for pagination
+   * @param {number} params.user_id - Filter by user ID
+   * @param {string} params.page_path - Filter by page path
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getPageViews(params = {}) {
+    try {
+      const response = await apiClient.get('/api/analytics/admin/page-views', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get page path statistics
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Maximum number of pages
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getPagePathStats(params = {}) {
+    try {
+      const response = await apiClient.get('/api/analytics/admin/page-path-stats', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get click events
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Maximum number of records
+   * @param {number} params.offset - Offset for pagination
+   * @param {number} params.page_analytics_id - Filter by page analytics ID
+   * @param {number} params.user_id - Filter by user ID
+   * @param {string} params.page_path - Filter by page path
+   * @param {string} params.element_type - Filter by element type
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getClickEvents(params = {}) {
+    try {
+      const response = await apiClient.get('/api/analytics/admin/click-events', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  /**
+   * Admin: Get click statistics by element type
+   * @param {Object} params - Query parameters
+   * @param {string} params.start_date - Start date (ISO format)
+   * @param {string} params.end_date - End date (ISO format)
+   */
+  async getClickStats(params = {}) {
+    try {
+      const response = await apiClient.get('/api/analytics/admin/click-stats', { params })
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
 

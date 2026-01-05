@@ -100,6 +100,7 @@
               @click="toggleExpanded(savedAnswer.id)"
               class="expand-button"
               :class="{ 'expand-button--active': expandedCards.has(savedAnswer.id) }"
+              :aria-label="expandedCards.has(savedAnswer.id) ? 'Collapse answer' : 'Expand answer'"
             >
               <svg viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -943,13 +944,13 @@ defineExpose({
 .header-title h2 {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: rgba(32, 39, 101, 0.709);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .saved-count {
   font-size: var(--font-size-sm);
-  color: white;
+  color: var(--color-text-primary);
   background: var(--color-background-muted);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-full);
@@ -1057,21 +1058,21 @@ defineExpose({
 .empty-state {
   text-align: center;
   padding: var(--spacing-4xl) var(--spacing-xl);
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .empty-icon {
   width: 64px;
   height: 64px;
   margin: 0 auto var(--spacing-lg);
-  color: black;
+  color: var(--color-text-muted);
   opacity: 0.6;
 }
 
 .empty-state h3 {
   font-size: var(--font-size-xl);
   margin-bottom: var(--spacing-sm);
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .empty-state p {
@@ -1079,7 +1080,7 @@ defineExpose({
   max-width: 400px;
   margin: 0 auto;
   line-height: var(--line-height-relaxed);
-  color: black;
+  color: var(--color-text-secondary);
 }
 
 .answers-grid {
@@ -1088,7 +1089,7 @@ defineExpose({
 }
 
 .answer-card {
-  background: var(--color-background);
+  background: var(--bg-card, #ffffff) !important;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-xl);
   overflow: hidden;
@@ -1111,7 +1112,7 @@ defineExpose({
 .answer-question {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  color: white;
+  color: var(--color-text-primary);
   margin: 0;
   flex-grow: 1;
   line-height: var(--line-height-tight);
@@ -1129,7 +1130,7 @@ defineExpose({
   height: 32px;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  background: var(--color-background);
+  background: var(--bg-card, #ffffff);
   color: var(--color-text-muted);
   cursor: pointer;
   display: flex;
@@ -1172,17 +1173,17 @@ defineExpose({
 .answer-text {
   font-size: var(--font-size-base);
   line-height: var(--line-height-relaxed);
-  color: white;
+  color: var(--color-text-primary);
   margin-bottom: var(--spacing-lg);
   white-space: pre-wrap;
 }
 
 .answer-text :deep(.scripture-reference),
 .question-text :deep(.scripture-reference) {
-  color: var(--color-primary-bright, #5c7fd0);
+  color: var(--color-primary-bright);
   text-decoration: underline dotted;
   text-decoration-thickness: 2px;
-  text-decoration-color: var(--color-primary-bright, #5c7fd0);
+  text-decoration-color: var(--color-primary-bright);
   transition: color var(--transition-normal, 0.2s), text-decoration-color var(--transition-normal, 0.2s);
 }
 
@@ -1190,8 +1191,8 @@ defineExpose({
 .answer-text :deep(.scripture-reference:focus),
 .question-text :deep(.scripture-reference:hover),
 .question-text :deep(.scripture-reference:focus) {
-  color: var(--color-primary, #2f4a7e);
-  text-decoration-color: var(--color-primary, #2f4a7e);
+  color: var(--color-primary);
+  text-decoration-color: var(--color-primary);
 }
 
 .answer-meta {
@@ -1205,7 +1206,7 @@ defineExpose({
   align-items: center;
   gap: var(--spacing-xs);
   font-size: var(--font-size-sm);
-  color: white;
+  color: var(--color-text-secondary);
 }
 
 .meta-item svg {
@@ -1220,10 +1221,16 @@ defineExpose({
   flex-wrap: wrap;
 }
 
+.answer-tags-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
 .answer-tag {
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-background-muted);
-  color: white;
+  color: var(--color-text-primary);
   font-size: var(--font-size-xs);
   border-radius: var(--border-radius-sm);
   border: 1px solid var(--color-border-light);
@@ -1300,7 +1307,7 @@ defineExpose({
 .modal-header h3 {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  color: white;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -1335,7 +1342,7 @@ defineExpose({
 }
 
 .modal-body p {
-  color: white;
+  color: var(--color-text-primary);
   margin-bottom: var(--spacing-md);
 }
 
@@ -1356,7 +1363,7 @@ defineExpose({
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: white;
+  color: var(--color-text-primary);
 }
 
 .export-select-all input {
@@ -1368,7 +1375,7 @@ defineExpose({
 
 .export-selection-count {
   font-size: var(--font-size-sm);
-  color: white;
+  color: var(--color-text-secondary);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -1421,7 +1428,7 @@ defineExpose({
 .export-answer-question {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: white;
+  color: var(--color-text-primary);
   line-height: var(--line-height-normal);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1431,7 +1438,7 @@ defineExpose({
 
 .export-answer-meta {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-muted);
 }
 
 .export-format-section {
@@ -1441,7 +1448,7 @@ defineExpose({
 .export-format-title {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: white;
+  color: var(--color-text-primary);
   margin: 0 0 var(--spacing-sm) 0;
 }
 
@@ -1481,7 +1488,7 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-xs);
-  color: white;
+  color: var(--color-text-primary);
 }
 
 .export-format-content svg {
@@ -1511,13 +1518,13 @@ defineExpose({
   display: block;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: white;
+  color: var(--color-text-primary);
   margin-bottom: var(--spacing-xs);
 }
 
 .stat-item span {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
 }
 
 .modal-footer {
