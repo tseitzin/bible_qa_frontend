@@ -1,39 +1,41 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { computed } from 'vue'
 import Home from '../../views/Home.vue'
-import { useAuth } from '../../composables/useAuth'
 
-// Mock the useAuth composable
-vi.mock('../../composables/useAuth', () => ({
-  useAuth: vi.fn()
-}))
-
-// Mock router
-const mockRouter = {
-  push: vi.fn()
-}
+const mockRouterPush = vi.fn()
 
 vi.mock('vue-router', () => ({
-  useRouter: () => mockRouter,
+  useRouter: () => ({ push: mockRouterPush }),
+  useRoute: () => ({ path: '/', query: {} }),
   RouterLink: {
     template: '<a><slot /></a>',
     props: ['to']
   }
 }))
 
-// Mock logo asset
+vi.mock('../../composables/useAuth', () => ({
+  useAuth: () => ({
+    currentUser: { value: null },
+    logout: vi.fn()
+  })
+}))
+
+vi.mock('../../composables/useTheme', () => ({
+  useTheme: () => ({
+    isDevotion: { value: false },
+    toggleTheme: vi.fn()
+  })
+}))
+
 vi.mock('../../assets/logo_cross.png', () => ({
   default: 'mocked-logo.png'
 }))
 
 describe('Home.vue', () => {
   let wrapper
-  let mockLogout
 
   beforeEach(() => {
-    mockLogout = vi.fn()
-    mockRouter.push.mockClear()
+    mockRouterPush.mockClear()
   })
 
   afterEach(() => {
@@ -42,17 +44,14 @@ describe('Home.vue', () => {
     }
   })
 
-  const createWrapper = (currentUser = null) => {
-    useAuth.mockReturnValue({
-      currentUser: computed(() => currentUser),
-      logout: mockLogout
-    })
-
+  const createWrapper = () => {
     return mount(Home, {
       global: {
         stubs: {
+          Navbar: { template: '<nav class="navbar-stub"></nav>' },
+          FooterSimple: { template: '<footer class="footer-stub"></footer>' },
           RouterLink: {
-            template: '<a><slot /></a>',
+            template: '<a class="router-link-stub"><slot /></a>',
             props: ['to']
           }
         }
@@ -61,102 +60,22 @@ describe('Home.vue', () => {
   }
 
   describe('Rendering', () => {
-    it('renders the home view correctly', () => {
+    it('renders the home view', () => {
       wrapper = createWrapper()
       expect(wrapper.find('.home').exists()).toBe(true)
-      expect(wrapper.find('.app-nav').exists()).toBe(true)
-      expect(wrapper.find('.app-header').exists()).toBe(true)
     })
 
-    it('shows welcome message for guest users', () => {
+    it('renders navbar and footer', () => {
+      wrapper = createWrapper()
+      expect(wrapper.find('.navbar-stub').exists()).toBe(true)
+      expect(wrapper.find('.footer-stub').exists()).toBe(true)
+    })
+
+    it('displays the app title', () => {
       wrapper = createWrapper()
       const title = wrapper.find('.app-title')
       expect(title.exists()).toBe(true)
-      expect(title.text()).toBe('Welcome Back')
-    })
-
-    it('shows welcome message with username for logged-in users', () => {
-      wrapper = createWrapper({ username: 'testuser' })
-      const title = wrapper.find('.app-title')
-      expect(title.text()).toBe('Welcome Back, testuser')
-    })
-
-    it('displays quick actions section', () => {
-      wrapper = createWrapper()
-      expect(wrapper.find('.home-quick-actions').exists()).toBe(true)
-      const text = wrapper.text()
-      expect(text).toContain('Quick Actions')
-      expect(text).toContain('Continue Exploring')
-      expect(text).toContain('Kids Corner')
-      expect(text).toContain('Saved Answers')
-    })
-
-    it('displays insights section', () => {
-      wrapper = createWrapper()
-      expect(wrapper.text()).toContain('Need Inspiration?')
-      expect(wrapper.text()).toContain('Tip: Follow Up')
-      expect(wrapper.text()).toContain('Ask a Bible Question')
-    })
-  })
-
-  describe('Navigation', () => {
-    it('shows Login button when user is not authenticated', () => {
-      wrapper = createWrapper(null)
-      // Check for login link
-      const navLinks = wrapper.findAll('.nav-link')
-      const hasLoginButton = navLinks.some(link => link.classes().includes('login-button'))
-      const hasLogoutButton = navLinks.some(link => link.classes().includes('logout-button'))
-      
-      expect(hasLoginButton).toBe(true)
-      expect(hasLogoutButton).toBe(false)
-    })
-
-    it('shows Logout button when user is authenticated', () => {
-      wrapper = createWrapper({ username: 'testuser' })
-      const navLinks = wrapper.findAll('.nav-link')
-      const hasLogoutButton = navLinks.some(link => link.classes().includes('logout-button'))
-      const hasLoginButton = navLinks.some(link => link.classes().includes('login-button'))
-      
-      expect(hasLogoutButton).toBe(true)
-      expect(hasLoginButton).toBe(false)
-    })
-
-    it('handles logout when logout button is clicked', async () => {
-      wrapper = createWrapper({ username: 'testuser' })
-      
-      await wrapper.find('.logout-button').trigger('click')
-      
-      expect(mockLogout).toHaveBeenCalled()
-    })
-
-    it('navigates to saved answers when saved answers button is clicked', async () => {
-      wrapper = createWrapper()
-      
-      const savedAnswersButton = wrapper.find('.action-card--button')
-      await savedAnswersButton.trigger('click')
-      
-      expect(mockRouter.push).toHaveBeenCalledWith({
-        path: '/',
-        query: { tab: 'saved' }
-      })
-    })
-
-    it('navigates to adults view when "Ask a Bible Question" button is clicked', async () => {
-      wrapper = createWrapper()
-      
-      const askButton = wrapper.find('.btn-primary')
-      await askButton.trigger('click')
-      
-      expect(mockRouter.push).toHaveBeenCalledWith('/')
-    })
-  })
-
-  describe('UI Elements', () => {
-    it('displays the logo', () => {
-      wrapper = createWrapper()
-      const logo = wrapper.find('.nav-logo img')
-      expect(logo.exists()).toBe(true)
-      expect(logo.attributes('alt')).toBe('Word of Life Answers logo')
+      expect(title.text()).toBe('Word of Life Answers')
     })
 
     it('displays the tagline', () => {
@@ -164,18 +83,53 @@ describe('Home.vue', () => {
       expect(wrapper.text()).toContain('Scripture • Wisdom • Truth')
     })
 
-    it('displays app subtitle', () => {
+    it('displays the app subtitle', () => {
       wrapper = createWrapper()
-      expect(wrapper.text()).toContain('Dive into your personalized Bible Q&A experience')
+      expect(wrapper.text()).toContain('Your personal Bible companion')
+    })
+  })
+
+  describe('Quick Actions', () => {
+    it('displays action cards', () => {
+      wrapper = createWrapper()
+      expect(wrapper.text()).toContain('Ask Biblical Questions')
+      expect(wrapper.text()).toContain('Bible Study Aids')
+      expect(wrapper.text()).toContain('Saved Answers')
     })
 
-    it('displays action card icons', () => {
+    it('displays action icons', () => {
       wrapper = createWrapper()
       const icons = wrapper.findAll('.action-icon')
       expect(icons.length).toBeGreaterThanOrEqual(3)
     })
 
-    it('has background elements', () => {
+    it('navigates to saved answers when button is clicked', async () => {
+      wrapper = createWrapper()
+      const buttons = wrapper.findAll('.action-card--button')
+      const savedButton = buttons.find(b => b.text().includes('Saved Answers'))
+      await savedButton.trigger('click')
+      expect(mockRouterPush).toHaveBeenCalledWith({ path: '/adults', query: { tab: 'saved' } })
+    })
+
+    it('navigates to study helps when button is clicked', async () => {
+      wrapper = createWrapper()
+      const buttons = wrapper.findAll('.action-card--button')
+      const studyButton = buttons.find(b => b.text().includes('Bible Study Aids'))
+      await studyButton.trigger('click')
+      expect(mockRouterPush).toHaveBeenCalledWith({ path: '/adults', query: { tab: 'study' } })
+    })
+  })
+
+  describe('Insights Section', () => {
+    it('displays insights cards', () => {
+      wrapper = createWrapper()
+      expect(wrapper.text()).toContain('Need Inspiration?')
+      expect(wrapper.text()).toContain('Follow-Up Questions')
+    })
+  })
+
+  describe('Background Elements', () => {
+    it('renders background elements', () => {
       wrapper = createWrapper()
       expect(wrapper.find('.app-background').exists()).toBe(true)
       expect(wrapper.find('.bg-gradient').exists()).toBe(true)

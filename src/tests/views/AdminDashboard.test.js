@@ -205,12 +205,13 @@ describe('AdminDashboard.vue', () => {
     it('renders all tab buttons', () => {
       wrapper = createWrapper()
       const tabs = wrapper.findAll('.tabs button')
-      expect(tabs).toHaveLength(5)
+      expect(tabs).toHaveLength(6)
       expect(tabs[0].text()).toBe('Statistics')
       expect(tabs[1].text()).toBe('API Logs')
       expect(tabs[2].text()).toBe('Endpoints')
       expect(tabs[3].text()).toBe('OpenAI Usage')
       expect(tabs[4].text()).toBe('Users')
+      expect(tabs[5].text()).toBe('Page Analytics')
     })
   })
 

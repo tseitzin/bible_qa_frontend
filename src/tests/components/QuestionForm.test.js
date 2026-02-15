@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import QuestionForm from '../../components/QuestionForm.vue'
 import BaseTextarea from '../../components/ui/BaseTextarea.vue'

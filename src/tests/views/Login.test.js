@@ -306,8 +306,8 @@ describe('Login - Save Operation and Redirects', () => {
     await wrapper.vm.handleLogin()
     await flushPromises()
 
-    // Verify redirect to main page
-    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'main' })
+    // Verify redirect to home page (default after login)
+    expect(mockRouterPush).toHaveBeenCalledWith({ name: 'home' })
   })
 
   it('should redirect to the saved tab after successful login when redirect=saved query param is present', async () => {
