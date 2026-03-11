@@ -115,6 +115,15 @@ const routes = [
     }
   },
   {
+    path: '/trivia',
+    name: 'trivia',
+    component: () => import('../views/TriviaView.vue'),
+    meta: {
+      title: 'BibleQuest - Scripture Scholar Trivia',
+      requiresAuth: false
+    }
+  },
+  {
     path: '/kids',
     name: 'kids',
     component: KidsApp,

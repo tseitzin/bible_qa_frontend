@@ -51,6 +51,12 @@
           @click="mobileMenuOpen = false"
         >Bible Study</router-link>
         <router-link
+          to="/trivia"
+          class="navbar-simple-link"
+          :class="{ 'active': $route.path === '/trivia' }"
+          @click="mobileMenuOpen = false"
+        >Trivia</router-link>
+        <router-link
           to="/kids"
           class="navbar-simple-link"
           :class="{ 'active': $route.path === '/kids' }"
